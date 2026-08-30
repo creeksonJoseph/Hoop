@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hoop · DM with itz_lore.en</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0f; --surface: #17171b; --surface2: #1f1f25;
+      --border: #2a2a33; --accent: #a78bfa; --accent-dim: #7c5cbf;
+      --bubble-out: #7c3aed; --bubble-in: #1f1f2e;
+      --text: #e4e4f0; --muted: #6b6b82; --danger: #f87171;
+      --radius: 18px; --radius-sm: 10px;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    }
+    .chat-window {
+      width: min(480px, 100vw); height: min(780px, 100vh);
+      display: flex; flex-direction: column;
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(167,139,250,.08);
+    }
+    .chat-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; background: var(--surface2);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .header-info h2 { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .header-info span { font-size: 12px; color: var(--muted); }
+    .ws-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted); margin-left: auto; flex-shrink: 0; transition: background .3s;
+    }
+    .ws-dot.live { background: #4ade80; box-shadow: 0 0 8px #4ade8088; }
+    .messages {
+      flex: 1; overflow-y: auto; padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .loader {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 12px; flex: 1;
+      color: var(--muted); font-size: 13px;
+    }
+    .spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .bubble-row {
+      display: flex; flex-direction: column; max-width: 78%;
+      animation: fadeUp .25s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .bubble-row.out { align-self: flex-end; align-items: flex-end; }
+    .bubble-row.in  { align-self: flex-start; align-items: flex-start; }
+    .bubble {
+      padding: 10px 14px; border-radius: var(--radius);
+      font-size: 14px; line-height: 1.5; word-break: break-word;
+    }
+    .bubble-row.out .bubble {
+      background: var(--bubble-out); border-bottom-right-radius: 4px; color: #fff;
+    }
+    .bubble-row.in .bubble {
+      background: var(--bubble-in); border-bottom-left-radius: 4px;
+      border: 1px solid var(--border); color: var(--text);
+    }
+    .bubble-meta { font-size: 11px; color: var(--muted); margin-top: 3px; padding: 0 4px; }
+    .attachment-pill {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+      padding: 6px 10px; background: rgba(255,255,255,.06); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--accent); text-decoration: none;
+      border: 1px solid rgba(167,139,250,.15); transition: background .15s;
+    }
+    .attachment-pill:hover { background: rgba(167,139,250,.15); }
+    .day-sep {
+      display: flex; align-items: center; gap: 10px;
+      margin: 10px 0; color: var(--muted); font-size: 11px; font-weight: 500;
+    }
+    .day-sep::before, .day-sep::after { content:''; flex:1; height:1px; background:var(--border); }
+    .input-bar {
+      display: flex; align-items: flex-end; gap: 10px;
+      padding: 14px 16px; background: var(--surface2);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .input-bar textarea {
+      flex: 1; resize: none; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text); font-family: inherit;
+      font-size: 14px; padding: 10px 14px; max-height: 120px; min-height: 42px;
+      line-height: 1.5; outline: none; transition: border-color .2s; overflow-y: auto;
+    }
+    .input-bar textarea:focus { border-color: var(--accent); }
+    .input-bar textarea::placeholder { color: var(--muted); }
+    .send-btn {
+      width: 42px; height: 42px; border-radius: 50%; border: none;
+      background: linear-gradient(135deg, var(--accent), var(--bubble-out));
+      color: #fff; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: transform .15s, opacity .15s;
+    }
+    .send-btn:hover:not(:disabled) { transform: scale(1.07); }
+    .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .send-btn svg { width: 18px; height: 18px; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1f1f25; border: 1px solid var(--danger); color: var(--danger);
+      padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px;
+      opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 99;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div class="chat-window">
+  <div class="chat-header">
+    <div class="avatar">✨</div>
+    <div class="header-info">
+      <h2>itz_lore.en</h2>
+      <span id="status-text">Connecting…</span>
+    </div>
+    <div class="ws-dot" id="ws-dot" title="WebSocket status"></div>
+  </div>
+  <div class="messages" id="messages">
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <span>Loading messages…</span>
+    </div>
+  </div>
+  <div class="input-bar">
+    <textarea id="msg-input" placeholder="Type a message… (Enter to send, Shift+Enter for newline)" rows="1" autocomplete="off"></textarea>
+    <button class="send-btn" id="send-btn" disabled title="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  const API = 'http://localhost:8000';
+  const WS  = 'ws://localhost:8000/ws';
+  const messagesEl = document.getElementById('messages');
+  const loaderEl   = document.getElementById('loader');
+  const inputEl    = document.getElementById('msg-input');
+  const sendBtn    = document.getElementById('send-btn');
+  const wsDot      = document.getElementById('ws-dot');
+  const statusText = document.getElementById('status-text');
+  const toastEl    = document.getElementById('toast');
+  let seenIds = new Set();
+  let lastDay = null;
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 3500);
+  }
+  function fmt(iso) {
+    const d = new Date(iso), now = new Date();
+    if (d.toDateString() === now.toDateString())
+      return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' +
+           d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+  function dayLabel(iso) {
+    const d = new Date(iso);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yest  = new Date(today); yest.setDate(yest.getDate()-1);
+    const dDay  = new Date(d); dDay.setHours(0,0,0,0);
+    if (dDay.getTime()===today.getTime()) return 'Today';
+    if (dDay.getTime()===yest.getTime())  return 'Yesterday';
+    return d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+  }
+
+  function renderMessage(msg, prepend=false) {
+    if (seenIds.has(msg.id)) return;
+    seenIds.add(msg.id);
+    const dir  = msg.direction === 'outgoing' ? 'out' : 'in';
+    const text = msg.message || '';
+    const time = msg.created_at ? fmt(msg.created_at) : '';
+    const dayStr = msg.created_at ? dayLabel(msg.created_at) : null;
+    if (dayStr && dayStr !== lastDay && !prepend) {
+      const sep = document.createElement('div');
+      sep.className = 'day-sep'; sep.textContent = dayStr;
+      messagesEl.appendChild(sep);
+      lastDay = dayStr;
+    }
+    const row = document.createElement('div');
+    row.className = `bubble-row ${dir}`;
+    row.dataset.id = msg.id;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    if (text) bubble.textContent = text;
+    (msg.attachments||[]).forEach(att => {
+      if (att.type==='image' && att.url) {
+        const img = document.createElement('img');
+        img.src = att.url;
+        img.style.cssText = 'max-width:200px;border-radius:10px;display:block;margin-top:6px;';
+        bubble.appendChild(img);
+      } else if (att.url) {
+        const a = document.createElement('a');
+        a.className = 'attachment-pill'; a.href = att.url; a.target='_blank'; a.rel='noopener noreferrer';
+        const icon = att.type==='video'
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'
+          : '📎';
+        a.innerHTML = icon + ' ' + ((att.payload && att.payload.title) ? att.payload.title.slice(0,40)+'…' : (att.type||'Attachment'));
+        bubble.appendChild(a);
+      }
+    });
+    const meta = document.createElement('div');
+    meta.className = 'bubble-meta'; meta.textContent = time;
+    row.appendChild(bubble); row.appendChild(meta);
+    prepend ? messagesEl.prepend(row) : messagesEl.appendChild(row);
+  }
+
+  async function loadMessages() {
+    try {
+      const res = await fetch(`${API}/messages?limit=50&sort=asc`);
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      loaderEl.remove();
+      lastDay = null;
+      (data.messages||[]).forEach(m => renderMessage(m));
+      scrollBottom();
+      sendBtn.disabled = false;
+      statusText.textContent = `@${data.instagram_username || 'itz_lore.en'}`;
+    } catch(e) {
+      loaderEl.innerHTML = `<span style="color:var(--danger)">Failed to load: ${e.message}</span>`;
+    }
+  }
+  function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  let ws;
+  function connectWS() {
+    ws = new WebSocket(WS);
+    ws.onopen  = () => wsDot.classList.add('live');
+    ws.onmessage = e => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.type==='new_message' && d.message) { renderMessage(d.message); scrollBottom(); }
+      } catch{}
+    };
+    ws.onclose = () => { wsDot.classList.remove('live'); setTimeout(connectWS, 4000); };
+    ws.onerror = () => ws.close();
+  }
+  setInterval(() => { if (ws && ws.readyState===WebSocket.OPEN) ws.send('ping'); }, 25000);
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    sendBtn.disabled = true; inputEl.disabled = true;
+    const optimistic = {
+      id: 'opt_'+Date.now(), message: text, direction: 'outgoing',
+      sender_name: 'You', created_at: new Date().toISOString(), attachments: []
+    };
+    renderMessage(optimistic); scrollBottom();
+    inputEl.value = ''; autoResize();
+    try {
+      const res = await fetch(`${API}/messages/reply`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: text}),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:res.statusText}));
+        throw new Error(err.detail||'Send failed');
+      }
+    } catch(e) {
+      showToast('❌ ' + e.message);
+      const el = document.querySelector(`[data-id="${optimistic.id}"]`);
+      if (el) el.remove();
+      seenIds.delete(optimistic.id);
+      inputEl.value = text; autoResize();
+    } finally {
+      sendBtn.disabled = false; inputEl.disabled = false; inputEl.focus();
+    }
+  }
+
+  function autoResize() {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+    sendBtn.disabled = !inputEl.value.trim();
+  }
+  inputEl.addEventListener('input', autoResize);
+  inputEl.addEventListener('keydown', e => {
+    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  loadMessages();
+  connectWS();
+</script>
+</body>
+</html>
