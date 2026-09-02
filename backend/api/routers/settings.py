@@ -38,18 +38,30 @@ async def settings_page(request: Request, user=Depends(require_user)):
 
     masked_key = "No API Key Connected"
     ig_username = None
+    has_connected_account = False
+    oauth_url = None
 
     if accounts and accounts[0]["zernio_api_key_enc"]:
         masked_key = mask_api_key(accounts[0]["zernio_api_key_enc"])
-        ig_username = accounts[0]["ig_username"]
+        for acc in accounts:
+            if acc["ig_username"] and acc["ig_username"] != "__pending__":
+                ig_username = acc["ig_username"]
+                has_connected_account = True
+                break
+
+        redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
+        oauth_url = await zernio_service.get_connect_url(accounts[0]["zernio_api_key_enc"], redirect_uri, user["id"])
 
     return _render(request, "settings.html", {
         "user": user,
         "accounts": [dict(a) for a in accounts],
         "masked_key": masked_key,
         "ig_username": ig_username,
+        "has_connected_account": has_connected_account,
+        "oauth_url": oauth_url,
         "active_page": "settings",
     })
+
 
 
 @router.post("/settings/api-key", response_class=HTMLResponse)

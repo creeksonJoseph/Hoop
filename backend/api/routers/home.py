@@ -28,15 +28,22 @@ async def home_page(request: Request, user=Depends(get_current_user)):
     if not user:
         return RedirectResponse("/auth/login", status_code=302)
 
-    # Check if the user has any connected accounts yet — if not, send to onboarding
+    # Check if the user has any connected accounts or API key yet — if not, send to onboarding
     pool = await get_pool()
     async with pool.acquire() as conn:
         cnt = await account_repo.count_accounts_for_user(conn, user["id"])
+        accounts = await account_repo.get_accounts_for_user(conn, user["id"])
 
     if cnt == 0:
         return RedirectResponse("/onboarding", status_code=302)
 
-    return _render(request, "home.html", {"user": user})
+    has_real_account = any(a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts)
+
+    return _render(request, "home.html", {
+        "user": user,
+        "has_real_account": has_real_account,
+        "active_page": "home",
+    })
 
 
 @router.get("/home/dms", response_class=HTMLResponse)
@@ -72,10 +79,11 @@ async def add_dm(
 
     pool = await get_pool()
     async with pool.acquire() as conn:
-        acc = await account_repo.get_any_account_for_user(conn, user["id"])
-        if not acc:
+        accounts = await account_repo.get_accounts_for_user(conn, user["id"])
+        has_real_account = any(a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts)
+        if not has_real_account:
             return HTMLResponse(
-                '<p class="text-danger text-sm px-4">No Instagram account connected yet</p>',
+                '<p class="text-yellow-400 text-sm px-4 font-semibold">⚠️ Connect an Instagram account first in Settings before adding DMs.</p>',
                 status_code=400,
             )
 
@@ -90,6 +98,7 @@ async def add_dm(
 
     dms = [dict(r) for r in rows]
     return _render(request, "partials/dm_list.html", {"dms": dms})
+
 
 
 @router.delete("/home/dms/{ig_username}", response_class=HTMLResponse)
