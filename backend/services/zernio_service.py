@@ -180,6 +180,7 @@ async def find_conversation(
     raw_key = decrypt_api_key(encrypted_key)
     target  = ig_username.lower().strip("@")
     cursor  = None
+    import logging
 
     try:
         while True:
@@ -188,10 +189,12 @@ async def find_conversation(
                 params["cursor"] = cursor
             data = await _get("/inbox/conversations", params, raw_key)
             for conv in data.get("data", []):
-                # participantName is the only name field (docs confirmed)
-                pname = (conv.get("participantName") or "").lower()
-                pid   = (conv.get("participantId") or "").lower()
-                if target in (pname, pid):
+                pname    = (conv.get("participantName") or "").lower()
+                pid      = (conv.get("participantId") or "").lower()
+                ig_prof  = conv.get("instagramProfile") or {}
+                ig_uname = (ig_prof.get("username") or "").lower()
+                logging.info(f"[find_conversation] target={target} pname={pname} pid={pid} ig_uname={ig_uname}")
+                if target in (pname, pid, ig_uname):
                     return conv
             pagination = data.get("pagination", {})
             if not pagination.get("hasMore"):
