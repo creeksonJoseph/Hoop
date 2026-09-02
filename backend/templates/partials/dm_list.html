@@ -1,0 +1,24 @@
+<div class="space-y-3" id="dm-list">
+  {% for dm in dms %}
+  <a href="/chat/{{ dm.ig_username }}"
+     class="flex items-center gap-4 bg-surface hover:bg-surface2 border border-border hover:border-accent/40
+            rounded-xl2 px-5 py-4 transition-all group fade-up cursor-pointer">
+    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-bubble-out flex items-center justify-center
+                text-lg flex-shrink-0 ring-2 ring-transparent group-hover:ring-accent/40 transition-all">
+      {{ dm.ig_username[0].upper() }}
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="font-semibold text-white text-sm">@{{ dm.ig_username }}</p>
+      <p class="text-muted text-xs truncate mt-0.5">{{ dm.last_message or 'Tap to open conversation' }}</p>
+    </div>
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <span class="text-xs text-muted bg-surface2 border border-border px-2 py-1 rounded-full">
+        {{ dm.session_count }} wingman{{ 's' if dm.session_count != 1 else '' }}
+      </span>
+      <svg class="w-4 h-4 text-muted group-hover:text-accent transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+  </a>
+  {% endfor %}
+</div>

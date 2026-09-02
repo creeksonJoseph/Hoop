@@ -1,0 +1,19 @@
+{# Skeleton for the sessions list on /sessions/:ig_username #}
+<div class="space-y-3" id="sessions-skeleton">
+  {% for _ in range(3) %}
+  <div class="flex items-start justify-between gap-4 bg-surface border border-border rounded-xl2 px-5 py-4 animate-pulse">
+    <div class="flex-1 space-y-2.5">
+      <div class="flex items-center gap-2">
+        <div class="h-3.5 bg-surface2 rounded-full w-24"></div>
+        <div class="h-5 w-16 bg-surface2 rounded-full"></div>
+      </div>
+      <div class="h-2.5 bg-surface2 rounded-full w-20"></div>
+      <div class="h-7 w-48 bg-surface2 rounded-md"></div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <div class="h-7 w-24 bg-surface2 rounded-sm2"></div>
+      <div class="h-7 w-24 bg-surface2 rounded-sm2"></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>

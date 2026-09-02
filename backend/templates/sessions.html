@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Sessions · @{{ ig_username }} · Hoop{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-bg">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-surface/80 backdrop-blur border-b border-border px-6 py-4 flex items-center gap-4">
+    <a href="/chat/{{ ig_username }}"
+       class="flex items-center justify-center w-9 h-9 rounded-xl bg-surface2 border border-border text-muted hover:text-white hover:border-accent/40 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <div class="flex-1">
+      <h1 class="text-sm font-bold text-white">Active Sessions</h1>
+      <p class="text-xs text-muted">@{{ ig_username }}</p>
+    </div>
+    <button onclick="document.getElementById('gen-modal').classList.remove('hidden')"
+      class="flex items-center gap-2 bg-gradient-to-r from-accent to-bubble-out text-white px-4 py-2 rounded-sm2 text-xs font-semibold hover:opacity-90 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      New Link
+    </button>
+  </header>
+
+  <!-- Sessions list — skeleton shown immediately, real content swapped in -->
+  <main class="max-w-2xl mx-auto px-4 py-8">
+    <div
+      id="sessions-list"
+      hx-get="/sessions/{{ ig_username }}/list"
+      hx-trigger="load"
+      hx-swap="outerHTML"
+      hx-sync="this:drop"
+    >
+      {% include "partials/skeletons/sessions_skeleton.html" %}
+    </div>
+  </main>
+</div>
+
+<!-- Generate Link Modal -->
+<div id="gen-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+  <div class="bg-surface border border-border rounded-xl2 p-6 w-full max-w-sm shadow-card fade-up">
+    <h2 class="text-base font-bold text-white mb-1">Generate wingman link</h2>
+    <p class="text-muted text-xs mb-5">Enter the name of the person you're sharing this with</p>
+
+    <form id="gen-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-white mb-1.5" for="wingman_name">Wingman Name</label>
+        <input id="wingman_name" name="wingman_name" type="text" required
+          placeholder="e.g. Kevo"
+          class="w-full bg-bg border border-border rounded-sm2 px-4 py-2.5 text-sm text-white placeholder-muted focus:outline-none focus:border-accent transition-colors" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-white mb-2">Access Level</label>
+        <div class="flex gap-3">
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="access_level" value="read" checked class="sr-only peer" />
+            <div class="peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent
+                        border border-border rounded-sm2 px-3 py-2.5 text-center transition-all text-muted hover:border-accent/40">
+              <div class="text-lg mb-0.5">👁️</div>
+              <div class="text-xs font-semibold">Read Only</div>
+              <div class="text-[10px] mt-0.5 opacity-70">Can only view</div>
+            </div>
+          </label>
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="access_level" value="send" class="sr-only peer" />
+            <div class="peer-checked:border-green-500 peer-checked:bg-green-500/10 peer-checked:text-green-400
+                        border border-border rounded-sm2 px-3 py-2.5 text-center transition-all text-muted hover:border-green-500/40">
+              <div class="text-lg mb-0.5">✉️</div>
+              <div class="text-xs font-semibold">Full Access</div>
+              <div class="text-[10px] mt-0.5 opacity-70">Can send too</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div id="gen-result" class="hidden bg-bg border border-accent/40 rounded-sm2 p-3">
+        <p class="text-xs text-muted mb-1">Share this link:</p>
+        <div class="flex items-center gap-2">
+          <code id="gen-link" class="text-accent text-xs flex-1 break-all"></code>
+          <button type="button" onclick="copyGen()" class="text-xs text-muted hover:text-accent transition-colors flex-shrink-0">📋</button>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="button" onclick="document.getElementById('gen-modal').classList.add('hidden')"
+          class="flex-1 bg-surface2 text-muted hover:text-white border border-border py-2.5 rounded-sm2 text-sm transition-all">
+          Cancel
+        </button>
+        <button type="button" onclick="generateLink()"
+          class="flex-1 bg-gradient-to-r from-accent to-bubble-out text-white font-semibold py-2.5 rounded-sm2 text-sm hover:opacity-90 active:scale-95 transition-all">
+          Generate
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const IG = '{{ ig_username }}';
+
+  function copyLink(token) {
+    navigator.clipboard.writeText(location.origin + '/view/' + token).then(() => alert('Link copied!'));
+  }
+  function copyGen() {
+    navigator.clipboard.writeText(document.getElementById('gen-link').textContent).then(() => alert('Copied!'));
+  }
+
+  async function generateLink() {
+    const name   = document.getElementById('wingman_name').value.trim();
+    const access = document.querySelector('input[name="access_level"]:checked').value;
+    if (!name) { alert('Enter a wingman name'); return; }
+
+    const res  = await fetch(`/admin/dms/${IG}/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wingman_name: name, access_level: access }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.detail || 'Error'); return; }
+
+    document.getElementById('gen-link').textContent = location.origin + '/view/' + data.token;
+    document.getElementById('gen-result').classList.remove('hidden');
+
+    // Reload the sessions list via HTMX after a beat
+    setTimeout(() => htmx.trigger('#sessions-list, [hx-get="/sessions/' + IG + '/list"]', 'load'), 1200);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Create Account · Hoop{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4">
+  <div class="w-full max-w-sm fade-up">
+
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-bubble-out mb-4 shadow-card">
+        <span class="text-3xl">🏀</span>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Create your account</h1>
+      <p class="text-muted text-sm mt-1">Connect your Instagram and get started</p>
+    </div>
+
+    <div class="bg-surface border border-border rounded-xl2 p-6 shadow-card">
+      <form method="POST" action="/auth/signup" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-white mb-1.5" for="email">Email</label>
+          <input id="email" name="email" type="email" required autocomplete="email"
+            placeholder="you@example.com"
+            class="w-full bg-bg border border-border rounded-sm2 px-4 py-2.5 text-sm text-white placeholder-muted
+                   focus:outline-none focus:border-accent transition-colors" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white mb-1.5" for="password">Password</label>
+          <input id="password" name="password" type="password" required autocomplete="new-password"
+            placeholder="••••••••"
+            class="w-full bg-bg border border-border rounded-sm2 px-4 py-2.5 text-sm text-white placeholder-muted
+                   focus:outline-none focus:border-accent transition-colors" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white mb-1.5" for="confirm_password">Confirm Password</label>
+          <input id="confirm_password" name="confirm_password" type="password" required
+            placeholder="••••••••"
+            class="w-full bg-bg border border-border rounded-sm2 px-4 py-2.5 text-sm text-white placeholder-muted
+                   focus:outline-none focus:border-accent transition-colors" />
+        </div>
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-accent to-bubble-out text-white font-semibold py-2.5 rounded-sm2
+                 hover:opacity-90 active:scale-95 transition-all text-sm mt-2">
+          Create Account
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center text-muted text-sm mt-6">
+      Already have an account?
+      <a href="/auth/login" class="text-accent hover:text-white transition-colors font-medium">Sign in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
