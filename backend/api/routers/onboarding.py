@@ -92,6 +92,11 @@ async def onboarding_connect(
         """)
 
     if not accounts:
+        # Save verified API key for user so they are marked as onboarded
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            await account_repo.upsert_account(conn, user["id"], "__pending__", "pending", enc_key)
+
         # Fetch Zernio Instagram OAuth URL for Step 2
         redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
         oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri)
@@ -115,7 +120,7 @@ async def onboarding_connect(
           <div class="p-3 rounded-sm2 bg-green-500/10 border border-green-500/30 text-green-400 text-xs flex items-center justify-between">
             <span class="font-semibold flex items-center gap-1.5">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              Step 1 Complete: API Key Verified & Active
+              Step 1 Complete: API Key Verified & Saved
             </span>
           </div>
 
