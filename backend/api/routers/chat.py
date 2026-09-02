@@ -28,23 +28,22 @@ async def get_messages(
     cursor: Optional[str] = Query(default=None),
     user=Depends(require_user),
 ):
-    ig_user = (username or "").strip().lstrip("@").lower() or None
+    ig_target = (username or "").strip().lstrip("@").lower() or None
     pool = await get_pool()
+    # Always use the user's own connected account for the API key
     async with pool.acquire() as conn:
-        acc = (
-            await account_repo.get_account(conn, user["id"], ig_user)
-            if ig_user
-            else await account_repo.get_any_account_for_user(conn, user["id"])
-        )
+        acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
         raise HTTPException(404, "No connected account found")
 
     conv = await zernio_service.find_conversation(
-        acc["ig_username"], acc["zernio_account_id"], acc["zernio_api_key_enc"]
+        ig_target or acc["ig_username"],
+        acc["zernio_account_id"],
+        acc["zernio_api_key_enc"],
     )
     if not conv:
-        raise HTTPException(404, f"No conversation with: {acc['ig_username']}")
+        raise HTTPException(404, f"No conversation found for: {ig_target}")
 
     data = await zernio_service.get_messages(
         conv["id"],
@@ -97,23 +96,21 @@ async def reply(
     if not body.message.strip():
         raise HTTPException(400, "Message cannot be empty")
 
-    ig_user = (username or "").strip().lstrip("@").lower() or None
+    ig_target = (username or "").strip().lstrip("@").lower() or None
     pool = await get_pool()
     async with pool.acquire() as conn:
-        acc = (
-            await account_repo.get_account(conn, user["id"], ig_user)
-            if ig_user
-            else await account_repo.get_any_account_for_user(conn, user["id"])
-        )
+        acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
         raise HTTPException(404, "No connected account found")
 
     conv = await zernio_service.find_conversation(
-        acc["ig_username"], acc["zernio_account_id"], acc["zernio_api_key_enc"]
+        ig_target or acc["ig_username"],
+        acc["zernio_account_id"],
+        acc["zernio_api_key_enc"],
     )
     if not conv:
-        raise HTTPException(404, f"No conversation with: {acc['ig_username']}")
+        raise HTTPException(404, f"No conversation found for: {ig_target}")
 
     result = await zernio_service.send_message(
         conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], body.message
