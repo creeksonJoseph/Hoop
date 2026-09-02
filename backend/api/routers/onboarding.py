@@ -136,8 +136,9 @@ async def onboarding_connect(
     added = 0
     async with pool.acquire() as conn:
         for acc in accounts:
-            ig_user = acc.get("username") or acc.get("instagramUsername") or acc.get("name") or ""
-            acc_id  = acc.get("_id") or acc.get("id") or acc.get("accountId") or ""
+            # Confirmed Zernio GET /v1/accounts fields: _id, username, displayName
+            ig_user = acc.get("username") or ""
+            acc_id  = acc.get("_id") or ""
             if not ig_user or not acc_id:
                 continue
             await account_repo.upsert_account(conn, user["id"], ig_user, acc_id, enc_key)
