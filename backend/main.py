@@ -45,7 +45,7 @@ from repositories import account_repo, session_repo
 from services import zernio_service
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-from api.routers import auth, home, chat, sessions, wingman, onboarding, admin
+from api.routers import auth, home, chat, sessions, wingman, onboarding, admin, settings
 
 # ── Shared template engine (imported by routers) ──────────────────────────────
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
@@ -169,6 +169,7 @@ app.include_router(sessions.router)
 app.include_router(wingman.router)
 app.include_router(onboarding.router)
 app.include_router(admin.router)
+app.include_router(settings.router)
 
 
 # ── WebSocket endpoints ───────────────────────────────────────────────────────

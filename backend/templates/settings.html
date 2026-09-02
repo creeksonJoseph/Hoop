@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Settings · Hoop{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-bg flex flex-col md:flex-row">
+
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-surface border-b md:border-b-0 md:border-r border-border flex-shrink-0 flex flex-col justify-between p-5">
+    <div>
+      <!-- Brand -->
+      <div class="flex items-center gap-3 px-2 py-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-bubble-out flex items-center justify-center text-xl shadow-md">🏀</div>
+        <div>
+          <h1 class="text-base font-bold text-white tracking-wide">Hoop</h1>
+          <p class="text-[11px] text-muted truncate max-w-[140px]">{{ user.email }}</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="space-y-1">
+        <a href="/home" class="flex items-center gap-3 px-3.5 py-2.5 rounded-sm2 text-sm font-medium transition-all text-muted hover:text-white hover:bg-surface2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 4.418 9 8z"/></svg>
+          <span>DMs / Conversations</span>
+        </a>
+        <a href="/settings" class="flex items-center gap-3 px-3.5 py-2.5 rounded-sm2 text-sm font-semibold transition-all bg-accent/15 text-accent border border-accent/30 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Settings & API Key</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- User & Logout -->
+    <div class="pt-4 border-t border-border mt-auto">
+      <form method="POST" action="/auth/logout">
+        <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-sm2 text-xs font-semibold text-muted hover:text-danger hover:bg-danger/10 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          <span>Sign Out</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 min-w-0 p-6 md:p-10 max-w-4xl">
+    <div class="fade-up">
+
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold text-white">Settings</h1>
+        <p class="text-muted text-sm mt-1">Manage your account, Zernio API keys, and connected Instagram accounts</p>
+      </header>
+
+      <div class="space-y-6">
+
+        <!-- User Profile Card -->
+        <div class="bg-surface border border-border rounded-xl2 p-6 shadow-card">
+          <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Account Profile</h2>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-muted">Email Address</p>
+              <p class="text-sm font-semibold text-white mt-0.5">{{ user.email }}</p>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 font-medium">
+              Active Account
+            </span>
+          </div>
+        </div>
+
+        <!-- Zernio API Key & Instagram Account Card -->
+        <div class="bg-surface border border-border rounded-xl2 p-6 shadow-card space-y-6">
+          <div>
+            <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-1">Zernio Integration & Key</h2>
+            <p class="text-muted text-xs">Your API key is encrypted at rest using AES-128-CBC + Fernet master key.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-bg border border-border rounded-xl p-4">
+            <div>
+              <p class="text-[11px] text-muted">Connected Key</p>
+              <p class="text-xs font-mono font-semibold text-accent mt-1">{{ masked_key }}</p>
+            </div>
+            <div>
+              <p class="text-[11px] text-muted">Connected Instagram</p>
+              <p class="text-xs font-semibold text-white mt-1">
+                {% if ig_username %}@{{ ig_username }}{% else %}<span class="text-muted italic">None linked</span>{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <!-- Update API Key Form -->
+          <div class="pt-4 border-t border-border">
+            <h3 class="text-xs font-bold text-white mb-3">Change / Replace Zernio API Key</h3>
+            <form hx-post="/settings/api-key" hx-target="#key-update-result" hx-swap="innerHTML" class="space-y-3">
+              <div>
+                <label for="zernio_api_key" class="block text-xs font-medium text-muted mb-1">New Zernio API Key</label>
+                <div class="flex gap-2">
+                  <input id="zernio_api_key" name="zernio_api_key" type="text" required
+                    placeholder="sk_..."
+                    class="flex-1 bg-bg border border-border rounded-sm2 px-4 py-2 text-xs text-white placeholder-muted font-mono focus:outline-none focus:border-accent transition-colors" />
+                  <button type="submit"
+                    class="bg-gradient-to-r from-accent to-bubble-out text-white font-semibold px-4 py-2 rounded-sm2 text-xs hover:opacity-90 active:scale-95 transition-all flex-shrink-0">
+                    Update Key <span class="htmx-indicator ml-1">⏳</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+            <div id="key-update-result" class="mt-3"></div>
+          </div>
+
+          <!-- Danger Zone: Delete / Disconnect Key -->
+          <div class="pt-4 border-t border-border flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-bold text-danger">Disconnect & Delete Key</h3>
+              <p class="text-[11px] text-muted mt-0.5">Removes your Zernio API key & revokes all active wingman sessions.</p>
+            </div>
+            <button
+              hx-delete="/settings/api-key"
+              hx-confirm="Are you sure you want to disconnect your Zernio API key and Instagram account? All active wingman links will be revoked immediately."
+              class="bg-danger/10 hover:bg-danger/20 border border-danger/30 text-danger text-xs font-semibold px-4 py-2 rounded-sm2 transition-all active:scale-95">
+              Disconnect Key
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+</div>
+{% endblock %}
