@@ -3,6 +3,7 @@ api/routers/onboarding.py
 ==========================
 LAYER: Router — Instagram connect onboarding flow.
 """
+from typing import Optional
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -91,13 +92,41 @@ async def onboarding_connect(
         """)
 
     if not accounts:
-        return HTMLResponse("""
-        <div class="p-3.5 rounded-sm2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs flex items-start gap-2.5 fade-up">
-          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <div>
-            <p class="font-semibold mb-0.5">No Instagram Accounts Found</p>
-            <p class="opacity-90">No Instagram accounts were found on this Zernio key. Please connect your Instagram Business/Creator account at zernio.com first.</p>
+        # Try fetching Zernio Instagram OAuth URL for programmatically authorizing Instagram
+        redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
+        oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri)
+        
+        button_html = f"""
+        <div class="mt-3 pt-3 border-t border-yellow-500/20 flex flex-col sm:flex-row gap-2">
+          <a href="{oauth_url}" target="_blank"
+             class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-sm2 text-xs hover:opacity-90 transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            ⚡ Authorize Instagram via OAuth
+          </a>
+          <a href="https://zernio.com/dashboard/accounts" target="_blank"
+             class="inline-flex items-center justify-center gap-1.5 bg-surface2 border border-border text-white font-medium px-3 py-2 rounded-sm2 text-xs hover:border-accent/40 transition-all">
+            Zernio Dashboard ↗
+          </a>
+        </div>
+        """ if oauth_url else """
+        <div class="mt-3 pt-3 border-t border-yellow-500/20">
+          <a href="https://zernio.com/dashboard/accounts" target="_blank"
+             class="inline-flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-sm2 text-xs hover:opacity-90 transition-all">
+            Connect Instagram at Zernio.com ↗
+          </a>
+        </div>
+        """
+
+        return HTMLResponse(f"""
+        <div class="p-4 rounded-sm2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs flex flex-col gap-2 fade-up">
+          <div class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <p class="font-semibold text-sm mb-0.5">No Instagram Account Connected to Key</p>
+              <p class="opacity-90 text-xs leading-relaxed">Your Zernio API key is valid, but doesn't have an Instagram Business/Creator account connected to it yet.</p>
+            </div>
           </div>
+          {button_html}
         </div>
         """)
 
@@ -134,4 +163,36 @@ async def onboarding_connect(
     </div>
     <script>setTimeout(() => location.href="/home", 1200)</script>
     """)
+
+
+@router.get("/onboarding/callback")
+async def onboarding_callback(
+    request: Request,
+    code: Optional[str] = None,
+    user=Depends(require_user),
+):
+    """
+    OAuth Callback route — handles redirection back from Meta/Zernio OAuth authorization.
+    Exchanges code, links Instagram account to user's profile, and redirects to /home.
+    """
+    if not code:
+        return RedirectResponse("/onboarding", status_code=302)
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        acc = await account_repo.get_any_account_for_user(conn, user["id"])
+        if acc and acc["zernio_api_key_enc"]:
+            try:
+                await zernio_service.handle_oauth_callback(acc["zernio_api_key_enc"], code)
+                accounts = await zernio_service.get_accounts(acc["zernio_api_key_enc"])
+                for a in accounts:
+                    ig_user = a.get("username") or a.get("instagramUsername") or a.get("name") or ""
+                    acc_id  = a.get("_id") or a.get("id") or a.get("accountId") or ""
+                    if ig_user and acc_id:
+                        await account_repo.upsert_account(conn, user["id"], ig_user, acc_id, acc["zernio_api_key_enc"])
+            except Exception:
+                pass
+
+    return RedirectResponse("/home", status_code=302)
+
 
