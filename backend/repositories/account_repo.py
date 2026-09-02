@@ -77,3 +77,15 @@ async def count_accounts_for_user(conn: asyncpg.Connection, user_id: int) -> int
     return await conn.fetchval(
         "SELECT COUNT(*) FROM connected_ig_accounts WHERE user_id = $1", user_id
     )
+
+
+async def delete_account(conn: asyncpg.Connection, user_id: int, ig_username: str) -> None:
+    await conn.execute(
+        "DELETE FROM connected_ig_accounts WHERE user_id = $1 AND ig_username = $2",
+        user_id, ig_username.lower().strip(),
+    )
+    await conn.execute(
+        "DELETE FROM conversations WHERE participant_username = $1",
+        ig_username.lower().strip(),
+    )
+

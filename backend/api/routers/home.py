@@ -8,7 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from db import get_pool
 from dependencies import get_current_user, require_user
-from repositories import account_repo
+from repositories import account_repo, session_repo
+from ws_manager import manager
 
 router = APIRouter()
 
@@ -85,3 +86,32 @@ async def add_dm(
 
     dms = [dict(r) for r in rows]
     return _render(request, "partials/dm_list.html", {"dms": dms})
+
+
+@router.delete("/home/dms/{ig_username}", response_class=HTMLResponse)
+async def delete_dm(
+    request: Request,
+    ig_username: str,
+    user=Depends(require_user),
+):
+    """
+    Deletes a conversation from tracked DMs.
+    1. Revokes and notifies all active wingman WebSocket connections.
+    2. Deletes all wingman sessions from DB.
+    3. Deletes the DM account entry.
+    4. Returns updated DM list HTMX partial.
+    """
+    ig_username = ig_username.strip().lstrip("@").lower()
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        revoked_tokens = await session_repo.delete_all_sessions_for_ig(conn, user["id"], ig_username)
+        await account_repo.delete_account(conn, user["id"], ig_username)
+        rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
+
+    # Notify all active wingmans that their session is revoked
+    for token in revoked_tokens:
+        await manager.broadcast_to_wingman(token, {"type": "access_revoked"})
+
+    dms = [dict(r) for r in rows]
+    return _render(request, "partials/dm_list.html", {"dms": dms})
+

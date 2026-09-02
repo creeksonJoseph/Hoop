@@ -2,8 +2,15 @@
 {% block title %}Create Account · Hoop{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4">
+<div class="min-h-screen flex items-center justify-center px-4 py-8">
   <div class="w-full max-w-sm fade-up">
+
+    <div class="mb-4">
+      <a href="/auth/login" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm2 bg-surface border border-border text-white text-xs font-semibold hover:border-accent/40 transition-all">
+        <svg class="w-3.5 h-3.5 text-muted" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <span>Back to Sign In</span>
+      </a>
+    </div>
 
     <div class="text-center mb-8">
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-bubble-out mb-4 shadow-card">

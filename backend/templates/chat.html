@@ -7,8 +7,10 @@
 
     <!-- Header -->
     <div style="display:flex; align-items:center; gap:12px; padding:16px 20px; background:#1f1f25; border-bottom:1px solid #2a2a33; flex-shrink:0;">
-      <a href="/home" style="color:#6b6b82; display:flex; align-items:center; margin-right:4px;">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <a href="/home" title="Back to DMs"
+         style="display:flex; align-items:center; gap:4px; padding:6px 10px; background:#17171b; border:1px solid #2a2a33; border-radius:10px; color:#e4e4f0; text-decoration:none; font-size:12px; font-weight:600; transition:all 0.2s; flex-shrink:0;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <span>Back</span>
       </a>
       <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
         {{ ig_username[0].upper() }}
@@ -26,6 +28,17 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
         </svg>
       </a>
+      <!-- Delete conversation button -->
+      <button
+        hx-delete="/home/dms/{{ ig_username }}"
+        hx-confirm="Delete conversation @{{ ig_username }}? This will instantly revoke all wingman sessions for this chat."
+        hx-on::after-request="if(event.detail.successful) location.href='/home'"
+        title="Delete conversation & revoke all wingmans"
+        style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);color:#f87171;flex-shrink:0;cursor:pointer;transition:background .2s;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </button>
       <!-- WS status dot -->
       <div id="ws-dot" style="width:8px;height:8px;border-radius:50%;background:#6b6b82;flex-shrink:0;transition:background .3s;"></div>
     </div>
