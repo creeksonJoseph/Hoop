@@ -188,7 +188,7 @@ APP_MASTER_KEY=   # 32-byte Fernet key
 JWT_SECRET=       # 64 hex chars
 WINGMAN_SECRET=   # 64 hex chars
 DATABASE_URL=     # PostgreSQL connection string
-FRONTEND_URL=     # e.g. https://your-frontend.vercel.app
+FRONTEND_URL=     # e.g. https://frontend-eight-inky-38.vercel.app
 ```
 
 ---

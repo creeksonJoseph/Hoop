@@ -136,8 +136,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        os.getenv("FRONTEND_URL", "http://localhost:5173"),
+        "http://localhost:5173",
+        "https://frontend-eight-inky-38.vercel.app",
+        os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app"),
     ],
     allow_credentials=True,
     allow_methods=["*"],
