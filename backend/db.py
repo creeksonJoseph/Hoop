@@ -97,9 +97,22 @@ async def init_db():
             )
         """)
 
+        # ── Tracked DMs (external conversations tracked on /home) ────────────
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS tracked_dms (
+                id           SERIAL PRIMARY KEY,
+                user_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                ig_username  TEXT NOT NULL,
+                last_message TEXT,
+                added_at     TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(user_id, ig_username)
+            )
+        """)
+
         # Ensure column exists for connected_ig_accounts
         await conn.execute("""
             ALTER TABLE connected_ig_accounts
                 ADD COLUMN IF NOT EXISTS zernio_api_key_enc TEXT
         """)
+
 

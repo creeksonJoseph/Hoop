@@ -66,20 +66,47 @@ async def upsert_account(
 
 
 
+async def add_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username: str) -> None:
+    await conn.execute("""
+        INSERT INTO tracked_dms (user_id, ig_username)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id, ig_username) DO NOTHING
+    """, user_id, ig_username.lower().strip())
+
+
+async def delete_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username: str) -> None:
+    clean_user = ig_username.lower().strip()
+    await conn.execute(
+        "DELETE FROM tracked_dms WHERE user_id = $1 AND ig_username = $2",
+        user_id, clean_user,
+    )
+    await conn.execute(
+        "DELETE FROM conversations WHERE participant_username = $1",
+        clean_user,
+    )
+
+
 async def list_dm_usernames_with_session_counts(
     conn: asyncpg.Connection, user_id: int
 ) -> List[asyncpg.Record]:
     return await conn.fetch("""
-        SELECT a.ig_username, a.last_message,
+        SELECT t.ig_username, t.last_message,
                COUNT(s.id) AS session_count
-        FROM connected_ig_accounts a
+        FROM tracked_dms t
         LEFT JOIN wingman_sessions s
-            ON s.ig_username = a.ig_username AND s.user_id = a.user_id
-        WHERE a.user_id = $1 AND a.ig_username != '__pending__'
-        GROUP BY a.ig_username, a.last_message, a.added_at
-        ORDER BY a.added_at DESC
+            ON s.ig_username = t.ig_username AND s.user_id = t.user_id
+        WHERE t.user_id = $1
+        GROUP BY t.ig_username, t.last_message, t.added_at
+        ORDER BY t.added_at DESC
     """, user_id)
 
+
+async def is_own_connected_account(conn: asyncpg.Connection, user_id: int, ig_username: str) -> bool:
+    row = await conn.fetchrow(
+        "SELECT 1 FROM connected_ig_accounts WHERE user_id = $1 AND ig_username = $2",
+        user_id, ig_username.lower().strip(),
+    )
+    return row is not None
 
 
 async def count_accounts_for_user(conn: asyncpg.Connection, user_id: int) -> int:
@@ -97,4 +124,5 @@ async def delete_account(conn: asyncpg.Connection, user_id: int, ig_username: st
         "DELETE FROM conversations WHERE participant_username = $1",
         ig_username.lower().strip(),
     )
+
 
