@@ -13,7 +13,7 @@ from dependencies import require_user
 from repositories import user_repo, account_repo
 from services.auth_service import create_jwt, hash_password, verify_password
 
-router = APIRouter(prefix="/api/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 class LoginBody(BaseModel):

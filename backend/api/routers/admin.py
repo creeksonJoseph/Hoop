@@ -10,7 +10,7 @@ from repositories import account_repo
 from services import zernio_service
 from db import get_pool
 
-router = APIRouter(prefix="/api/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
 @router.delete("/messages/{msg_id}")
