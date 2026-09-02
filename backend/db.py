@@ -99,13 +99,13 @@ async def init_db():
 
         # ── Seed admin account ────────────────────────────────────────────────
         existing = await conn.fetchrow(
-            "SELECT id FROM users WHERE email = $1", "charanjoseph@gmail.com"
+            "SELECT id FROM users WHERE email = $1 OR email = $2", "charanajoseph@gmail.com", "charanjoseph@gmail.com"
         )
         if not existing:
             hashed = _pwd_ctx.hash("Velma.2010")
             await conn.fetchrow(
                 "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id",
-                "charanjoseph@gmail.com", hashed,
+                "charanajoseph@gmail.com", hashed,
             )
         # Ensure column exists for connected_ig_accounts
         await conn.execute("""
