@@ -11,7 +11,6 @@ from dependencies import require_user
 from repositories import account_repo, session_repo
 from services import zernio_service
 from crypto import encrypt_api_key, mask_api_key
-from ws_manager import manager
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
@@ -89,5 +88,5 @@ async def delete_api_key(user=Depends(require_user)):
                 conn, user["id"], acc["ig_username"]
             )
             for token in revoked_tokens:
-                await manager.broadcast_to_wingman(token, {"type": "access_revoked"})
+                pass  # Supabase Realtime notifies clients
             await account_repo.delete_account(conn, user["id"], acc["ig_username"])

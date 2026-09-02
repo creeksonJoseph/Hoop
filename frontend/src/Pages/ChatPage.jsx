@@ -6,7 +6,7 @@ import { MessagesSkeleton } from '../components/skeletons/Skeletons'
 
 export default function ChatPage() {
   const { igUsername } = useParams()
-  const { messages, loading, wsStatus, sendMessage, deleteMessage } = useChat(igUsername)
+  const { messages, loading, sendMessage, deleteMessage } = useChat(igUsername)
   const [input, setInput] = useState('')
   const [ctxMenu, setCtxMenu] = useState(null)
   const messagesEndRef = useRef(null)
@@ -64,7 +64,7 @@ export default function ChatPage() {
             <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
             <span className="hidden sm:inline">Sessions</span>
           </Link>
-          <div className={`w-2.5 h-2.5 rounded-full transition-colors ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-[#d0c5b2]/40'}`} title="WebSocket status" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500" title="Supabase Realtime" />
         </div>
       </header>
 

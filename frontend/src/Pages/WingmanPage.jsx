@@ -6,7 +6,7 @@ import { MessagesSkeleton } from '../components/skeletons/Skeletons'
 
 export default function WingmanPage() {
   const { token } = useParams()
-  const { session, messages, loading, wsStatus, sendMessage } = useWingman(token)
+  const { session, messages, loading, sendMessage } = useWingman(token)
   const [input, setInput] = useState('')
   const messagesEndRef = useRef(null)
 
@@ -48,7 +48,7 @@ export default function WingmanPage() {
               Access Revoked
             </span>
           )}
-          <div className={`w-2.5 h-2.5 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-[#d0c5b2]/40'}`} />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500" title="Realtime" />
         </div>
       </header>
 
