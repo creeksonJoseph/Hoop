@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from db import get_pool
 from dependencies import get_current_user
-from repositories import user_repo
+from repositories import user_repo, account_repo
 from services.auth_service import create_jwt, hash_password, verify_password
 
 router = APIRouter()
