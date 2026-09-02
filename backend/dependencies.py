@@ -7,9 +7,9 @@ from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request
 
-from .db import get_pool
-from .services.auth_service import decode_jwt
-from .repositories import user_repo
+from db import get_pool
+from services.auth_service import decode_jwt
+from repositories import user_repo
 
 
 async def get_current_user(

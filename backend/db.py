@@ -13,11 +13,11 @@ from typing import Optional
 import asyncpg
 from passlib.context import CryptContext
 
-from .config import (
+from config import (
     DATABASE_URL,
     APP_MASTER_KEY,
 )
-from .crypto import encrypt_api_key
+from crypto import encrypt_api_key
 
 _pool: Optional[asyncpg.Pool] = None
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -5,10 +5,10 @@ LAYER: Router — admin-only message operations.
 """
 from fastapi import APIRouter, Depends
 
-from ...dependencies import require_user
-from ...repositories import account_repo
-from ...services import zernio_service
-from ...db import get_pool
+from dependencies import require_user
+from repositories import account_repo
+from services import zernio_service
+from db import get_pool
 
 router = APIRouter()
 

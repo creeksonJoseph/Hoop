@@ -10,7 +10,7 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from ..config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_HOURS
+from config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_HOURS
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

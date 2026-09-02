@@ -7,15 +7,15 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from ...db import get_pool
-from ...repositories import account_repo, session_repo
-from ...services import zernio_service
+from db import get_pool
+from repositories import account_repo, session_repo
+from services import zernio_service
 
 router = APIRouter()
 
 
 def _render(request: Request, tpl: str, ctx: dict = None, status: int = 200) -> HTMLResponse:
-    from ...main import templates
+    from main import templates
     flashed = request.session.pop("_flash", [])
     context = {"request": request, "get_flashed_messages": lambda with_categories=True: flashed}
     if ctx:
