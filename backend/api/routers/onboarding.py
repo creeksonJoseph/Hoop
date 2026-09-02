@@ -97,12 +97,11 @@ async def onboarding_connect(
         async with pool.acquire() as conn:
             await account_repo.upsert_account(conn, user["id"], "__pending__", "pending", enc_key)
 
-        # Fetch Zernio Instagram OAuth URL for Step 2
-        redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
-        oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri, user["id"])
+        # Route user through backend endpoint that dynamically gets the Zernio authUrl
+        connect_url = "/api/connect/instagram"
         
         oauth_btn = f"""
-        <a href="{oauth_url}" target="_blank"
+        <a href="{connect_url}"
            class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-4 py-3 rounded-sm2 text-sm hover:opacity-90 transition-all shadow-md active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
           <span>⚡ Connect Instagram with Meta (OAuth)</span>
@@ -199,3 +198,32 @@ async def onboarding_callback(
     return RedirectResponse("/home", status_code=302)
 
 
+@router.get("/api/connect/instagram")
+async def api_connect_instagram(
+    request: Request,
+    user=Depends(require_user),
+):
+    """
+    Backend redirect endpoint for Instagram OAuth via Zernio headless mode.
+    Flow:
+      1. Fetch user's encrypted Zernio API key from DB.
+      2. POST to Zernio /accounts/connect with platforms, profileId, redirectUrl, headless=True.
+      3. Zernio returns a dynamically generated authUrl pointing at Meta's OAuth screen.
+      4. 307-redirect the user's browser directly to that authUrl.
+
+    This avoids hardcoding any Zernio URLs in the frontend.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        acc = await account_repo.get_any_account_for_user(conn, user["id"])
+
+    if not acc or not acc.get("zernio_api_key_enc"):
+        return RedirectResponse("/settings", status_code=302)
+
+    redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
+    auth_url = await zernio_service.get_connect_url(acc["zernio_api_key_enc"], redirect_uri, user["id"])
+
+    if not auth_url:
+        return RedirectResponse("/settings?error=oauth_failed", status_code=302)
+
+    return RedirectResponse(auth_url, status_code=307)
