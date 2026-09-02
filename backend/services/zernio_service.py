@@ -13,8 +13,8 @@ from typing import Dict, List, Optional
 
 import httpx
 
-from ..config import ZERNIO_BASE
-from ..crypto import decrypt_api_key
+from config import ZERNIO_BASE
+from crypto import decrypt_api_key
 
 
 def _headers(api_key: str) -> Dict[str, str]:

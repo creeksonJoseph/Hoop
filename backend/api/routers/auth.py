@@ -7,16 +7,16 @@ Delegates all logic to auth_service and user_repo.
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from ...db import get_pool
-from ...dependencies import get_current_user
-from ...repositories import user_repo
-from ...services.auth_service import create_jwt, hash_password, verify_password
+from db import get_pool
+from dependencies import get_current_user
+from repositories import user_repo
+from services.auth_service import create_jwt, hash_password, verify_password
 
 router = APIRouter()
 
 
 def _render(request: Request, tpl: str, ctx: dict = None, status: int = 200) -> HTMLResponse:
-    from ...main import templates
+    from main import templates
     flashed = request.session.pop("_flash", [])
     context = {"request": request, "get_flashed_messages": lambda with_categories=True: flashed}
     if ctx:

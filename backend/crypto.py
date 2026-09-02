@@ -12,7 +12,7 @@ import warnings
 
 from cryptography.fernet import Fernet
 
-from .config import APP_MASTER_KEY
+from config import APP_MASTER_KEY
 
 # Build the cipher once at startup — fails fast if key is malformed
 try:

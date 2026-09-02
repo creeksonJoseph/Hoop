@@ -7,22 +7,22 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
-from ...db import get_pool
-from ...dependencies import require_user
-from ...repositories import session_repo
-from ...services.session_service import (
+from db import get_pool
+from dependencies import require_user
+from repositories import session_repo
+from services.session_service import (
     format_session_for_display,
     make_wingman_token,
     new_session_id,
     validate_access_level,
 )
-from ...ws_manager import manager
+from ws_manager import manager
 
 router = APIRouter()
 
 
 def _render(request: Request, tpl: str, ctx: dict = None, status: int = 200) -> HTMLResponse:
-    from ...main import templates
+    from main import templates
     flashed = request.session.pop("_flash", [])
     context = {"request": request, "get_flashed_messages": lambda with_categories=True: flashed}
     if ctx:

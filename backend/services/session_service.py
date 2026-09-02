@@ -10,7 +10,7 @@ import hmac
 import secrets
 from typing import Optional
 
-from ..config import WINGMAN_SECRET
+from config import WINGMAN_SECRET
 
 
 def make_wingman_token(wingman_name: str, ig_username: str) -> str:

@@ -6,17 +6,17 @@ LAYER: Router — Instagram connect onboarding flow.
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from ...db import get_pool
-from ...dependencies import require_user
-from ...repositories import account_repo
-from ...services import zernio_service
-from ...crypto import encrypt_api_key
+from db import get_pool
+from dependencies import require_user
+from repositories import account_repo
+from services import zernio_service
+from crypto import encrypt_api_key
 
 router = APIRouter()
 
 
 def _render(request: Request, tpl: str, ctx: dict = None, status: int = 200) -> HTMLResponse:
-    from ...main import templates
+    from main import templates
     flashed = request.session.pop("_flash", [])
     context = {"request": request, "get_flashed_messages": lambda with_categories=True: flashed}
     if ctx:

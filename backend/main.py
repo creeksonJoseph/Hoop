@@ -29,18 +29,23 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from .config import (
+import sys
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+
+from config import (
     STATIC_DIR,
     TEMPLATE_DIR,
     JWT_SECRET,
 )
-from .db import get_pool, init_db
-from .ws_manager import manager
-from .repositories import account_repo, session_repo
-from .services import zernio_service
+from db import get_pool, init_db
+from ws_manager import manager
+from repositories import account_repo, session_repo
+from services import zernio_service
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-from .api.routers import auth, home, chat, sessions, wingman, onboarding, admin
+from api.routers import auth, home, chat, sessions, wingman, onboarding, admin
 
 # ── Shared template engine (imported by routers) ──────────────────────────────
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
