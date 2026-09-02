@@ -99,20 +99,16 @@ async def onboarding_connect(
 
         # Fetch Zernio Instagram OAuth URL for Step 2
         redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
-        oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri)
+        oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri, user["id"])
         
         oauth_btn = f"""
         <a href="{oauth_url}" target="_blank"
            class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-4 py-3 rounded-sm2 text-sm hover:opacity-90 transition-all shadow-md active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-          <span>⚡ Authorize Instagram via OAuth</span>
-        </a>
-        """ if oauth_url else """
-        <a href="https://zernio.com/dashboard/accounts" target="_blank"
-           class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-4 py-3 rounded-sm2 text-sm hover:opacity-90 transition-all shadow-md active:scale-95">
-          <span>Connect Instagram at Zernio.com ↗</span>
+          <span>⚡ Connect Instagram with Meta (OAuth)</span>
         </a>
         """
+
 
         return HTMLResponse(f"""
         <div class="space-y-4 fade-up">

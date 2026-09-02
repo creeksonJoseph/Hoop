@@ -69,23 +69,31 @@ async def get_accounts(encrypted_key: str) -> List[dict]:
         raw_key = ""  # always discard
 
 
-async def get_connect_url(encrypted_key: str, redirect_url: str) -> Optional[str]:
+async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 1) -> str:
     """
-    Fetch the raw Meta/Instagram OAuth authorization URL from Zernio using headless=true.
+    Fetch the raw Meta/Instagram OAuth authorization URL from Zernio using headless=true and profileId.
     Skips Zernio UI completely — redirects user straight to official Meta OAuth login screen.
     """
     raw_key = decrypt_api_key(encrypted_key)
+    profile_id = f"usr_{user_id}"
     try:
-        data = await _get("/connect/instagram", {"redirect_url": redirect_url, "headless": "true"}, raw_key)
-        return data.get("authUrl") or data.get("url") or data.get("link")
+        data = await _get("/connect/instagram", {
+            "redirect_url": redirect_url,
+            "profileId": profile_id,
+            "headless": "true",
+            "loginMethod": "instagram_login"
+        }, raw_key)
+        url = data.get("authUrl") or data.get("url") or data.get("link")
+        if url:
+            return url
     except Exception:
-        try:
-            data = await _get("/connect/instagram", {"redirect_url": redirect_url}, raw_key)
-            return data.get("authUrl") or data.get("url") or data.get("link")
-        except Exception:
-            return None
+        pass
     finally:
         raw_key = ""
+
+    # Always return a direct OAuth connect URL that launches Instagram/Meta authorization
+    return f"https://zernio.com/connect/instagram?profileId={profile_id}&redirect_url={redirect_url}&headless=true"
+
 
 
 
