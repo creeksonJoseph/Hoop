@@ -167,43 +167,70 @@ async def find_conversation(
     encrypted_key: str,
 ) -> Optional[dict]:
     """
-    Paginate Zernio inbox until we find the conversation with ig_username.
-
-    Confirmed GET /v1/inbox/conversations response fields per item:
-      id, platform, accountId, accountUsername,
-      participantId, participantName, participantPicture,
-      lastMessage, updatedTime, status, unreadCount, url,
-      instagramProfile (object, optional)
-
-    NOTE: there is no 'participantUsername' field — only 'participantName'.
+    Find a conversation by Instagram username.
+    First tries a direct search query param, then falls back to pagination.
     """
     raw_key = decrypt_api_key(encrypted_key)
-    target  = ig_username.lower().strip("@")
-    cursor  = None
+    target  = ig_username.lower().strip().lstrip("@")
     import logging
 
     try:
+        # Try search param first — avoids paginating 2000+ conversations
+        for search_param in ("search", "query", "username", "participantUsername"):
+            try:
+                data = await _get(
+                    "/inbox/conversations",
+                    {"platform": "instagram", "accountId": account_id, "limit": 50, search_param: target},
+                    raw_key,
+                )
+                for conv in data.get("data", []):
+                    if _conv_matches(conv, target):
+                        logging.info(f"[find_conversation] found via {search_param}={target}")
+                        return conv
+            except Exception:
+                pass
+
+        # Full pagination fallback
+        cursor = None
+        page = 0
         while True:
             params = {"platform": "instagram", "accountId": account_id, "limit": 50}
             if cursor:
                 params["cursor"] = cursor
             data = await _get("/inbox/conversations", params, raw_key)
-            for conv in data.get("data", []):
-                pname    = (conv.get("participantName") or "").lower()
-                pid      = (conv.get("participantId") or "").lower()
-                ig_prof  = conv.get("instagramProfile") or {}
-                ig_uname = (ig_prof.get("username") or "").lower()
-                logging.info(f"[find_conversation] target={target} pname={pname} pid={pid} ig_uname={ig_uname}")
-                if target in (pname, pid, ig_uname):
+            convs = data.get("data", [])
+            if page == 0 and convs:
+                logging.info(f"[find_conversation] sample conv keys: {list(convs[0].keys())}")
+                logging.info(f"[find_conversation] sample conv: {convs[0]}")
+            for conv in convs:
+                if _conv_matches(conv, target):
                     return conv
             pagination = data.get("pagination", {})
             if not pagination.get("hasMore"):
                 break
             cursor = pagination.get("nextCursor")
+            if not cursor:
+                break
+            page += 1
     finally:
-        raw_key = ""  # always discard
+        raw_key = ""
 
+    logging.warning(f"[find_conversation] no match found for target={target}")
     return None
+
+
+def _conv_matches(conv: dict, target: str) -> bool:
+    """Check all possible username/name fields Zernio may return."""
+    fields = [
+        conv.get("participantName"),
+        conv.get("participantId"),
+        conv.get("participantUsername"),
+        (conv.get("instagramProfile") or {}).get("username"),
+        (conv.get("instagramProfile") or {}).get("name"),
+        conv.get("username"),
+        conv.get("name"),
+    ]
+    return target in [str(f).lower().lstrip("@") for f in fields if f]
 
 
 async def get_messages(
