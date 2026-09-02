@@ -48,6 +48,7 @@ async def upsert_account(
     zernio_account_id: str,
     zernio_api_key_enc: str,
 ) -> None:
+    clean_username = ig_username.lower().strip()
     await conn.execute("""
         INSERT INTO connected_ig_accounts
             (user_id, ig_username, zernio_account_id, zernio_api_key_enc)
@@ -55,7 +56,14 @@ async def upsert_account(
         ON CONFLICT (user_id, ig_username) DO UPDATE SET
             zernio_account_id  = EXCLUDED.zernio_account_id,
             zernio_api_key_enc = EXCLUDED.zernio_api_key_enc
-    """, user_id, ig_username.lower().strip(), zernio_account_id, zernio_api_key_enc)
+    """, user_id, clean_username, zernio_account_id, zernio_api_key_enc)
+
+    if clean_username != "__pending__":
+        await conn.execute(
+            "DELETE FROM connected_ig_accounts WHERE user_id = $1 AND ig_username = '__pending__'",
+            user_id,
+        )
+
 
 
 async def list_dm_usernames_with_session_counts(
@@ -67,10 +75,11 @@ async def list_dm_usernames_with_session_counts(
         FROM connected_ig_accounts a
         LEFT JOIN wingman_sessions s
             ON s.ig_username = a.ig_username AND s.user_id = a.user_id
-        WHERE a.user_id = $1
+        WHERE a.user_id = $1 AND a.ig_username != '__pending__'
         GROUP BY a.ig_username, a.last_message, a.added_at
         ORDER BY a.added_at DESC
     """, user_id)
+
 
 
 async def count_accounts_for_user(conn: asyncpg.Connection, user_id: int) -> int:
