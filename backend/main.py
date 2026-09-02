@@ -1,14 +1,14 @@
 """
 main.py — Hoop Application Entry Point
 ========================================
-FastAPI + Jinja2 + HTMX + TailwindCSS CDN
+FastAPI REST API + React Frontend
 
 Architecture (see Architecture.md):
   Router → Service → Repository → DB
 
 This file:
 - Creates the FastAPI app
-- Registers middleware
+- Registers middleware (CORS)
 - Mounts routers
 - Starts/stops background tasks (poll loop)
 - Serves static files
@@ -17,28 +17,19 @@ No business logic, no SQL, no Zernio calls live here.
 """
 
 import asyncio
-import json
 import os
 from contextlib import asynccontextmanager
 
-import asyncpg
-import httpx
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
 
 import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-from config import (
-    STATIC_DIR,
-    TEMPLATE_DIR,
-    JWT_SECRET,
-)
+from config import STATIC_DIR, JWT_SECRET
 from db import get_pool, init_db
 from ws_manager import manager
 from repositories import account_repo, session_repo
@@ -46,10 +37,6 @@ from services import zernio_service
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 from api.routers import auth, home, chat, sessions, wingman, onboarding, admin, settings
-
-# ── Shared template engine (imported by routers) ──────────────────────────────
-templates = Jinja2Templates(directory=TEMPLATE_DIR)
-
 
 # ── Background poll task ──────────────────────────────────────────────────────
 
@@ -68,14 +55,13 @@ async def poll_new_messages():
                 )
 
             for acc in accounts:
-                ig_user     = acc["ig_username"]
-                acc_id      = acc["zernio_account_id"]
-                enc_key     = acc["zernio_api_key_enc"]
+                ig_user = acc["ig_username"]
+                acc_id = acc["zernio_account_id"]
+                enc_key = acc["zernio_api_key_enc"]
 
                 if enc_key is None:
                     continue
 
-                # Get active wingman tokens so we can check for listeners
                 pool2 = await get_pool()
                 async with pool2.acquire() as conn:
                     active_tokens = await session_repo.get_active_tokens_for_ig(conn, ig_user)
@@ -96,7 +82,7 @@ async def poll_new_messages():
                         continue
 
                     newest_id = msgs[0]["id"]
-                    last_id   = _latest_message_ids.get(ig_user)
+                    last_id = _latest_message_ids.get(ig_user)
 
                     if last_id is None:
                         _latest_message_ids[ig_user] = newest_id
@@ -145,17 +131,20 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Hoop – IG DM Manager",
     description="View and reply to Instagram DMs via Zernio. Multi-user, BYOK.",
-    version="3.0.0",
+    version="4.0.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",  # Vite dev server
+        os.getenv("FRONTEND_URL", "http://localhost:5173"),
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SessionMiddleware, secret_key=JWT_SECRET)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 if os.path.isdir(STATIC_DIR):
@@ -204,4 +193,4 @@ async def ws_wingman(ws: WebSocket, token: str):
 
 @app.get("/health", tags=["System"])
 async def health():
-    return {"status": "ok", "version": "3.0.0"}
+    return {"status": "ok", "version": "4.0.0"}

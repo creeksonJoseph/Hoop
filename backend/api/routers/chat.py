@@ -1,48 +1,26 @@
 """
 api/routers/chat.py
 ====================
-LAYER: Router — admin chat screen & messages API.
+LAYER: Router — REST endpoints for messages.
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from db import get_pool
-from dependencies import get_current_user, require_user
+from dependencies import require_user
 from repositories import account_repo
 from services import zernio_service
 
-router = APIRouter()
-
-
-def _render(request: Request, tpl: str, ctx: dict = None, status: int = 200) -> HTMLResponse:
-    from main import templates
-    flashed = request.session.pop("_flash", [])
-    context = {"request": request, "get_flashed_messages": lambda with_categories=True: flashed}
-    if ctx:
-        context.update(ctx)
-    return templates.TemplateResponse(tpl, context, status_code=status)
+router = APIRouter(prefix="/api/messages", tags=["Messages"])
 
 
 class ReplyBody(BaseModel):
     message: str
 
 
-@router.get("/chat/{ig_username}", response_class=HTMLResponse)
-async def chat_page(request: Request, ig_username: str, user=Depends(get_current_user)):
-    if not user:
-        return RedirectResponse("/auth/login", status_code=302)
-    return _render(request, "chat.html", {
-        "ig_username": ig_username.lower().lstrip("@"),
-        "user": user,
-    })
-
-
-# ── Messages API (consumed by chat.html JS) ────────────────────────────────────
-
-@router.get("/messages")
+@router.get("")
 async def get_messages(
     username: Optional[str] = Query(default=None),
     limit: int = Query(default=50, ge=1, le=100),
@@ -51,7 +29,7 @@ async def get_messages(
     user=Depends(require_user),
 ):
     ig_user = (username or "").strip().lstrip("@").lower() or None
-    pool    = await get_pool()
+    pool = await get_pool()
     async with pool.acquire() as conn:
         acc = (
             await account_repo.get_account(conn, user["id"], ig_user)
@@ -60,32 +38,34 @@ async def get_messages(
         )
 
     if not acc or not acc["zernio_api_key_enc"]:
-        from fastapi import HTTPException
         raise HTTPException(404, "No connected account found")
 
     conv = await zernio_service.find_conversation(
         acc["ig_username"], acc["zernio_account_id"], acc["zernio_api_key_enc"]
     )
     if not conv:
-        from fastapi import HTTPException
         raise HTTPException(404, f"No conversation with: {acc['ig_username']}")
 
     data = await zernio_service.get_messages(
-        conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"],
-        limit=limit, sort=sort if sort in ("asc", "desc") else "asc", cursor=cursor,
+        conv["id"],
+        acc["zernio_account_id"],
+        acc["zernio_api_key_enc"],
+        limit=limit,
+        sort=sort if sort in ("asc", "desc") else "asc",
+        cursor=cursor,
     )
     raw = data.get("messages", [])
 
-    # Cache in DB
     pool2 = await get_pool()
     async with pool2.acquire() as conn:
         for msg in raw:
-            await conn.execute("""
+            await conn.execute(
+                """
                 INSERT INTO messages
                     (id, conversation_id, sender_id, sender_name, message, direction, created_at, platform)
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
                 ON CONFLICT (id) DO NOTHING
-            """,
+                """,
                 msg["id"], conv["id"], msg.get("senderId"), msg.get("senderName"),
                 msg.get("message"), msg.get("direction"), msg.get("createdAt"),
                 msg.get("platform", "instagram"),
@@ -108,18 +88,17 @@ async def get_messages(
     }
 
 
-@router.post("/messages/reply")
+@router.post("/reply")
 async def reply(
     body: ReplyBody,
     username: Optional[str] = Query(default=None),
     user=Depends(require_user),
 ):
     if not body.message.strip():
-        from fastapi import HTTPException
         raise HTTPException(400, "Message cannot be empty")
 
     ig_user = (username or "").strip().lstrip("@").lower() or None
-    pool    = await get_pool()
+    pool = await get_pool()
     async with pool.acquire() as conn:
         acc = (
             await account_repo.get_account(conn, user["id"], ig_user)
@@ -128,14 +107,12 @@ async def reply(
         )
 
     if not acc or not acc["zernio_api_key_enc"]:
-        from fastapi import HTTPException
         raise HTTPException(404, "No connected account found")
 
     conv = await zernio_service.find_conversation(
         acc["ig_username"], acc["zernio_account_id"], acc["zernio_api_key_enc"]
     )
     if not conv:
-        from fastapi import HTTPException
         raise HTTPException(404, f"No conversation with: {acc['ig_username']}")
 
     result = await zernio_service.send_message(
