@@ -71,61 +71,61 @@ async def get_accounts(encrypted_key: str) -> List[dict]:
 
 async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 1) -> Optional[str]:
     """
-    Dynamically generate a headless Meta OAuth authUrl via Zernio's backend API.
-    POSTs to Zernio with platforms, profileId, redirectUrl, headless=True.
-    Returns the real Meta OAuth URL (never a hardcoded Zernio link).
+    POST to Zernio's confirmed endpoint: POST /api/v1/connect/instagram
+    (confirmed from Zernio API logs: path_pattern = connect/[platform]:post)
+    Sends all known field-name variants to handle camelCase vs snake_case.
+    Returns the dynamic Meta OAuth authUrl on success, None on failure.
     """
     raw_key = decrypt_api_key(encrypted_key)
     profile_id = f"usr_{user_id}"
+
+    # Send all known field-name variants — Zernio docs are unclear so we cover both
     payload = {
-        "platforms": ["instagram"],
-        "profileId": profile_id,
+        # camelCase variants
         "redirectUrl": redirect_url,
+        "profileId": profile_id,
         "headless": True,
+        # snake_case variants
+        "redirect_url": redirect_url,
+        "profile_id": profile_id,
     }
+
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            # Try POST /accounts/connect (primary)
             r = await client.post(
-                f"{ZERNIO_BASE}/accounts/connect",
+                f"{ZERNIO_BASE}/connect/instagram",
                 headers=_headers(raw_key),
                 json=payload,
             )
-            if r.status_code < 400:
+            try:
                 data = r.json()
-                url = data.get("authUrl") or data.get("url") or data.get("link")
+            except Exception:
+                data = {}
+
+            # Log response details for debugging
+            import logging
+            logging.warning(f"[Zernio /connect/instagram] status={r.status_code} body={data}")
+
+            if r.status_code < 400:
+                url = (
+                    data.get("authUrl")
+                    or data.get("auth_url")
+                    or data.get("url")
+                    or data.get("link")
+                    or data.get("connectUrl")
+                    or data.get("connect_url")
+                    or data.get("oauthUrl")
+                    or data.get("oauth_url")
+                )
                 if url:
                     return url
-
-            # Fallback: try POST /connect/instagram
-            r2 = await client.post(
-                f"{ZERNIO_BASE}/connect/instagram",
-                headers=_headers(raw_key),
-                json={**payload, "redirectUrl": redirect_url, "redirect_url": redirect_url},
-            )
-            if r2.status_code < 400:
-                data2 = r2.json()
-                url2 = data2.get("authUrl") or data2.get("url") or data2.get("link")
-                if url2:
-                    return url2
-
-            # Fallback: try GET /connect/instagram with params
-            r3 = await client.get(
-                f"{ZERNIO_BASE}/connect/instagram",
-                headers=_headers(raw_key),
-                params={"redirect_url": redirect_url, "profileId": profile_id, "headless": "true"},
-            )
-            if r3.status_code < 400:
-                data3 = r3.json()
-                return data3.get("authUrl") or data3.get("url") or data3.get("link")
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+        logging.warning(f"[Zernio get_connect_url] exception: {e}")
     finally:
         raw_key = ""
 
     return None
-
-
 
 
 
