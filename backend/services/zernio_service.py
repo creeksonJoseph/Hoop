@@ -69,30 +69,62 @@ async def get_accounts(encrypted_key: str) -> List[dict]:
         raw_key = ""  # always discard
 
 
-async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 1) -> str:
+async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 1) -> Optional[str]:
     """
-    Fetch the raw Meta/Instagram OAuth authorization URL from Zernio using headless=true and profileId.
-    Skips Zernio UI completely — redirects user straight to official Meta OAuth login screen.
+    Dynamically generate a headless Meta OAuth authUrl via Zernio's backend API.
+    POSTs to Zernio with platforms, profileId, redirectUrl, headless=True.
+    Returns the real Meta OAuth URL (never a hardcoded Zernio link).
     """
     raw_key = decrypt_api_key(encrypted_key)
     profile_id = f"usr_{user_id}"
+    payload = {
+        "platforms": ["instagram"],
+        "profileId": profile_id,
+        "redirectUrl": redirect_url,
+        "headless": True,
+    }
     try:
-        data = await _get("/connect/instagram", {
-            "redirect_url": redirect_url,
-            "profileId": profile_id,
-            "headless": "true",
-            "loginMethod": "instagram_login"
-        }, raw_key)
-        url = data.get("authUrl") or data.get("url") or data.get("link")
-        if url:
-            return url
+        async with httpx.AsyncClient(timeout=30) as client:
+            # Try POST /accounts/connect (primary)
+            r = await client.post(
+                f"{ZERNIO_BASE}/accounts/connect",
+                headers=_headers(raw_key),
+                json=payload,
+            )
+            if r.status_code < 400:
+                data = r.json()
+                url = data.get("authUrl") or data.get("url") or data.get("link")
+                if url:
+                    return url
+
+            # Fallback: try POST /connect/instagram
+            r2 = await client.post(
+                f"{ZERNIO_BASE}/connect/instagram",
+                headers=_headers(raw_key),
+                json={**payload, "redirectUrl": redirect_url, "redirect_url": redirect_url},
+            )
+            if r2.status_code < 400:
+                data2 = r2.json()
+                url2 = data2.get("authUrl") or data2.get("url") or data2.get("link")
+                if url2:
+                    return url2
+
+            # Fallback: try GET /connect/instagram with params
+            r3 = await client.get(
+                f"{ZERNIO_BASE}/connect/instagram",
+                headers=_headers(raw_key),
+                params={"redirect_url": redirect_url, "profileId": profile_id, "headless": "true"},
+            )
+            if r3.status_code < 400:
+                data3 = r3.json()
+                return data3.get("authUrl") or data3.get("url") or data3.get("link")
     except Exception:
         pass
     finally:
         raw_key = ""
 
-    # Always return a direct OAuth connect URL that launches Instagram/Meta authorization
-    return f"https://zernio.com/connect/instagram?profileId={profile_id}&redirect_url={redirect_url}&headless=true"
+    return None
+
 
 
 
