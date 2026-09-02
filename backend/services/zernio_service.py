@@ -69,42 +69,65 @@ async def get_accounts(encrypted_key: str) -> List[dict]:
         raw_key = ""  # always discard
 
 
+async def get_zernio_profile_id(raw_key: str) -> Optional[str]:
+    """
+    Fetch the first Zernio profile _id from GET /v1/profiles.
+    profileId in the connect flow must be the real Zernio profile _id,
+    NOT a custom string like 'usr_1'.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(f"{ZERNIO_BASE}/profiles", headers=_headers(raw_key))
+            if r.status_code < 400:
+                data = r.json()
+                profiles = data if isinstance(data, list) else (
+                    data.get("profiles") or data.get("data") or data.get("items") or []
+                )
+                if profiles:
+                    p = profiles[0]
+                    return p.get("_id") or p.get("id") or p.get("profileId")
+    except Exception as e:
+        import logging
+        logging.warning(f"[Zernio get_zernio_profile_id] {e}")
+    return None
+
+
 async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 1) -> Optional[str]:
     """
-    POST to Zernio's confirmed endpoint: POST /api/v1/connect/instagram
-    (confirmed from Zernio API logs: path_pattern = connect/[platform]:post)
-    Sends all known field-name variants to handle camelCase vs snake_case.
-    Returns the dynamic Meta OAuth authUrl on success, None on failure.
+    Generate a Meta OAuth authUrl using Zernio's correct endpoint:
+      GET /v1/connect/instagram?profileId=<real_zernio_id>&redirect_url=...&headless=true
+
+    Docs confirmed: GET initiates the flow and returns authUrl.
+                    POST finalizes it (requires the OAuth `code` — NOT what we want here).
     """
+    import logging
     raw_key = decrypt_api_key(encrypted_key)
-    profile_id = f"usr_{user_id}"
-
-    # Send all known field-name variants — Zernio docs are unclear so we cover both
-    payload = {
-        # camelCase variants
-        "redirectUrl": redirect_url,
-        "profileId": profile_id,
-        "headless": True,
-        # snake_case variants
-        "redirect_url": redirect_url,
-        "profile_id": profile_id,
-    }
-
     try:
+        # Step 1: get the real Zernio profile _id (not a custom 'usr_X' string)
+        profile_id = await get_zernio_profile_id(raw_key)
+        if not profile_id:
+            logging.warning("[Zernio get_connect_url] Could not fetch Zernio profileId from /profiles")
+            return None
+
+        # Step 2: GET /connect/instagram with query params
+        params = {
+            "profileId": profile_id,
+            "redirect_url": redirect_url,
+            "headless": "true",
+            "loginMethod": "instagram_login",
+        }
         async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(
+            r = await client.get(
                 f"{ZERNIO_BASE}/connect/instagram",
                 headers=_headers(raw_key),
-                json=payload,
+                params=params,
             )
             try:
                 data = r.json()
             except Exception:
                 data = {}
 
-            # Log response details for debugging
-            import logging
-            logging.warning(f"[Zernio /connect/instagram] status={r.status_code} body={data}")
+            logging.warning(f"[Zernio GET /connect/instagram] status={r.status_code} body={data}")
 
             if r.status_code < 400:
                 url = (
@@ -112,10 +135,6 @@ async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 
                     or data.get("auth_url")
                     or data.get("url")
                     or data.get("link")
-                    or data.get("connectUrl")
-                    or data.get("connect_url")
-                    or data.get("oauthUrl")
-                    or data.get("oauth_url")
                 )
                 if url:
                     return url
@@ -126,8 +145,6 @@ async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 
         raw_key = ""
 
     return None
-
-
 
 async def handle_oauth_callback(encrypted_key: str, code: str) -> dict:
     """
