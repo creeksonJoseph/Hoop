@@ -35,7 +35,9 @@ export function useChat(igUsername) {
 
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket(`ws://${location.host}/ws/${igUsername}`)
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://hoop-4thy.onrender.com'
+      const wsBase = backendUrl.replace(/^http/, 'ws')
+      const ws = new WebSocket(`${wsBase}/ws/${igUsername}`)
       wsRef.current = ws
       ws.onopen = () => setWsStatus('connected')
       ws.onmessage = (e) => {

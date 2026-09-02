@@ -30,7 +30,9 @@ export function useWingman(token) {
 
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket(`ws://${location.host}/ws/view/${token}`)
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://hoop-4thy.onrender.com'
+      const wsBase = backendUrl.replace(/^http/, 'ws')
+      const ws = new WebSocket(`${wsBase}/ws/view/${token}`)
       wsRef.current = ws
       ws.onopen = () => setWsStatus('connected')
       ws.onmessage = (e) => {
