@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useChat } from '../hooks/useChat'
 import MessageBubble from '../components/chat/MessageBubble'
-import WingmanBar from '../components/chat/WingmanBar'
 import { MessagesSkeleton } from '../components/skeletons/Skeletons'
 
 export default function ChatPage() {
@@ -70,7 +69,7 @@ export default function ChatPage() {
       </header>
 
       {/* Messages */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3 pb-56">
+      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3 pb-24">
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
@@ -80,9 +79,8 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </main>
 
-      {/* Bottom command bar */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-3 bg-gradient-to-t from-[#131313] via-[#131313]/95 to-transparent flex flex-col gap-2.5 z-40">
-        <WingmanBar igUsername={igUsername} onUseSuggestion={(t) => setInput(t)} />
+      {/* Input bar */}
+      <div className="px-4 pb-4 pt-3 border-t border-[#4d4638] bg-[#131313] z-40">
         <div className="relative w-full flex items-center bg-[#201f1f] border border-[#4d4638] focus-within:border-[#ffe19e] focus-within:ring-1 focus-within:ring-[#ffe19e] rounded-xl transition-all shadow-lg">
           <textarea
             ref={textareaRef}
