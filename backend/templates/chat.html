@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block title %}@{{ ig_username }} · Hoop{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-bg">
+  <div class="w-full" style="max-width:480px; height:100vh; max-height:780px; display:flex; flex-direction:column; background:#17171b; border:1px solid #2a2a33; border-radius:18px; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(167,139,250,.08);">
+
+    <!-- Header -->
+    <div style="display:flex; align-items:center; gap:12px; padding:16px 20px; background:#1f1f25; border-bottom:1px solid #2a2a33; flex-shrink:0;">
+      <a href="/home" style="color:#6b6b82; display:flex; align-items:center; margin-right:4px;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </a>
+      <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
+        {{ ig_username[0].upper() }}
+      </div>
+      <div style="flex:1; min-width:0;">
+        <h2 style="font-size:15px;font-weight:600;color:#e4e4f0;line-height:1.2;">@{{ ig_username }}</h2>
+        <span id="status-text" style="font-size:12px;color:#6b6b82;">Loading…</span>
+      </div>
+      <!-- Sessions button -->
+      <a href="/sessions/{{ ig_username }}"
+         title="View active sessions"
+         style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);color:#a78bfa;flex-shrink:0;transition:background .2s;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+      </a>
+      <!-- WS status dot -->
+      <div id="ws-dot" style="width:8px;height:8px;border-radius:50%;background:#6b6b82;flex-shrink:0;transition:background .3s;"></div>
+    </div>
+
+    <!-- Messages area -->
+    <div id="messages" style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth;">
+      <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex:1;color:#6b6b82;font-size:13px;">
+        <div style="width:32px;height:32px;border:3px solid #2a2a33;border-top-color:#a78bfa;border-radius:50%;" class="spin"></div>
+        <span>Loading messages…</span>
+      </div>
+    </div>
+
+    <!-- Input bar -->
+    <div style="display:flex;align-items:flex-end;gap:10px;padding:14px 16px;background:#1f1f25;border-top:1px solid #2a2a33;flex-shrink:0;">
+      <textarea id="msg-input"
+        placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+        rows="1" autocomplete="off"
+        style="flex:1;resize:none;background:#0d0d0f;border:1px solid #2a2a33;border-radius:10px;color:#e4e4f0;font-family:inherit;font-size:14px;padding:10px 14px;max-height:120px;min-height:42px;line-height:1.5;outline:none;overflow-y:auto;"
+        onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#2a2a33'"></textarea>
+      <button id="send-btn" disabled title="Send"
+        style="width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s,opacity .15s;opacity:0.4;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu (long press / right click on messages) -->
+<div id="ctx-menu" class="hidden fixed z-50 bg-surface2 border border-border rounded-xl2 shadow-card overflow-hidden" style="min-width:150px;">
+  <button id="ctx-delete" class="w-full text-left px-4 py-2.5 text-sm text-danger hover:bg-danger/10 transition-colors flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    Delete message
+  </button>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f1f25;border:1px solid #f87171;color:#f87171;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:99;"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const API       = '';
+  const WS_URL    = 'ws://' + location.host + '/ws/{{ ig_username }}';
+  const IG_USER   = '{{ ig_username }}';
+  const messagesEl = document.getElementById('messages');
+  const loaderEl   = document.getElementById('loader');
+  const inputEl    = document.getElementById('msg-input');
+  const sendBtn    = document.getElementById('send-btn');
+  const wsDot      = document.getElementById('ws-dot');
+  const statusText = document.getElementById('status-text');
+  const toastEl    = document.getElementById('toast');
+  const ctxMenu    = document.getElementById('ctx-menu');
+  let seenIds = new Set(), lastDay = null, ctxMsgId = null;
+
+  function showToast(msg, isOk=false) {
+    toastEl.textContent = msg;
+    toastEl.style.borderColor = isOk ? '#4ade80' : '#f87171';
+    toastEl.style.color = isOk ? '#4ade80' : '#f87171';
+    toastEl.style.opacity = 1;
+    toastEl.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => { toastEl.style.opacity = 0; toastEl.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500);
+  }
+  function fmt(iso) {
+    const d = new Date(iso), now = new Date();
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+  function dayLabel(iso) {
+    const d = new Date(iso);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yest  = new Date(today); yest.setDate(yest.getDate()-1);
+    const dDay  = new Date(d); dDay.setHours(0,0,0,0);
+    if (dDay.getTime()===today.getTime()) return 'Today';
+    if (dDay.getTime()===yest.getTime())  return 'Yesterday';
+    return d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+  }
+
+  function renderMessage(msg, prepend=false) {
+    if (seenIds.has(msg.id)) return;
+    seenIds.add(msg.id);
+    const dir  = msg.direction === 'outgoing' ? 'out' : 'in';
+    const text = msg.message || '';
+    const time = msg.created_at ? fmt(msg.created_at) : '';
+    const dayStr = msg.created_at ? dayLabel(msg.created_at) : null;
+    if (dayStr && dayStr !== lastDay && !prepend) {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'display:flex;align-items:center;gap:10px;margin:10px 0;color:#6b6b82;font-size:11px;font-weight:500;';
+      sep.innerHTML = '<span style="flex:1;height:1px;background:#2a2a33;"></span>' + dayStr + '<span style="flex:1;height:1px;background:#2a2a33;"></span>';
+      messagesEl.appendChild(sep);
+      lastDay = dayStr;
+    }
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;flex-direction:column;max-width:78%;animation:fadeUp .25s ease both;align-self:${dir==='out'?'flex-end':'flex-start'};align-items:${dir==='out'?'flex-end':'flex-start'};`;
+    row.dataset.id = msg.id;
+
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;word-break:break-word;cursor:context-menu;` +
+      (dir==='out'
+        ? 'background:#7c3aed;border-bottom-right-radius:4px;color:#fff;'
+        : 'background:#1f1f2e;border-bottom-left-radius:4px;border:1px solid #2a2a33;color:#e4e4f0;');
+    if (text) bubble.textContent = text;
+
+    // Right-click / long press = context menu (admin delete)
+    bubble.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      ctxMsgId = msg.id;
+      ctxMenu.style.left = e.clientX + 'px';
+      ctxMenu.style.top  = e.clientY + 'px';
+      ctxMenu.classList.remove('hidden');
+    });
+
+    (msg.attachments||[]).forEach(att => {
+      if (att.type==='image' && att.url) {
+        const img = document.createElement('img');
+        img.src = att.url;
+        img.style.cssText = 'max-width:200px;border-radius:10px;display:block;margin-top:6px;';
+        bubble.appendChild(img);
+      } else if (att.url) {
+        const a = document.createElement('a');
+        a.href = att.url; a.target='_blank'; a.rel='noopener noreferrer';
+        a.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:6px 10px;background:rgba(255,255,255,.06);border-radius:10px;font-size:12px;color:#a78bfa;text-decoration:none;border:1px solid rgba(167,139,250,.15);';
+        a.textContent = '📎 ' + ((att.payload && att.payload.title) ? att.payload.title.slice(0,40)+'…' : (att.type||'Attachment'));
+        bubble.appendChild(a);
+      }
+    });
+
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:11px;color:#6b6b82;margin-top:3px;padding:0 4px;';
+    meta.textContent = time;
+
+    row.appendChild(bubble); row.appendChild(meta);
+    prepend ? messagesEl.prepend(row) : messagesEl.appendChild(row);
+  }
+
+  // Context menu delete
+  document.getElementById('ctx-delete').addEventListener('click', async () => {
+    ctxMenu.classList.add('hidden');
+    if (!ctxMsgId) return;
+    const msgId = ctxMsgId;
+    try {
+      const res = await fetch(`/admin/messages/${msgId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        const el = document.querySelector(`[data-id="${msgId}"]`);
+        if (el) el.remove();
+        seenIds.delete(msgId);
+        showToast('✓ Message deleted', true);
+      } else {
+        showToast('❌ ' + (data.detail || 'Delete failed'));
+      }
+    } catch(e) { showToast('❌ ' + e.message); }
+    ctxMsgId = null;
+  });
+  document.addEventListener('click', () => ctxMenu.classList.add('hidden'));
+
+  async function loadMessages() {
+    try {
+      const res = await fetch(`/messages?username=${encodeURIComponent(IG_USER)}&limit=50&sort=asc`);
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      loaderEl.remove();
+      lastDay = null;
+      (data.messages||[]).forEach(m => renderMessage(m));
+      scrollBottom();
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = '1';
+      statusText.textContent = '@' + (data.instagram_username || IG_USER);
+    } catch(e) {
+      loaderEl.innerHTML = `<span style="color:#f87171">Failed to load: ${e.message}</span>`;
+    }
+  }
+  function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  let ws;
+  function connectWS() {
+    ws = new WebSocket(WS_URL);
+    ws.onopen  = () => wsDot.style.background = '#4ade80';
+    ws.onmessage = e => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.type==='new_message' && d.message) { renderMessage(d.message); scrollBottom(); }
+      } catch{}
+    };
+    ws.onclose = () => { wsDot.style.background = '#6b6b82'; setTimeout(connectWS, 4000); };
+    ws.onerror = () => ws.close();
+  }
+  setInterval(() => { if (ws && ws.readyState===WebSocket.OPEN) ws.send('ping'); }, 25000);
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    sendBtn.disabled = true; inputEl.disabled = true; sendBtn.style.opacity = '0.4';
+    const optimistic = { id: 'opt_'+Date.now(), message: text, direction: 'outgoing', sender_name: 'You', created_at: new Date().toISOString(), attachments: [] };
+    renderMessage(optimistic); scrollBottom();
+    inputEl.value = ''; autoResize();
+    try {
+      const res = await fetch(`/messages/reply?username=${encodeURIComponent(IG_USER)}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: text}),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:res.statusText}));
+        throw new Error(err.detail||'Send failed');
+      }
+    } catch(e) {
+      showToast('❌ ' + e.message);
+      const el = document.querySelector(`[data-id="${optimistic.id}"]`);
+      if (el) el.remove();
+      seenIds.delete(optimistic.id);
+      inputEl.value = text; autoResize();
+    } finally { sendBtn.disabled = false; sendBtn.style.opacity = '1'; inputEl.disabled = false; inputEl.focus(); }
+  }
+
+  function autoResize() {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+    const hasText = !!inputEl.value.trim();
+    sendBtn.disabled = !hasText;
+    sendBtn.style.opacity = hasText ? '1' : '0.4';
+    sendBtn.style.cursor  = hasText ? 'pointer' : 'not-allowed';
+  }
+  inputEl.addEventListener('input', autoResize);
+  inputEl.addEventListener('keydown', e => {
+    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  loadMessages();
+  connectWS();
+</script>
+{% endblock %}

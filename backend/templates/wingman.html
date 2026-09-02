@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ wingman_name }}'s View · Hoop{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-bg">
+  <div class="w-full" style="max-width:480px; height:100vh; max-height:780px; display:flex; flex-direction:column; background:#17171b; border:1px solid #2a2a33; border-radius:18px; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(167,139,250,.08);">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:#1f1f25;border-bottom:1px solid #2a2a33;flex-shrink:0;">
+      <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
+        {{ ig_username[0].upper() }}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <h2 style="font-size:15px;font-weight:600;color:#e4e4f0;line-height:1.2;">@{{ ig_username }}</h2>
+        <span style="font-size:11px;color:#6b6b82;">
+          Shared with {{ wingman_name }}
+          {% if access_level == 'read' %} · 👁️ Read Only{% endif %}
+        </span>
+      </div>
+      <!-- WS dot -->
+      <div id="ws-dot" style="width:8px;height:8px;border-radius:50%;background:#6b6b82;flex-shrink:0;transition:background .3s;"></div>
+    </div>
+
+    <!-- Revoked banner -->
+    {% if access_level == 'revoked' %}
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#f87171;padding:40px;">
+      <div style="font-size:48px;">🚫</div>
+      <p style="font-size:16px;font-weight:600;">Access Revoked</p>
+      <p style="font-size:13px;color:#6b6b82;text-align:center;">Your access to this conversation has been removed.</p>
+    </div>
+    {% else %}
+
+    <!-- Messages -->
+    <div id="messages" style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth;">
+      <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex:1;color:#6b6b82;font-size:13px;">
+        <div style="width:32px;height:32px;border:3px solid #2a2a33;border-top-color:#a78bfa;border-radius:50%;" class="spin"></div>
+        <span>Loading messages…</span>
+      </div>
+    </div>
+
+    <!-- Input bar — only if send access -->
+    {% if access_level == 'send' %}
+    <div style="display:flex;align-items:flex-end;gap:10px;padding:14px 16px;background:#1f1f25;border-top:1px solid #2a2a33;flex-shrink:0;">
+      <textarea id="msg-input" placeholder="Type a message… (Enter to send)" rows="1" autocomplete="off"
+        style="flex:1;resize:none;background:#0d0d0f;border:1px solid #2a2a33;border-radius:10px;color:#e4e4f0;font-family:inherit;font-size:14px;padding:10px 14px;max-height:120px;min-height:42px;line-height:1.5;outline:none;overflow-y:auto;"
+        onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#2a2a33'"></textarea>
+      <button id="send-btn" disabled title="Send"
+        style="width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;cursor:not-allowed;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s,opacity .15s;opacity:0.4;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+    {% else %}
+    <div style="padding:12px 16px;background:#1f1f25;border-top:1px solid #2a2a33;flex-shrink:0;text-align:center;">
+      <span style="font-size:12px;color:#6b6b82;">👁️ You're in read-only mode</span>
+    </div>
+    {% endif %}
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f1f25;border:1px solid #f87171;color:#f87171;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:99;"></div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if access_level != 'revoked' %}
+<script>
+  const TOKEN = '{{ token }}';
+  const IG_USER = '{{ ig_username }}';
+  const ACCESS = '{{ access_level }}';
+  const messagesEl = document.getElementById('messages');
+  const loaderEl   = document.getElementById('loader');
+  const inputEl    = ACCESS === 'send' ? document.getElementById('msg-input') : null;
+  const sendBtn    = ACCESS === 'send' ? document.getElementById('send-btn') : null;
+  const wsDot      = document.getElementById('ws-dot');
+  const toastEl    = document.getElementById('toast');
+  let seenIds = new Set(), lastDay = null;
+
+  function showToast(msg, isOk=false) {
+    toastEl.textContent = msg;
+    toastEl.style.borderColor = isOk ? '#4ade80' : '#f87171';
+    toastEl.style.color = isOk ? '#4ade80' : '#f87171';
+    toastEl.style.opacity = 1; toastEl.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => { toastEl.style.opacity = 0; toastEl.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500);
+  }
+  function fmt(iso) {
+    const d = new Date(iso), now = new Date();
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString([],{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+  function dayLabel(iso) {
+    const d = new Date(iso);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yest  = new Date(today); yest.setDate(yest.getDate()-1);
+    const dDay  = new Date(d); dDay.setHours(0,0,0,0);
+    if (dDay.getTime()===today.getTime()) return 'Today';
+    if (dDay.getTime()===yest.getTime())  return 'Yesterday';
+    return d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+  }
+
+  function renderMessage(msg) {
+    if (seenIds.has(msg.id)) return;
+    seenIds.add(msg.id);
+    const dir  = msg.direction === 'outgoing' ? 'out' : 'in';
+    const text = msg.message || '';
+    const time = msg.created_at ? fmt(msg.created_at) : '';
+    const dayStr = msg.created_at ? dayLabel(msg.created_at) : null;
+    if (dayStr && dayStr !== lastDay) {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'display:flex;align-items:center;gap:10px;margin:10px 0;color:#6b6b82;font-size:11px;font-weight:500;';
+      sep.innerHTML = '<span style="flex:1;height:1px;background:#2a2a33;"></span>' + dayStr + '<span style="flex:1;height:1px;background:#2a2a33;"></span>';
+      messagesEl.appendChild(sep);
+      lastDay = dayStr;
+    }
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;flex-direction:column;max-width:78%;animation:fadeUp .25s ease both;align-self:${dir==='out'?'flex-end':'flex-start'};align-items:${dir==='out'?'flex-end':'flex-start'};`;
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;word-break:break-word;' +
+      (dir==='out' ? 'background:#7c3aed;border-bottom-right-radius:4px;color:#fff;' : 'background:#1f1f2e;border-bottom-left-radius:4px;border:1px solid #2a2a33;color:#e4e4f0;');
+    if (text) bubble.textContent = text;
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:11px;color:#6b6b82;margin-top:3px;padding:0 4px;';
+    meta.textContent = time;
+    row.appendChild(bubble); row.appendChild(meta);
+    messagesEl.appendChild(row);
+  }
+
+  async function loadMessages() {
+    try {
+      const res = await fetch(`/view/${TOKEN}/messages`);
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      loaderEl.remove();
+      lastDay = null;
+      (data.messages||[]).forEach(m => renderMessage(m));
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.style.cursor = 'not-allowed'; }
+    } catch(e) {
+      loaderEl.innerHTML = `<span style="color:#f87171">Failed to load: ${e.message}</span>`;
+    }
+  }
+
+  // WebSocket for real-time
+  let ws;
+  function connectWS() {
+    ws = new WebSocket('ws://' + location.host + '/ws/view/' + TOKEN);
+    ws.onopen  = () => wsDot.style.background = '#4ade80';
+    ws.onmessage = e => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.type === 'access_revoked') { location.reload(); return; }
+        if (d.type === 'new_message' && d.message) { renderMessage(d.message); messagesEl.scrollTop = messagesEl.scrollHeight; }
+      } catch{}
+    };
+    ws.onclose = () => { wsDot.style.background = '#6b6b82'; setTimeout(connectWS, 4000); };
+    ws.onerror = () => ws.close();
+  }
+  setInterval(() => { if (ws && ws.readyState===WebSocket.OPEN) ws.send('ping'); }, 25000);
+
+  {% if access_level == 'send' %}
+  async function sendMessage() {
+    const text = inputEl.value.trim(); if (!text) return;
+    sendBtn.disabled = true; inputEl.disabled = true; sendBtn.style.opacity = '0.4';
+    inputEl.value = ''; autoResize();
+    try {
+      const res = await fetch(`/view/${TOKEN}/reply`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: text}),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:res.statusText}));
+        throw new Error(err.detail||'Send failed');
+      }
+    } catch(e) {
+      showToast('❌ ' + e.message);
+      inputEl.value = text; autoResize();
+    } finally { sendBtn.disabled = false; sendBtn.style.opacity = '1'; inputEl.disabled = false; inputEl.focus(); }
+  }
+  function autoResize() {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+    const hasText = !!inputEl.value.trim();
+    sendBtn.disabled = !hasText; sendBtn.style.opacity = hasText ? '1' : '0.4'; sendBtn.style.cursor = hasText ? 'pointer' : 'not-allowed';
+  }
+  inputEl.addEventListener('input', autoResize);
+  inputEl.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); if(!sendBtn.disabled) sendMessage(); } });
+  sendBtn.addEventListener('click', sendMessage);
+  {% endif %}
+
+  loadMessages();
+  connectWS();
+</script>
+{% endif %}
+{% endblock %}

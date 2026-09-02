@@ -1,0 +1,65 @@
+<div class="bg-surface border border-border rounded-xl2 px-5 py-4 fade-up" data-session="{{ s.id }}">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 mb-1">
+        <p class="font-semibold text-white text-sm">{{ s.wingman_name }}</p>
+        <span class="text-xs px-2 py-0.5 rounded-full font-medium
+          {% if s.access_level == 'revoked' %}bg-danger/20 text-danger border border-danger/40
+          {% elif s.access_level == 'send' %}bg-green-500/20 text-green-400 border border-green-500/30
+          {% else %}bg-accent/20 text-accent border border-accent/30{% endif %}">
+          {% if s.access_level == 'revoked' %}🚫 Revoked
+          {% elif s.access_level == 'send' %}✉️ Full Access
+          {% else %}👁️ Read Only{% endif %}
+        </span>
+      </div>
+      <p class="text-muted text-xs">Created {{ s.created_at[:10] }}</p>
+      <div class="flex items-center gap-2 mt-2">
+        <code class="text-xs text-accent/80 bg-bg px-2 py-1 rounded-md border border-border truncate max-w-[200px]">
+          /view/{{ s.token_preview }}…
+        </code>
+        <button onclick="navigator.clipboard.writeText(location.origin+'/view/{{ s.token }}')"
+          class="text-xs text-muted hover:text-accent transition-colors">📋 Copy</button>
+      </div>
+    </div>
+    <div class="flex flex-col gap-2 flex-shrink-0">
+      {% if s.access_level != 'read' %}
+      <button
+        hx-patch="/admin/sessions/{{ s.id }}"
+        hx-vals='{"access_level": "read"}'
+        hx-target="[data-session='{{ s.id }}']"
+        hx-swap="outerHTML"
+        class="text-xs px-3 py-1.5 rounded-sm2 bg-accent/20 text-accent border border-accent/40 hover:bg-accent/30 transition-all">
+        👁️ Read Only
+      </button>
+      {% endif %}
+      {% if s.access_level != 'send' and s.access_level != 'revoked' %}
+      <button
+        hx-patch="/admin/sessions/{{ s.id }}"
+        hx-vals='{"access_level": "send"}'
+        hx-target="[data-session='{{ s.id }}']"
+        hx-swap="outerHTML"
+        class="text-xs px-3 py-1.5 rounded-sm2 bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 transition-all">
+        ✉️ Full Access
+      </button>
+      {% endif %}
+      {% if s.access_level != 'revoked' %}
+      <button
+        hx-patch="/admin/sessions/{{ s.id }}"
+        hx-vals='{"access_level": "revoked"}'
+        hx-target="[data-session='{{ s.id }}']"
+        hx-swap="outerHTML"
+        class="text-xs px-3 py-1.5 rounded-sm2 bg-danger/20 text-danger border border-danger/40 hover:bg-danger/30 transition-all">
+        🚫 Revoke
+      </button>
+      {% endif %}
+      <button
+        hx-delete="/admin/sessions/{{ s.id }}"
+        hx-confirm="Permanently delete this session?"
+        hx-target="[data-session='{{ s.id }}']"
+        hx-swap="outerHTML"
+        class="text-xs px-3 py-1.5 rounded-sm2 bg-surface2 text-muted border border-border hover:text-danger hover:border-danger/40 transition-all">
+        🗑️ Delete
+      </button>
+    </div>
+  </div>
+</div>
