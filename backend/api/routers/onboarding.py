@@ -92,41 +92,43 @@ async def onboarding_connect(
         """)
 
     if not accounts:
-        # Try fetching Zernio Instagram OAuth URL for programmatically authorizing Instagram
+        # Fetch Zernio Instagram OAuth URL for Step 2
         redirect_uri = f"{request.url.scheme}://{request.url.netloc}/onboarding/callback"
         oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri)
         
-        button_html = f"""
-        <div class="mt-3 pt-3 border-t border-yellow-500/20 flex flex-col sm:flex-row gap-2">
-          <a href="{oauth_url}" target="_blank"
-             class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-sm2 text-xs hover:opacity-90 transition-all shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-            ⚡ Authorize Instagram via OAuth
-          </a>
-          <a href="https://zernio.com/dashboard/accounts" target="_blank"
-             class="inline-flex items-center justify-center gap-1.5 bg-surface2 border border-border text-white font-medium px-3 py-2 rounded-sm2 text-xs hover:border-accent/40 transition-all">
-            Zernio Dashboard ↗
-          </a>
-        </div>
+        oauth_btn = f"""
+        <a href="{oauth_url}" target="_blank"
+           class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-4 py-3 rounded-sm2 text-sm hover:opacity-90 transition-all shadow-md active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+          <span>⚡ Authorize Instagram via OAuth</span>
+        </a>
         """ if oauth_url else """
-        <div class="mt-3 pt-3 border-t border-yellow-500/20">
-          <a href="https://zernio.com/dashboard/accounts" target="_blank"
-             class="inline-flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-sm2 text-xs hover:opacity-90 transition-all">
-            Connect Instagram at Zernio.com ↗
-          </a>
-        </div>
+        <a href="https://zernio.com/dashboard/accounts" target="_blank"
+           class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-4 py-3 rounded-sm2 text-sm hover:opacity-90 transition-all shadow-md active:scale-95">
+          <span>Connect Instagram at Zernio.com ↗</span>
+        </a>
         """
 
         return HTMLResponse(f"""
-        <div class="p-4 rounded-sm2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs flex flex-col gap-2 fade-up">
-          <div class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <div>
-              <p class="font-semibold text-sm mb-0.5">No Instagram Account Connected to Key</p>
-              <p class="opacity-90 text-xs leading-relaxed">Your Zernio API key is valid, but doesn't have an Instagram Business/Creator account connected to it yet.</p>
-            </div>
+        <div class="space-y-4 fade-up">
+          <!-- Step 1 status -->
+          <div class="p-3 rounded-sm2 bg-green-500/10 border border-green-500/30 text-green-400 text-xs flex items-center justify-between">
+            <span class="font-semibold flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              Step 1 Complete: API Key Verified & Active
+            </span>
           </div>
-          {button_html}
+
+          <!-- Step 2 box -->
+          <div class="p-4 rounded-xl2 bg-bg border border-accent/40 text-white space-y-3">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>Step 2: Connect Instagram Account</span>
+              </h3>
+              <p class="text-muted text-xs mt-1">Tap below to authorize Zernio to access your Instagram Business/Creator account via OAuth.</p>
+            </div>
+            {oauth_btn}
+          </div>
         </div>
         """)
 
