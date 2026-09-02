@@ -86,3 +86,15 @@ async def delete_session(
         "DELETE FROM wingman_sessions WHERE id = $1 AND user_id = $2 RETURNING token",
         session_id, user_id,
     )
+
+
+async def delete_all_sessions_for_ig(
+    conn: asyncpg.Connection, user_id: int, ig_username: str
+) -> List[str]:
+    """Deletes all wingman sessions for this ig_username & user_id, returning list of revoked tokens."""
+    rows = await conn.fetch(
+        "DELETE FROM wingman_sessions WHERE user_id = $1 AND ig_username = $2 RETURNING token",
+        user_id, ig_username.lower().strip(),
+    )
+    return [r["token"] for r in rows]
+
