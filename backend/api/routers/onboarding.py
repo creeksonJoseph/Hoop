@@ -103,7 +103,7 @@ async def onboarding_callback(
     import logging
 
     import os
-    frontend_base = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    frontend_base = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
 
     if error:
         logging.warning(f"[onboarding/callback] OAuth error: {error}")
