@@ -50,12 +50,28 @@
           <p class="text-muted text-sm mt-1">Manage active conversations & generate Wingman sharing links</p>
         </div>
         <!-- Add DM button -->
-        <button onclick="document.getElementById('add-dm-modal').classList.remove('hidden')"
+        <button onclick="{% if has_real_account %}document.getElementById('add-dm-modal').classList.remove('hidden'){% else %}location.href='/settings'{% endif %}"
           class="flex items-center gap-2 bg-gradient-to-r from-accent to-bubble-out text-white px-4 py-2.5 rounded-sm2 text-xs font-semibold shadow-md hover:opacity-90 active:scale-95 transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           <span>Add DM</span>
         </button>
       </header>
+
+      {% if not has_real_account %}
+      <!-- Warning Banner for Users with saved API key but no connected Instagram account -->
+      <div class="mb-6 p-4 rounded-xl2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 fade-up">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-yellow-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <div>
+            <h3 class="text-sm font-bold text-white">Instagram Account Connection Required</h3>
+            <p class="text-xs text-muted mt-0.5">Your Zernio API key is verified, but you must authorize your Instagram account in Settings before tracking DMs.</p>
+          </div>
+        </div>
+        <a href="/settings" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs px-4 py-2.5 rounded-sm2 shadow-md hover:opacity-90 active:scale-95 transition-all flex-shrink-0 flex items-center gap-1.5">
+          <span>Connect Instagram in Settings ↗</span>
+        </a>
+      </div>
+      {% endif %}
 
       <!-- DM List — skeleton shown immediately, real content swapped in -->
       <div
