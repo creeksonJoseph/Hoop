@@ -26,6 +26,11 @@ def _render(request: Request, tpl: str, ctx: dict = None, status: int = 200) -> 
 
 @router.get("/onboarding", response_class=HTMLResponse)
 async def onboarding_page(request: Request, user=Depends(require_user)):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        cnt = await account_repo.count_accounts_for_user(conn, user["id"])
+    if cnt > 0:
+        return RedirectResponse("/home", status_code=302)
     return _render(request, "onboarding.html", {"user": user})
 
 

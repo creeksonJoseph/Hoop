@@ -44,13 +44,18 @@ async def login(
     pool = await get_pool()
     async with pool.acquire() as conn:
         user = await user_repo.get_user_by_email(conn, email)
+        if user:
+            cnt = await account_repo.count_accounts_for_user(conn, user["id"])
+        else:
+            cnt = 0
 
     if not user or not verify_password(password, user["password_hash"]):
         _flash(request, "Invalid email or password", "error")
         return _render(request, "auth/login.html", status=401)
 
     token = create_jwt(user["id"], user["email"])
-    resp  = RedirectResponse("/home", status_code=302)
+    target = "/home" if cnt > 0 else "/onboarding"
+    resp  = RedirectResponse(target, status_code=302)
     resp.set_cookie("hoop_token", token, httponly=True, samesite="lax", max_age=72 * 3600)
     return resp
 
@@ -100,5 +105,10 @@ async def logout():
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request, user=Depends(get_current_user)):
     if user:
-        return RedirectResponse("/home", status_code=302)
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            cnt = await account_repo.count_accounts_for_user(conn, user["id"])
+        target = "/home" if cnt > 0 else "/onboarding"
+        return RedirectResponse(target, status_code=302)
     return _render(request, "auth/login.html")
+
