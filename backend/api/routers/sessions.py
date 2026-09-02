@@ -15,7 +15,6 @@ from services.session_service import (
     new_session_id,
     validate_access_level,
 )
-from ws_manager import manager
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
@@ -83,7 +82,7 @@ async def update_session(
         raise HTTPException(404, "Session not found")
 
     if body.access_level == "revoked":
-        await manager.broadcast_to_wingman(row["token"], {"type": "access_revoked"})
+        pass  # Supabase Realtime notifies clients via DB subscription
 
     return format_session_for_display(dict(row))
 
@@ -94,4 +93,4 @@ async def delete_session(session_id: str, user=Depends(require_user)):
     async with pool.acquire() as conn:
         row = await session_repo.delete_session(conn, session_id, user["id"])
     if row:
-        await manager.broadcast_to_wingman(row["token"], {"type": "access_revoked"})
+        pass  # Supabase Realtime notifies clients via DB subscription

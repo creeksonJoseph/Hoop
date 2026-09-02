@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from db import get_pool
 from dependencies import require_user
 from repositories import account_repo, session_repo
-from ws_manager import manager
 
 router = APIRouter(prefix="/dms", tags=["DMs"])
 
@@ -66,6 +65,6 @@ async def delete_dm(ig_username: str, user=Depends(require_user)):
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
 
     for token in revoked_tokens:
-        await manager.broadcast_to_wingman(token, {"type": "access_revoked"})
+        pass  # Supabase Realtime notifies clients
 
     return {"dms": [dict(r) for r in rows]}
