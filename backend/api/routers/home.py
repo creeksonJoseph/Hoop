@@ -59,7 +59,7 @@ async def add_dm(
     ig_username: str = Form(...),
 ):
     """
-    HTMX form — adds a DM username to the list.
+    HTMX form — adds a DM username to tracked_dms list.
     Returns the updated DM list fragment.
     hx-sync="this:drop" on the form prevents duplicate submissions.
     """
@@ -78,10 +78,14 @@ async def add_dm(
                 '<p class="text-danger text-sm px-4">No Instagram account connected yet</p>',
                 status_code=400,
             )
-        await account_repo.upsert_account(
-            conn, user["id"], ig_username,
-            acc["zernio_account_id"], acc["zernio_api_key_enc"],
-        )
+
+        if await account_repo.is_own_connected_account(conn, user["id"], ig_username):
+            return HTMLResponse(
+                '<p class="text-yellow-400 text-sm px-4">That is your own connected Instagram account! Enter the username of a person you are chatting with.</p>',
+                status_code=400,
+            )
+
+        await account_repo.add_tracked_dm(conn, user["id"], ig_username)
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
 
     dms = [dict(r) for r in rows]
@@ -98,14 +102,14 @@ async def delete_dm(
     Deletes a conversation from tracked DMs.
     1. Revokes and notifies all active wingman WebSocket connections.
     2. Deletes all wingman sessions from DB.
-    3. Deletes the DM account entry.
+    3. Deletes the DM entry from tracked_dms (connected IG credentials & API key remain 100% safe).
     4. Returns updated DM list HTMX partial.
     """
     ig_username = ig_username.strip().lstrip("@").lower()
     pool = await get_pool()
     async with pool.acquire() as conn:
         revoked_tokens = await session_repo.delete_all_sessions_for_ig(conn, user["id"], ig_username)
-        await account_repo.delete_account(conn, user["id"], ig_username)
+        await account_repo.delete_tracked_dm(conn, user["id"], ig_username)
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
 
     # Notify all active wingmans that their session is revoked
@@ -114,4 +118,5 @@ async def delete_dm(
 
     dms = [dict(r) for r in rows]
     return _render(request, "partials/dm_list.html", {"dms": dms})
+
 
