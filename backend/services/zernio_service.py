@@ -69,6 +69,32 @@ async def get_accounts(encrypted_key: str) -> List[dict]:
         raw_key = ""  # always discard
 
 
+async def get_connect_url(encrypted_key: str, redirect_url: str) -> Optional[str]:
+    """
+    Fetch the Zernio Instagram OAuth authorization URL for the user's Zernio API key.
+    """
+    raw_key = decrypt_api_key(encrypted_key)
+    try:
+        data = await _get("/connect/instagram", {"redirect_url": redirect_url}, raw_key)
+        return data.get("authUrl") or data.get("url") or data.get("link")
+    except Exception:
+        return None
+    finally:
+        raw_key = ""
+
+
+async def handle_oauth_callback(encrypted_key: str, code: str) -> dict:
+    """
+    Exchange OAuth code with Zernio to finalize Instagram account connection.
+    """
+    raw_key = decrypt_api_key(encrypted_key)
+    try:
+        return await _post("/connect/instagram", {"code": code}, raw_key)
+    finally:
+        raw_key = ""
+
+
+
 async def find_conversation(
     ig_username: str,
     account_id: str,
