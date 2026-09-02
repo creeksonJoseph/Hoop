@@ -58,9 +58,15 @@ async def get_accounts(encrypted_key: str) -> List[dict]:
     Decrypts the key in-memory — never stored or returned.
     """
     raw_key = decrypt_api_key(encrypted_key)
-    data = await _get("/accounts", {"platform": "instagram"}, raw_key)
-    raw_key = ""  # discard
-    return data.get("accounts", [])
+    try:
+        data = await _get("/accounts", {"platform": "instagram"}, raw_key)
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
+            return data.get("accounts") or data.get("data") or data.get("items") or []
+        return []
+    finally:
+        raw_key = ""  # always discard
 
 
 async def find_conversation(
