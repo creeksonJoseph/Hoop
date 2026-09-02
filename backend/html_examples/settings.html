@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Hoop - Conversations</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#e7c268",
+                        "on-primary-fixed": "#251a00",
+                        "error": "#ffb4ab",
+                        "on-error-container": "#ffdad6",
+                        "inverse-primary": "#765a05",
+                        "surface-tint": "#e7c268",
+                        "on-surface-variant": "#d0c5b2",
+                        "on-tertiary-container": "#804407",
+                        "primary-fixed": "#ffdf96",
+                        "on-tertiary": "#4e2600",
+                        "secondary-fixed": "#f9ddce",
+                        "on-background": "#e5e2e1",
+                        "surface-bright": "#3a3939",
+                        "tertiary-container": "#ffb984",
+                        "on-primary-fixed-variant": "#5a4400",
+                        "on-secondary": "#3e2d23",
+                        "surface-container": "#201f1f",
+                        "primary": "#ffe19e",
+                        "on-primary-container": "#695000",
+                        "on-secondary-container": "#cab0a2",
+                        "surface-container-high": "#2a2a2a",
+                        "secondary": "#dcc1b3",
+                        "primary-container": "#e9c46a",
+                        "inverse-on-surface": "#313030",
+                        "surface": "#131313",
+                        "surface-variant": "#353534",
+                        "background": "#131313",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-error": "#690005",
+                        "on-secondary-fixed": "#27180f",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-fixed": "#ffdcc4",
+                        "outline-variant": "#4d4638",
+                        "on-tertiary-fixed-variant": "#6f3800",
+                        "on-primary": "#3e2e00",
+                        "tertiary": "#ffdec8",
+                        "on-tertiary-fixed": "#2f1400",
+                        "surface-container-highest": "#353534",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#564338",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed-dim": "#dcc1b3",
+                        "outline": "#99907e",
+                        "secondary-container": "#564338",
+                        "tertiary-fixed-dim": "#ffb780",
+                        "surface-dim": "#131313"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "stack-sm": "12px",
+                        "container-padding": "24px",
+                        "gutter": "16px",
+                        "stack-md": "24px",
+                        "stack-lg": "48px"
+                    },
+                    "fontFamily": {
+                        "body-lg": [
+                            "Inter"
+                        ],
+                        "headline-xl": [
+                            "Outfit"
+                        ],
+                        "label-sm": [
+                            "Inter"
+                        ],
+                        "headline-md": [
+                            "Outfit"
+                        ],
+                        "body-md": [
+                            "Inter"
+                        ],
+                        "headline-lg": [
+                            "Outfit"
+                        ],
+                        "label-md": [
+                            "Inter"
+                        ]
+                    },
+                    "fontSize": {
+                        "body-lg": [
+                            "18px",
+                            {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "headline-xl": [
+                            "40px",
+                            {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "label-sm": [
+                            "12px",
+                            {
+                                "lineHeight": "1.4",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "headline-md": [
+                            "24px",
+                            {
+                                "lineHeight": "1.3",
+                                "fontWeight": "500"
+                            }
+                        ],
+                        "body-md": [
+                            "16px",
+                            {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "headline-lg": [
+                            "32px",
+                            {
+                                "lineHeight": "1.2",
+                                "fontWeight": "500"
+                            }
+                        ],
+                        "label-md": [
+                            "14px",
+                            {
+                                "lineHeight": "1.4",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                            }
+                        ]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-surface h-screen w-full overflow-hidden flex font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+    <!-- Global Navigation Rail (Col 1) -->
+    <nav
+        class="w-[60px] h-full flex flex-col bg-surface border-r border-outline-variant shrink-0 py-stack-md items-center justify-between z-20 relative">
+        <div class="flex flex-col items-center gap-stack-lg w-full">
+            <!-- Brand -->
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-headline-md text-headline-md text-on-primary cursor-pointer hover:scale-105 transition-transform shrink-0"
+                title="Hoop">H</div>
+            <!-- Nav Actions -->
+            <div class="flex flex-col items-center gap-gutter w-full px-2">
+                <button
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-primary bg-surface-container-high border border-primary relative group cursor-pointer active:scale-95 transition-all"
+                    title="Threads">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">forum</span>
+                    <div
+                        class="absolute left-full ml-3 px-2 py-1 bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm text-on-surface opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                        Threads</div>
+                </button>
+                <button
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group relative"
+                    title="Inbox">
+                    <span class="material-symbols-outlined">inbox</span>
+                    <div
+                        class="absolute left-full ml-3 px-2 py-1 bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm text-on-surface opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                        Inbox</div>
+                </button>
+                <button
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group relative"
+                    title="Analytics">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    <div
+                        class="absolute left-full ml-3 px-2 py-1 bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm text-on-surface opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                        Analytics</div>
+                </button>
+                <button
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group relative"
+                    title="Settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    <div
+                        class="absolute left-full ml-3 px-2 py-1 bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm text-on-surface opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                        Settings</div>
+                </button>
+            </div>
+        </div>
+        <!-- Profile -->
+        <button
+            class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant hover:border-primary transition-colors cursor-pointer group relative">
+            <img class="w-full h-full object-cover"
+                data-alt="A macro shot of a sleek, dark metallic texture with minimal specular highlights, conveying a premium technical feel in a moody, high-contrast dark mode environment."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCZoblPbUzeQxDpD-5KD2Z8tiSU2RhCuAdDdPzqnFeUWv_DKv9N0vft5YnUCSMiAo9TrfvIRo-6OCvkiYlnUOll5tMAn9ac9ZHJuu2SB7XniN0BpfRlhBpFc5zgnUPmyupjLWgp1I7LX8QQUDdy4tGqzk4I2mwYp5LtMCv5VKUl38zBrX8NwHfn9Q9JQ8eTmkOAQPIXLcaPw8lO1WMLb1zuNWgAc-5RpIf2Qct2olJyREg5lxmT006" />
+            <div
+                class="absolute left-full ml-3 px-2 py-1 bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm text-on-surface opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                Profile</div>
+        </button>
+    </nav>
+    <!-- Conversation Pipeline (Col 2) -->
+    <div class="w-[340px] h-full flex flex-col bg-surface border-r border-outline-variant shrink-0 z-10">
+        <!-- Header -->
+        <div class="h-16 px-stack-sm border-b border-outline-variant flex justify-between items-center shrink-0">
+            <h1 class="font-headline-md text-headline-md text-on-surface">Conversations</h1>
+            <button
+                class="flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary px-3 py-1.5 rounded font-label-sm text-label-sm transition-colors border border-transparent">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                New Thread
+            </button>
+        </div>
+        <!-- Search -->
+        <div class="p-stack-sm shrink-0">
+            <div class="relative w-full group">
+                <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                <input
+                    class="w-full bg-surface-container border border-outline-variant rounded-md py-2 pl-9 pr-10 font-label-md text-label-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    placeholder="Search..." type="text" />
+                <div
+                    class="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-outline-variant bg-surface-container-lowest font-label-sm text-[10px] text-on-surface-variant pointer-events-none">
+                    ⌘K</div>
+            </div>
+            <!-- Filters -->
+            <div class="flex gap-4 mt-stack-sm border-b border-outline-variant">
+                <button
+                    class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-2 px-1">All</button>
+                <button
+                    class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface pb-2 px-1 transition-colors">Unread</button>
+                <button
+                    class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface pb-2 px-1 transition-colors">Archived</button>
+            </div>
+        </div>
+        <!-- List -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+            <!-- Active Item -->
+            <div
+                class="px-stack-sm py-3 flex gap-3 cursor-pointer relative bg-surface-container border-l-2 border-primary group">
+                <div
+                    class="w-[36px] h-[36px] rounded-full overflow-hidden bg-surface-container-highest shrink-0 border border-outline-variant group-hover:border-primary transition-colors">
+                    <img class="w-full h-full object-cover"
+                        data-alt="A dark-themed abstract geometric avatar featuring precise angles, sharp contrast, and a futuristic corporate aesthetic. Subdued cool tones with a hint of electric blue."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS5qZLvPAPu8h9rbGv_NlwxUTriZLILpg_VXrRsgs3V57d0__wJ4uUXOF0TxyAzRBu5a_UsDu6R2gWfEHfM9OJwjkiB6tPIFc4gb_7RQO_ThOb0gt4WRjZOw8CDWdp4iM1_coePzCEqY7vhIyMQxLpNk75zJRTW1N4eTNW_qdBzpG1qXSsR7pz8gTcHzP2r-0HLPh_ehCsiDhReqQiGn6X6wdc0Kg6a2V1_dAkg4XstD0JNq0t2miv" />
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                        <span class="font-label-md text-label-md font-semibold text-on-surface truncate pr-2">Aria
+                            Voss</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant text-[10px] shrink-0">10:42
+                            AM</span>
+                    </div>
+                    <div class="font-label-md text-label-md text-on-surface-variant truncate">Can you confirm the API
+                        payload structure for the v2 endpoint?</div>
+                </div>
+            </div>
+            <!-- Inactive Item 1 -->
+            <div
+                class="px-stack-sm py-3 flex gap-3 cursor-pointer border-l-2 border-transparent hover:bg-surface-container-high transition-colors group">
+                <div
+                    class="w-[36px] h-[36px] rounded-full overflow-hidden bg-surface-container-highest shrink-0 border border-outline-variant group-hover:border-primary transition-colors">
+                    <img class="w-full h-full object-cover"
+                        data-alt="A minimalist dark profile placeholder showing subtle gradients of deep indigo and almost black, creating a sense of depth without obvious texture."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn5fASvDIYuoWhoOfuxRwX3eBqD0pNuDOvoxRu8ienwLYwxt9OJX1rZktSuXTQODYnuOZbL9v2vAEjI847xBJ94YwSeLpnGt5FS53D2KYlCPkPJa-T4Ob0nldf6zllR5_uD_G7H9LfHigRcnm6pX0Vk6O7sI2RPCCM38XM97W8vUU9GHrR8OHODlggxLXkb_oFgS1jg-tcMraDtOd4yCUyOJbqxd8QvTC5GH9KK14br3yTqogf5Y9Q" />
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                        <span class="font-label-md text-label-md font-semibold text-on-surface truncate pr-2">Julian
+                            Dax</span>
+                        <span
+                            class="font-label-sm text-label-sm text-on-surface-variant text-[10px] shrink-0">Yesterday</span>
+                    </div>
+                    <div class="font-label-md text-label-md text-on-surface-variant truncate text-opacity-80">The
+                        staging deployment looks stable. We're clear for launch.</div>
+                </div>
+            </div>
+            <!-- Inactive Item 2 -->
+            <div
+                class="px-stack-sm py-3 flex gap-3 cursor-pointer border-l-2 border-transparent hover:bg-surface-container-high transition-colors group">
+                <div
+                    class="w-[36px] h-[36px] rounded-full overflow-hidden bg-surface-container-highest shrink-0 border border-outline-variant group-hover:border-primary transition-colors">
+                    <div
+                        class="w-full h-full bg-surface-bright flex items-center justify-center font-label-sm text-label-sm text-on-surface">
+                        CX</div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                        <span
+                            class="font-label-md text-label-md font-semibold text-on-surface truncate pr-2 flex items-center gap-1">Corey
+                            Xiao <span class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span></span>
+                        <span
+                            class="font-label-sm text-label-sm text-on-surface-variant text-[10px] shrink-0">Tue</span>
+                    </div>
+                    <div class="font-label-md text-label-md text-on-surface truncate">Attached are the revised quarterly
+                        metrics you requested.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Thread View (Col 3) -->
+    <div class="flex-1 flex flex-col min-w-0 bg-background relative">
+        <!-- Thread Header -->
+        <div
+            class="h-16 px-stack-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low shrink-0">
+            <div class="flex items-center gap-3">
+                <h2
+                    class="font-headline-md text-[18px] leading-[24px] font-semibold text-on-surface flex items-center gap-1.5">
+                    Aria Voss
+                    <span class="material-symbols-outlined text-primary text-[18px]"
+                        style="font-variation-settings: 'FILL' 1;">verified</span>
+                </h2>
+                <span
+                    class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container border border-outline-variant px-1.5 py-0.5 rounded text-[10px]">@aria_v</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button
+                    class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded transition-colors"
+                    title="More options">
+                    <span class="material-symbols-outlined">more_vert</span>
+                </button>
+            </div>
+        </div>
+        <!-- Messages Area (Threaded Code Style) -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-stack-md flex flex-col gap-gutter">
+            <!-- Date Divider -->
+            <div class="flex items-center justify-center my-stack-sm">
+                <div
+                    class="bg-surface-container-highest border border-outline-variant px-3 py-1 rounded-full font-label-sm text-[10px] text-on-surface-variant tracking-wider">
+                    TODAY</div>
+            </div>
+            <!-- Incoming Message -->
+            <div class="flex gap-4 max-w-[80%]">
+                <div
+                    class="w-[32px] h-[32px] rounded-full overflow-hidden bg-surface-container-highest shrink-0 border border-outline-variant mt-1">
+                    <img class="w-full h-full object-cover"
+                        data-alt="A dark-themed abstract geometric avatar featuring precise angles, sharp contrast, and a futuristic corporate aesthetic. Subdued cool tones with a hint of electric blue."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr8OK8uNQcluN942dce54eNveWBcFs77mZM634BP8fMrMp82Q5xEz75taeAM4Re0NQG6NKBhsqw72AkyNzh8d0V_bon6Acwh0-fhy-ahzLdSnZRo55ipZ68gRthii9ggg5cuss4nmmtveKdmke1US_X2dtOLUeDJ8UI5w4w-KPzXeEdq10EhvTT2hemOp0ZwIf7O5g1mCYBMQTErsv78ljfLsHENER25Oq3u2llwUt9lam9B7xWPK1" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-baseline gap-2 ml-1">
+                        <span class="font-label-md text-[12px] font-semibold text-on-surface">Aria Voss</span>
+                        <span class="font-label-sm text-[10px] text-on-surface-variant">10:41 AM</span>
+                    </div>
+                    <div
+                        class="bg-surface-container-high border border-outline-variant rounded-xl rounded-tl-sm px-4 py-3 text-on-surface font-label-md leading-relaxed shadow-sm">
+                        Hey! The latest build is looking solid, but I have a quick question before I push the
+                        documentation updates to staging.
+                    </div>
+                </div>
+            </div>
+            <!-- Incoming Message (Continuation) -->
+            <div class="flex gap-4 max-w-[80%] -mt-stack-sm">
+                <div class="w-[32px] shrink-0 border-r border-outline-variant relative right-[-16px] h-full opacity-0">
+                </div> <!-- Alignment spacer -->
+                <div class="flex flex-col gap-1 ml-12">
+                    <div
+                        class="bg-surface-container-high border border-outline-variant rounded-xl px-4 py-3 text-on-surface font-label-md leading-relaxed shadow-sm">
+                        Can you confirm the API payload structure for the v2 endpoint? Specifically looking at how we're
+                        handling the nested `metadata` objects now.
+                    </div>
+                </div>
+            </div>
+            <!-- Outgoing Message -->
+            <div class="flex gap-4 max-w-[80%] self-end flex-row-reverse">
+                <div
+                    class="w-[32px] h-[32px] rounded-full overflow-hidden bg-primary shrink-0 border border-primary mt-1 flex items-center justify-center font-headline-md text-[14px] text-on-primary">
+                    H
+                </div>
+                <div class="flex flex-col gap-1 items-end">
+                    <div class="flex items-baseline gap-2 mr-1 flex-row-reverse">
+                        <span class="font-label-md text-[12px] font-semibold text-on-surface">You</span>
+                        <span class="font-label-sm text-[10px] text-on-surface-variant">10:45 AM</span>
+                    </div>
+                    <div
+                        class="bg-primary-container border border-primary-container border-l-4 border-l-primary rounded-xl rounded-tr-sm px-4 py-3 text-on-primary-container font-label-md leading-relaxed shadow-sm text-left">
+                        Sure thing. We flattened it slightly. I'll send over the updated schema snippet in a second.
+                    </div>
+                </div>
+            </div>
+            <!-- Typing Indicator -->
+            <div class="flex gap-4 max-w-[80%] mt-4 opacity-50">
+                <div
+                    class="w-[32px] h-[32px] rounded-full overflow-hidden bg-surface-container-highest shrink-0 border border-outline-variant">
+                    <img class="w-full h-full object-cover"
+                        data-alt="A dark-themed abstract geometric avatar featuring precise angles, sharp contrast, and a futuristic corporate aesthetic. Subdued cool tones with a hint of electric blue."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUBjprPdWpRPVlziXNFAfoNj4FfZ3gCno5CQW6GVRabU7lqg0ColQhla0AB4WvYbim1_YBE4YGhUFaCWGyjSCEMfTFGfB9mlmMM_c4A7PNRwUVdxXUfPplDMFA07HVMqxNKbk5IwxPEdtcH_HpqPgb-t_U1kIHgOO6W-n-oN8r7vPkOu83DBu3vyoolcq00xAMUs1KeEw_5QvqvYDeJeD-SPCznTk9c-uBgp31CCwFSViUgQoGSAju" />
+                </div>
+                <div
+                    class="bg-surface-container border border-outline-variant rounded-xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 h-[42px]">
+                    <div class="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-pulse"></div>
+                    <div class="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-pulse"
+                        style="animation-delay: 150ms"></div>
+                    <div class="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-pulse"
+                        style="animation-delay: 300ms"></div>
+                </div>
+            </div>
+            <div class="h-32"></div> <!-- Spacer for absolute docked elements -->
+        </div>
+        <!-- Input Area Container (Docked to bottom) -->
+        <div
+            class="absolute bottom-0 left-0 w-full px-stack-md pb-stack-md pt-4 bg-gradient-to-t from-background via-background to-transparent flex flex-col gap-3">
+            <!-- Wingman Command Module -->
+            <div class="bg-surface border border-outline-variant rounded-lg p-3 shadow-lg flex flex-col gap-2">
+                <div class="flex items-center gap-2 px-1">
+                    <span class="material-symbols-outlined text-primary text-[14px]">smart_toy</span>
+                    <span class="font-label-sm text-[10px] text-on-surface-variant tracking-widest uppercase">Suggested
+                        Responses</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        class="bg-primary/10 hover:bg-primary/20 border border-outline-variant hover:border-primary text-on-surface font-label-sm text-[11px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5">
+                        <span class="text-primary opacity-60">[</span>
+                        Playful Pivot
+                        <span class="text-primary opacity-60">]</span>
+                    </button>
+                    <button
+                        class="bg-primary/10 hover:bg-primary/20 border border-outline-variant hover:border-primary text-on-surface font-label-sm text-[11px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5">
+                        <span class="text-primary opacity-60">[</span>
+                        Direct Confirmation
+                        <span class="text-primary opacity-60">]</span>
+                    </button>
+                    <button
+                        class="bg-primary/10 hover:bg-primary/20 border border-outline-variant hover:border-primary text-on-surface font-label-sm text-[11px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5">
+                        <span class="text-primary opacity-60">[</span>
+                        Low-Investment Follow-up
+                        <span class="text-primary opacity-60">]</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Input Bar -->
+            <div
+                class="relative w-full flex items-center bg-surface-container border border-outline-variant rounded-lg group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                <button class="p-3 text-on-surface-variant hover:text-on-surface transition-colors shrink-0"
+                    title="Attach file">
+                    <span class="material-symbols-outlined text-[20px]">attach_file</span>
+                </button>
+                <textarea
+                    class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-3 resize-none custom-scrollbar max-h-32"
+                    placeholder="Type a message..." rows="1" style="min-height: 44px;"></textarea>
+                <div class="flex items-center pr-2 shrink-0 gap-1">
+                    <button class="p-2 text-on-surface-variant hover:text-on-surface transition-colors rounded"
+                        title="AI Assist">
+                        <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+                    </button>
+                    <button
+                        class="p-2 bg-primary hover:bg-opacity-90 text-on-primary rounded transition-colors flex items-center justify-center ml-1"
+                        title="Send">
+                        <span class="material-symbols-outlined text-[18px]"
+                            style="font-variation-settings: 'FILL' 1;">send</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Footer Text -->
+            <div class="text-center font-label-sm text-[10px] text-on-surface-variant mt-1 opacity-50">
+                Cmd+K for quick search · End-to-end encrypted
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
