@@ -11,7 +11,7 @@ from dependencies import require_user
 from repositories import account_repo, session_repo
 from ws_manager import manager
 
-router = APIRouter(prefix="/api/dms", tags=["DMs"])
+router = APIRouter(prefix="/dms", tags=["DMs"])
 
 
 class AddDMBody(BaseModel):

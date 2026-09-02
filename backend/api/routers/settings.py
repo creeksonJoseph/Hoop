@@ -13,7 +13,7 @@ from services import zernio_service
 from crypto import encrypt_api_key, mask_api_key
 from ws_manager import manager
 
-router = APIRouter(prefix="/api/settings", tags=["Settings"])
+router = APIRouter(prefix="/settings", tags=["Settings"])
 
 
 class ApiKeyBody(BaseModel):

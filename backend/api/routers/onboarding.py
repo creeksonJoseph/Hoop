@@ -15,7 +15,7 @@ from repositories import account_repo
 from services import zernio_service
 from crypto import encrypt_api_key
 
-router = APIRouter(prefix="/api/onboarding", tags=["Onboarding"])
+router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
 
 class ConnectBody(BaseModel):

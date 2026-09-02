@@ -17,7 +17,7 @@ from services.session_service import (
 )
 from ws_manager import manager
 
-router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
+router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 
 class GenerateBody(BaseModel):

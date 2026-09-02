@@ -13,7 +13,7 @@ from dependencies import require_user
 from repositories import account_repo
 from services import zernio_service
 
-router = APIRouter(prefix="/api/messages", tags=["Messages"])
+router = APIRouter(prefix="/messages", tags=["Messages"])
 
 
 class ReplyBody(BaseModel):

@@ -146,14 +146,14 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-app.include_router(auth.router)
-app.include_router(home.router)
-app.include_router(chat.router)
-app.include_router(sessions.router)
-app.include_router(wingman.router)
-app.include_router(onboarding.router)
-app.include_router(admin.router)
-app.include_router(settings.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(home.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
+app.include_router(sessions.router, prefix="/api")
+app.include_router(wingman.router, prefix="/api")
+app.include_router(onboarding.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
+app.include_router(settings.router, prefix="/api")
 
 
 # ── WebSocket endpoints ───────────────────────────────────────────────────────

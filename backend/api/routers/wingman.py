@@ -10,7 +10,7 @@ from db import get_pool
 from repositories import account_repo, session_repo
 from services import zernio_service
 
-router = APIRouter(prefix="/api/wingman", tags=["Wingman"])
+router = APIRouter(prefix="/wingman", tags=["Wingman"])
 
 
 class ReplyBody(BaseModel):
