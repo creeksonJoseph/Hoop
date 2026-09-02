@@ -11,7 +11,6 @@ This file:
 - Registers middleware (CORS)
 - Mounts routers
 - Starts/stops background tasks (poll loop)
-- Serves static files
 
 No business logic, no SQL, no Zernio calls live here.
 """
@@ -22,14 +21,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-from config import STATIC_DIR, JWT_SECRET
+from config import JWT_SECRET
 from db import get_pool, init_db
 from ws_manager import manager
 from repositories import account_repo, session_repo
@@ -145,10 +143,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ── Static files ──────────────────────────────────────────────────────────────
-if os.path.isdir(STATIC_DIR):
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
