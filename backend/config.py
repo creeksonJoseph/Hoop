@@ -34,11 +34,6 @@ if not APP_MASTER_KEY:
 PORT: int         = int(os.getenv("PORT", "8000"))
 APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8000")
 
-# ── Directories ───────────────────────────────────────────────────────────────
-_HERE        = pathlib.Path(__file__).parent
-STATIC_DIR   = str(_HERE / "static")
-TEMPLATE_DIR = str(_HERE / "templates")
-
 # ── Startup validation ────────────────────────────────────────────────────────
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is required.")
