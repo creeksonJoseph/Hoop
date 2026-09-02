@@ -17,20 +17,18 @@
         <span class="text-3xl">📱</span>
       </div>
       <h1 class="text-2xl font-bold text-white">Connect Instagram</h1>
-      <p class="text-muted text-sm mt-1">You need a Business or Creator account to get started</p>
+      <p class="text-muted text-sm mt-1">Follow the 2 simple steps below to connect your Instagram account</p>
     </div>
 
-    <!-- Steps -->
+    <!-- Onboarding Steps -->
     <div class="bg-surface border border-border rounded-xl2 p-6 shadow-card mb-6">
-      <h2 class="text-sm font-semibold text-accent uppercase tracking-widest mb-5">Before you connect</h2>
+      <h2 class="text-sm font-semibold text-accent uppercase tracking-widest mb-5">Setup Guide</h2>
       <div class="space-y-4">
         {% set steps = [
-          ('1', '🔄', 'Switch to a Business or Creator Account',
-           'Go to Instagram → Settings → Account → Switch to Professional Account. Choose Business or Creator.'),
-          ('2', '🔗', 'Get your Zernio API key',
-           'Sign in at zernio.com → Settings → API → Copy your key. This lets Hoop read your DMs securely.'),
-          ('3', '🚀', 'Paste your API key below',
-           "Once connected, you'll see your Instagram account and can start managing DMs."),
+          ('1', '🔑', 'Verify Zernio API Key',
+           'Enter your Zernio API key below. Hoop verifies your key and encrypts it safely at rest.'),
+          ('2', '⚡', 'Connect Instagram via OAuth',
+           'If your key is verified, tap Authorize Instagram to link your Instagram Business or Creator account in 1 click.'),
         ] %}
         {% for num, icon, title, desc in steps %}
         <div class="flex gap-4">
@@ -48,22 +46,27 @@
 
     <!-- Connection form -->
     <div class="bg-surface border border-border rounded-xl2 p-6 shadow-card">
-      <h2 class="text-sm font-semibold text-white mb-4">Connect your account</h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold text-white">Step 1: Enter Zernio API Key</h2>
+        <a href="https://zernio.com/settings/api" target="_blank" class="text-xs text-accent hover:underline flex items-center gap-1">
+          Get API Key ↗
+        </a>
+      </div>
       <form method="POST" action="/onboarding/connect" class="space-y-4"
             hx-post="/onboarding/connect" hx-target="#connect-result" hx-swap="innerHTML">
         <div>
-          <label class="block text-sm font-medium text-white mb-1.5" for="zernio_api_key">Zernio API Key</label>
+          <label class="block text-xs font-medium text-muted mb-1.5" for="zernio_api_key">API Key</label>
           <input id="zernio_api_key" name="zernio_api_key" type="text" required
             placeholder="sk_..."
             class="w-full bg-bg border border-border rounded-sm2 px-4 py-2.5 text-sm text-white placeholder-muted
                    font-mono focus:outline-none focus:border-accent transition-colors" />
-          <p class="text-muted text-xs mt-1">Your key is stored encrypted and only used to fetch your DMs.</p>
+          <p class="text-muted text-[11px] mt-1">Key is encrypted at rest using AES-128-CBC + Fernet.</p>
         </div>
         <button type="submit"
-          class="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-2.5 rounded-sm2
-                 hover:opacity-90 active:scale-95 transition-all text-sm">
-          Connect Instagram
-          <span class="htmx-indicator ml-2">⏳</span>
+          class="w-full bg-gradient-to-r from-accent to-bubble-out text-white font-semibold py-2.5 rounded-sm2
+                 hover:opacity-90 active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
+          <span>Verify API Key</span>
+          <span class="htmx-indicator">⏳</span>
         </button>
       </form>
       <div id="connect-result" class="mt-4"></div>
