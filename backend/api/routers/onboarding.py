@@ -4,7 +4,7 @@ api/routers/onboarding.py
 LAYER: Router — Instagram connect onboarding flow.
 """
 from typing import Optional
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from db import get_pool
@@ -170,20 +170,50 @@ async def onboarding_connect(
 @router.get("/onboarding/callback")
 async def onboarding_callback(
     request: Request,
-    code: Optional[str] = None,
     user=Depends(require_user),
+    # Standard Zernio flow params (what we actually receive - camelCase from Zernio URL)
+    connected: Optional[str] = None,
+    account_id: Optional[str] = Query(None, alias="accountId"),
+    username: Optional[str] = None,
+    profile_id: Optional[str] = Query(None, alias="profileId"),
+    connect_token: Optional[str] = Query(None, alias="connect_token"),
+    # Headless OAuth code (alternative flow)
+    code: Optional[str] = None,
+    # Error params
+    error: Optional[str] = None,
 ):
     """
-    OAuth Callback route — handles redirection back from Meta/Zernio OAuth authorization.
-    Exchanges code, links Instagram account to user's profile, and redirects to /home.
+    OAuth Callback — handles return from Zernio/Meta after Instagram authorization.
+
+    Zernio standard flow sends:
+      ?connected=instagram&profileId=...&accountId=...&username=...&connect_token=...
+
+    Headless flow sends:
+      ?code=...&state=...
+
+    We handle both. Standard flow is preferred — save accountId + username directly.
     """
-    if not code:
-        return RedirectResponse("/onboarding", status_code=302)
+    import logging
+
+    if error:
+        logging.warning(f"[onboarding/callback] OAuth error from Zernio: {error}")
+        return RedirectResponse("/settings?error=oauth_failed", status_code=302)
 
     pool = await get_pool()
     async with pool.acquire() as conn:
         acc = await account_repo.get_any_account_for_user(conn, user["id"])
-        if acc and acc["zernio_api_key_enc"]:
+
+        # ── Standard flow: Zernio sends accountId + username directly ──────────
+        if connected == "instagram" and account_id and username:
+            ig_user = username.strip().lstrip("@").lower()
+            enc_key = acc["zernio_api_key_enc"] if acc else None
+            if ig_user and enc_key:
+                await account_repo.upsert_account(conn, user["id"], ig_user, account_id, enc_key)
+                logging.info(f"[onboarding/callback] Saved Instagram account @{ig_user} (accountId={account_id})")
+                return RedirectResponse("/home", status_code=302)
+
+        # ── Headless flow: exchange OAuth code via Zernio API ──────────────────
+        if code and acc and acc.get("zernio_api_key_enc"):
             try:
                 await zernio_service.handle_oauth_callback(acc["zernio_api_key_enc"], code)
                 accounts = await zernio_service.get_accounts(acc["zernio_api_key_enc"])
@@ -192,10 +222,12 @@ async def onboarding_callback(
                     acc_id  = a.get("_id") or a.get("id") or a.get("accountId") or ""
                     if ig_user and acc_id:
                         await account_repo.upsert_account(conn, user["id"], ig_user, acc_id, acc["zernio_api_key_enc"])
-            except Exception:
-                pass
+                        logging.info(f"[onboarding/callback] Headless: saved @{ig_user} (accountId={acc_id})")
+            except Exception as e:
+                logging.warning(f"[onboarding/callback] Headless code exchange failed: {e}")
 
     return RedirectResponse("/home", status_code=302)
+
 
 
 @router.get("/api/connect/instagram")
