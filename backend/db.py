@@ -26,7 +26,14 @@ _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=5)
+        # statement_cache_size=0 is required for Supabase Transaction Pooler
+        # (PgBouncer in transaction mode does not support prepared statements)
+        _pool = await asyncpg.create_pool(
+            DATABASE_URL,
+            min_size=1,
+            max_size=5,
+            statement_cache_size=0,
+        )
     return _pool
 
 
