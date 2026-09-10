@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '../lib/api'
+import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 
 export function useDMs() {
@@ -24,6 +25,26 @@ export function useDMs() {
   }, [])
 
   useEffect(() => { fetchDMs() }, [fetchDMs])
+
+  // Supabase Realtime — refresh list when new message is inserted
+  useEffect(() => {
+    const channel = supabase
+      .channel('dms_list_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          fetchDMs()
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [fetchDMs])
 
   const addDM = async (igUsername) => {
     try {
