@@ -46,17 +46,25 @@ export function useChat(igUsername) {
     if (!convId) return
 
     const channel = supabase
-      .channel(`messages:${convId}`)
+      .channel(`messages_realtime_${convId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `conversation_id=eq.${convId}`,
         },
         (payload) => {
           const row = payload.new
+          if (
+            !row ||
+            !row.conversation_id ||
+            (String(row.conversation_id) !== String(convId) &&
+              !String(row.conversation_id).includes(String(convId)) &&
+              !String(convId).includes(String(row.conversation_id)))
+          ) {
+            return
+          }
           addMessage({
             id: row.id,
             message: row.message,
