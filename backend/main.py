@@ -83,19 +83,37 @@ app.include_router(admin.router,      prefix="/api")
 app.include_router(settings.router,   prefix="/api")
 
 
+from repositories import account_repo
+
+
 # ── Zernio inbound webhook ────────────────────────────────────────────────────
 
 @app.post("/webhook/zernio", tags=["Webhook"])
 async def zernio_webhook(request: Request):
     """
-    Receives inbound message events from Zernio.
-    Inserts the message into the messages table.
-    Supabase Realtime broadcasts the INSERT to subscribed frontend clients.
+    Receives inbound events (messages, account.connected) from Zernio.
     """
     try:
         payload = await request.json()
     except Exception:
         raise HTTPException(400, "Invalid JSON payload")
+
+    event_type = payload.get("event")
+    if event_type == "account.connected":
+        acc = payload.get("account") or {}
+        username = acc.get("username")
+        account_id = acc.get("accountId") or acc.get("_id")
+        if username and account_id:
+            pool = await get_pool()
+            async with pool.acquire() as conn:
+                pending = await conn.fetchrow(
+                    "SELECT user_id, zernio_api_key_enc FROM connected_ig_accounts WHERE ig_username = '__pending__' ORDER BY added_at DESC LIMIT 1"
+                )
+                if pending:
+                    await account_repo.upsert_account(
+                        conn, pending["user_id"], username, account_id, pending["zernio_api_key_enc"]
+                    )
+        return {"status": "ok", "event": "account.connected"}
 
     msg = payload.get("message") or payload
     msg_id      = msg.get("id") or msg.get("messageId")

@@ -12,7 +12,12 @@ export default function OnboardingPage() {
     const result = await connect(key)
     if (!result) return
     if (result.status === 'pending_oauth') {
-      window.location.href = `https://hoop-4thy.onrender.com${result.connect_url}`
+      const targetUrl = result.oauth_url || result.connect_url
+      if (targetUrl.startsWith('http')) {
+        window.location.href = targetUrl
+      } else {
+        window.location.href = `https://hoop-4thy.onrender.com${targetUrl}`
+      }
     } else {
       navigate('/home')
     }

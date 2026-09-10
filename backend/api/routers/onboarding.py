@@ -87,7 +87,17 @@ async def onboarding_connect(body: ConnectBody, user=Depends(require_user)):
         pool = await get_pool()
         async with pool.acquire() as conn:
             await account_repo.upsert_account(conn, user["id"], "__pending__", "pending", enc_key)
-        return {"status": "pending_oauth", "connect_url": "/api/onboarding/connect/instagram"}
+
+        state = _make_state(user["id"])
+        backend_base = f"{request.url.scheme}://{request.url.netloc}"
+        redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
+
+        auth_url = await zernio_service.get_connect_url(enc_key, redirect_uri, user["id"])
+        return {
+            "status": "pending_oauth",
+            "oauth_url": auth_url,
+            "connect_url": auth_url or "/api/onboarding/connect/instagram",
+        }
 
     pool = await get_pool()
     added = 0
