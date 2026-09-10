@@ -30,29 +30,37 @@ async def get_messages(
 ):
     ig_target = (username or "").strip().lstrip("@").lower() or None
     pool = await get_pool()
-    # Always use the user's own connected account for the API key
     async with pool.acquire() as conn:
         acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
-    if not acc or not acc["zernio_api_key_enc"]:
-        raise HTTPException(404, "No connected account found")
+    if not acc or not acc.get("zernio_api_key_enc") or acc.get("ig_username") == "__pending__" or acc.get("zernio_account_id") == "pending":
+        raise HTTPException(400, "No connected Instagram account found. Please connect your Instagram account in Settings.")
 
-    conv = await zernio_service.find_conversation(
-        ig_target or acc["ig_username"],
-        acc["zernio_account_id"],
-        acc["zernio_api_key_enc"],
-    )
+    target_user = ig_target or acc["ig_username"]
+    try:
+        conv = await zernio_service.find_conversation(
+            target_user,
+            acc["zernio_account_id"],
+            acc["zernio_api_key_enc"],
+        )
+    except Exception as e:
+        raise HTTPException(502, f"Failed to look up conversation on Zernio: {e}")
+
     if not conv:
-        raise HTTPException(404, f"No conversation found for: {ig_target}")
+        raise HTTPException(404, f"No conversation found for: @{target_user}")
 
-    data = await zernio_service.get_messages(
-        conv["id"],
-        acc["zernio_account_id"],
-        acc["zernio_api_key_enc"],
-        limit=limit,
-        sort=sort if sort in ("asc", "desc") else "asc",
-        cursor=cursor,
-    )
+    try:
+        data = await zernio_service.get_messages(
+            conv["id"],
+            acc["zernio_account_id"],
+            acc["zernio_api_key_enc"],
+            limit=limit,
+            sort=sort if sort in ("asc", "desc") else "asc",
+            cursor=cursor,
+        )
+    except Exception as e:
+        raise HTTPException(502, f"Failed to fetch messages from Zernio: {e}")
+
     raw = data.get("messages", [])
 
     pool2 = await get_pool()
@@ -101,18 +109,30 @@ async def reply(
     async with pool.acquire() as conn:
         acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
-    if not acc or not acc["zernio_api_key_enc"]:
-        raise HTTPException(404, "No connected account found")
+    if not acc or not acc.get("zernio_api_key_enc") or acc.get("ig_username") == "__pending__" or acc.get("zernio_account_id") == "pending":
+        raise HTTPException(400, "No connected Instagram account found. Please connect your Instagram account in Settings.")
 
-    conv = await zernio_service.find_conversation(
-        ig_target or acc["ig_username"],
-        acc["zernio_account_id"],
-        acc["zernio_api_key_enc"],
-    )
+    target_user = ig_target or acc["ig_username"]
+    try:
+        conv = await zernio_service.find_conversation(
+            target_user,
+            acc["zernio_account_id"],
+            acc["zernio_api_key_enc"],
+        )
+    except Exception as e:
+        raise HTTPException(502, f"Failed to look up conversation on Zernio: {e}")
+
     if not conv:
-        raise HTTPException(404, f"No conversation found for: {ig_target}")
+        raise HTTPException(404, f"No active conversation found on Instagram for handle: @{target_user}")
 
-    result = await zernio_service.send_message(
-        conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], body.message
-    )
+    try:
+        result = await zernio_service.send_message(
+            conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], body.message
+        )
+    except Exception as e:
+        err_msg = str(e)
+        if "401" in err_msg or "Unauthorized" in err_msg:
+            raise HTTPException(401, "Zernio API key is invalid or revoked.")
+        raise HTTPException(400, f"Zernio message send failed: {err_msg}")
+
     return {"success": True, "sent_message": body.message, "zernio_response": result}

@@ -47,6 +47,7 @@ app = FastAPI(
 
 _ALLOWED_ORIGINS = list(dict.fromkeys(filter(None, [
     "http://localhost:5173",
+    "http://localhost:3000",
     "https://frontend-eight-inky-38.vercel.app",
     FRONTEND_URL,
 ])))
@@ -54,6 +55,7 @@ _ALLOWED_ORIGINS = list(dict.fromkeys(filter(None, [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,10 +68,18 @@ app.add_middleware(
 async def _unhandled_exception_handler(request: Request, exc: Exception):
     """Catch-all so unhandled errors still return JSON with CORS headers."""
     import traceback, logging
+    err_str = str(exc)
     logging.error("Unhandled exception: %s", traceback.format_exc())
+    origin = request.headers.get("origin") or "*"
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"},
+        content={"detail": f"Internal error: {err_str}" if err_str else "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": origin if origin != "*" else "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        },
     )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
