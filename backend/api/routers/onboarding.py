@@ -3,12 +3,18 @@ api/routers/onboarding.py
 ==========================
 LAYER: Router — REST endpoints for Instagram connect onboarding flow.
 """
+import hashlib
+import hmac
+import logging
+import os
+import time
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
+from config import WINGMAN_SECRET
 from db import get_pool
 from dependencies import require_user
 from repositories import account_repo
@@ -17,6 +23,38 @@ from crypto import encrypt_api_key
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
+FRONTEND_BASE = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
+
+
+# ── State token helpers ───────────────────────────────────────────────────────
+
+def _make_state(user_id: int) -> str:
+    """HMAC-signed state token: '<user_id>.<timestamp>.<sig>'"""
+    ts = int(time.time())
+    msg = f"{user_id}.{ts}".encode()
+    sig = hmac.new(WINGMAN_SECRET.encode(), msg, hashlib.sha256).hexdigest()[:16]
+    return f"{user_id}.{ts}.{sig}"
+
+
+def _verify_state(state: str, max_age: int = 3600) -> Optional[int]:
+    """Returns user_id if state is valid and not expired, else None."""
+    try:
+        parts = state.split(".")
+        if len(parts) != 3:
+            return None
+        user_id, ts, sig = int(parts[0]), int(parts[1]), parts[2]
+        if time.time() - ts > max_age:
+            return None
+        msg = f"{user_id}.{ts}".encode()
+        expected = hmac.new(WINGMAN_SECRET.encode(), msg, hashlib.sha256).hexdigest()[:16]
+        if not hmac.compare_digest(sig, expected):
+            return None
+        return user_id
+    except Exception:
+        return None
+
+
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 class ConnectBody(BaseModel):
     zernio_api_key: str
@@ -78,7 +116,11 @@ async def connect_instagram(request: Request, user=Depends(require_user)):
     if not acc or not acc.get("zernio_api_key_enc"):
         raise HTTPException(400, "No API key found — complete step 1 first")
 
-    redirect_uri = f"{request.url.scheme}://{request.url.netloc}/api/onboarding/callback"
+    # Embed signed user identity in the callback URL (no JWT cookie needed on return)
+    state = _make_state(user["id"])
+    backend_base = f"{request.url.scheme}://{request.url.netloc}"
+    redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
+
     auth_url = await zernio_service.get_connect_url(
         acc["zernio_api_key_enc"], redirect_uri, user["id"]
     )
@@ -92,34 +134,43 @@ async def connect_instagram(request: Request, user=Depends(require_user)):
 @router.get("/callback")
 async def onboarding_callback(
     request: Request,
-    user=Depends(require_user),
+    state: Optional[str] = None,
     connected: Optional[str] = None,
     account_id: Optional[str] = Query(None, alias="accountId"),
     username: Optional[str] = None,
+    connect_token: Optional[str] = Query(None, alias="connect_token"),
     code: Optional[str] = None,
     error: Optional[str] = None,
 ):
-    """OAuth callback — handles return from Zernio/Meta after Instagram authorization."""
-    import logging
-
-    import os
-    frontend_base = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
-
+    """
+    OAuth callback — handles return from Zernio/Meta after Instagram authorization.
+    User is identified via a signed 'state' token embedded in the redirect_uri.
+    No JWT/session cookie required — safe for cross-origin OAuth redirects.
+    """
     if error:
         logging.warning(f"[onboarding/callback] OAuth error: {error}")
-        return RedirectResponse(f"{frontend_base}/settings?error=oauth_failed")
+        return RedirectResponse(f"{FRONTEND_BASE}/settings?error=oauth_failed")
+
+    # Resolve user from signed state token
+    user_id = _verify_state(state) if state else None
+    if not user_id:
+        logging.warning(f"[onboarding/callback] Invalid or missing state: {state!r}")
+        return RedirectResponse(f"{FRONTEND_BASE}/settings?error=invalid_state")
 
     pool = await get_pool()
     async with pool.acquire() as conn:
-        acc = await account_repo.get_any_account_for_user(conn, user["id"])
+        acc = await account_repo.get_any_account_for_user(conn, user_id)
 
+        # Zernio sends back: connected=instagram, accountId, username
         if connected == "instagram" and account_id and username:
             ig_user = username.strip().lstrip("@").lower()
             enc_key = acc["zernio_api_key_enc"] if acc else None
             if ig_user and enc_key:
-                await account_repo.upsert_account(conn, user["id"], ig_user, account_id, enc_key)
-                return RedirectResponse(f"{frontend_base}/home")
+                await account_repo.upsert_account(conn, user_id, ig_user, account_id, enc_key)
+                logging.info(f"[onboarding/callback] Connected @{ig_user} for user_id={user_id}")
+                return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1")
 
+        # Fallback: OAuth code exchange (some Zernio flows use this)
         if code and acc and acc.get("zernio_api_key_enc"):
             try:
                 await zernio_service.handle_oauth_callback(acc["zernio_api_key_enc"], code)
@@ -129,9 +180,10 @@ async def onboarding_callback(
                     acc_id = a.get("_id") or a.get("id") or ""
                     if ig_user and acc_id:
                         await account_repo.upsert_account(
-                            conn, user["id"], ig_user, acc_id, acc["zernio_api_key_enc"]
+                            conn, user_id, ig_user, acc_id, acc["zernio_api_key_enc"]
                         )
+                return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1")
             except Exception as e:
                 logging.warning(f"[onboarding/callback] Code exchange failed: {e}")
 
-    return RedirectResponse(f"{frontend_base}/home")
+    return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1")
