@@ -25,10 +25,7 @@ export function useWingman(token) {
       setSession(s.data)
       m.data.messages.forEach((msg) => seenIds.current.add(msg.id))
       setMessages(m.data.messages)
-      // derive convId from first message if available
-      if (m.data.messages.length > 0) {
-        setConvId(m.data.conversation_id || null)
-      }
+      setConvId(m.data.conversation_id || null)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [token])
 
