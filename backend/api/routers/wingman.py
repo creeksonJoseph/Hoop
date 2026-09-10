@@ -60,8 +60,9 @@ async def wingman_messages(token: str):
 
     data = await zernio_service.get_messages(
         conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"],
-        limit=50, sort="asc",
+        limit=50, sort="desc",
     )
+    raw_messages = list(reversed(data.get("messages", [])))
     return {
         "conversation_id": conv["id"],
         "messages": [
@@ -70,7 +71,7 @@ async def wingman_messages(token: str):
                 "direction": m.get("direction"), "sender_name": m.get("senderName"),
                 "created_at": m.get("createdAt"), "attachments": m.get("attachments", []),
             }
-            for m in data.get("messages", [])
+            for m in raw_messages
         ]
     }
 
