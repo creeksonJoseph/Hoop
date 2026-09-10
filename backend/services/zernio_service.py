@@ -28,14 +28,30 @@ def _headers(api_key: str) -> Dict[str, str]:
 async def _get(path: str, params: dict, api_key: str) -> dict:
     async with httpx.AsyncClient(timeout=30) as client:
         r = await client.get(f"{ZERNIO_BASE}{path}", headers=_headers(api_key), params=params)
-    r.raise_for_status()
+    if r.status_code >= 400:
+        import logging
+        try:
+            err_data = r.json()
+            err_msg = err_data.get("error") or err_data.get("message") or err_data.get("detail") or str(err_data)
+        except Exception:
+            err_msg = r.text
+        logging.error(f"[Zernio GET {path}] status={r.status_code} body={err_msg}")
+        raise RuntimeError(f"[{r.status_code}] {err_msg}")
     return r.json()
 
 
 async def _post(path: str, body: dict, api_key: str) -> dict:
     async with httpx.AsyncClient(timeout=30) as client:
         r = await client.post(f"{ZERNIO_BASE}{path}", headers=_headers(api_key), json=body)
-    r.raise_for_status()
+    if r.status_code >= 400:
+        import logging
+        try:
+            err_data = r.json()
+            err_msg = err_data.get("error") or err_data.get("message") or err_data.get("detail") or str(err_data)
+        except Exception:
+            err_msg = r.text
+        logging.error(f"[Zernio POST {path}] status={r.status_code} body={err_msg}")
+        raise RuntimeError(f"[{r.status_code}] {err_msg}")
     return r.json()
 
 
