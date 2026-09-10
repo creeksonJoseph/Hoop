@@ -47,7 +47,7 @@ async def wingman_messages(token: str):
 
     ig_username = session["ig_username"]
     async with pool.acquire() as conn:
-        acc = await account_repo.get_account_by_ig(conn, ig_username)
+        acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
         raise HTTPException(404, "Account not configured")
@@ -63,6 +63,7 @@ async def wingman_messages(token: str):
         limit=50, sort="asc",
     )
     return {
+        "conversation_id": conv["id"],
         "messages": [
             {
                 "id": m["id"], "message": m.get("message"),
@@ -89,7 +90,7 @@ async def wingman_reply(token: str, body: ReplyBody):
 
     ig_username = session["ig_username"]
     async with pool.acquire() as conn:
-        acc = await account_repo.get_account_by_ig(conn, ig_username)
+        acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
         raise HTTPException(404, "Account not configured")
