@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -44,17 +45,32 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_ALLOWED_ORIGINS = list(dict.fromkeys(filter(None, [
+    "http://localhost:5173",
+    "https://frontend-eight-inky-38.vercel.app",
+    FRONTEND_URL,
+])))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://frontend-eight-inky-38.vercel.app",
-        FRONTEND_URL,
-    ],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Global exception handler (ensures CORS headers survive a 500) ─────────────
+
+@app.exception_handler(Exception)
+async def _unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch-all so unhandled errors still return JSON with CORS headers."""
+    import traceback, logging
+    logging.error("Unhandled exception: %s", traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router,       prefix="/api")
