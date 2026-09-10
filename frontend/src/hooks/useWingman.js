@@ -18,15 +18,27 @@ export function useWingman(token) {
   }, [])
 
   useEffect(() => {
-    Promise.all([
-      publicApi.get(`/wingman/${token}`),
-      publicApi.get(`/wingman/${token}/messages`),
-    ]).then(([s, m]) => {
-      setSession(s.data)
-      m.data.messages.forEach((msg) => seenIds.current.add(msg.id))
-      setMessages(m.data.messages)
-      setConvId(m.data.conversation_id || null)
-    }).catch(() => {}).finally(() => setLoading(false))
+    let active = true
+
+    publicApi.get(`/wingman/${token}`)
+      .then(({ data }) => {
+        if (active) setSession(data)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    publicApi.get(`/wingman/${token}/messages`)
+      .then(({ data }) => {
+        if (!active) return
+        data.messages.forEach((msg) => seenIds.current.add(msg.id))
+        setMessages(data.messages)
+        setConvId(data.conversation_id || null)
+      })
+      .catch(() => {})
+
+    return () => { active = false }
   }, [token])
 
   // Supabase Realtime for new inbound messages
