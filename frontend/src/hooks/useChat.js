@@ -24,7 +24,7 @@ export function useChat(igUsername) {
     const load = async () => {
       try {
         const { data } = await api.get('/messages', {
-          params: { username: igUsername, limit: 50, sort: 'asc' },
+          params: { username: igUsername, limit: 50, sort: 'desc' },
         })
         if (cancelled) return
         seenIds.current.clear()

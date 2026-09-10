@@ -24,7 +24,7 @@ class ReplyBody(BaseModel):
 async def get_messages(
     username: Optional[str] = Query(default=None),
     limit: int = Query(default=50, ge=1, le=100),
-    sort: str = Query(default="asc"),
+    sort: str = Query(default="desc"),
     cursor: Optional[str] = Query(default=None),
     user=Depends(require_user),
 ):
@@ -49,19 +49,22 @@ async def get_messages(
     if not conv:
         raise HTTPException(404, f"No conversation found for: @{target_user}")
 
+    sort_order = sort if sort in ("asc", "desc") else "desc"
     try:
         data = await zernio_service.get_messages(
             conv["id"],
             acc["zernio_account_id"],
             acc["zernio_api_key_enc"],
             limit=limit,
-            sort=sort if sort in ("asc", "desc") else "asc",
+            sort=sort_order,
             cursor=cursor,
         )
     except Exception as e:
         raise HTTPException(502, f"Failed to fetch messages from Zernio: {e}")
 
     raw = data.get("messages", [])
+    if sort_order == "desc":
+        raw = list(reversed(raw))
 
     pool2 = await get_pool()
     async with pool2.acquire() as conn:
@@ -133,6 +136,12 @@ async def reply(
         err_msg = str(e)
         if "401" in err_msg or "Unauthorized" in err_msg:
             raise HTTPException(401, "Zernio API key is invalid or revoked.")
+        if "outside of allowed window" in err_msg.lower() or "allowed window" in err_msg.lower():
+            raise HTTPException(
+                400,
+                f"Meta's 24-hour messaging window has expired for @{target_user}. "
+                "Per Meta/Instagram rules, the recipient must send a new DM to your Instagram account first before you can reply via API."
+            )
         raise HTTPException(400, f"Zernio message send failed: {err_msg}")
 
     return {"success": True, "sent_message": body.message, "zernio_response": result}
