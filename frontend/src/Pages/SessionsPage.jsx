@@ -1,78 +1,67 @@
-import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft, Plus, Zap } from 'lucide-react'
 import { useSessions } from '../hooks/useSessions'
+import NavRail from '../components/NavRail'
 import SessionCard from '../components/sessions/SessionCard'
 import { SessionsSkeleton } from '../components/skeletons/Skeletons'
 
 export default function SessionsPage() {
   const { igUsername } = useParams()
-  const { sessions, loading, generateSession, updateSession, deleteSession } = useSessions(igUsername)
-  const [name, setName] = useState('')
-  const [level, setLevel] = useState('read')
-  const [generating, setGenerating] = useState(false)
-
-  const handleGenerate = async (e) => {
-    e.preventDefault()
-    if (!name.trim()) return
-    setGenerating(true)
-    await generateSession(name.trim(), level)
-    setName('')
-    setGenerating(false)
-  }
+  const { sessions, loading, updateSession, deleteSession } = useSessions(igUsername)
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
-      <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center gap-3 shrink-0 bg-white shadow-2xs">
-        <Link to={`/chat/${igUsername}`}
-          className="w-7 h-7 flex items-center justify-center rounded-[6px] bg-white border border-[#dfdcd9] text-[#494744] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors">
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-        </Link>
-        <div>
-          <h1 className="text-[15px] font-semibold text-[#191918] tracking-tight">Wingman Sessions</h1>
-          <p className="text-[11px] text-[#615d59]">@{igUsername}</p>
-        </div>
-      </header>
+    <div className="h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans">
+      <NavRail activePage="sessions" />
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 max-w-lg mx-auto w-full">
-        {/* Generate form */}
-        <form onSubmit={handleGenerate} className="bg-white border border-[#dfdcd9] rounded-[12px] p-4 space-y-3 shadow-xs">
-          <h2 className="text-[14px] font-semibold text-[#191918]">Generate Wingman Link</h2>
-          <div className="flex gap-2">
-            <input
-              value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Wingman name"
-              className="flex-1 bg-white border border-[#dfdcd9] rounded-[6px] px-3 py-1.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-1 focus:ring-[#0075de] transition-colors"
-            />
-            <select
-              value={level} onChange={(e) => setLevel(e.target.value)}
-              className="bg-white border border-[#dfdcd9] rounded-[6px] px-3 py-1.5 text-[13px] text-[#191918] focus:outline-none focus:border-[#0075de] transition-colors cursor-pointer"
-            >
-              <option value="read">Read</option>
-              <option value="send">Send</option>
-            </select>
+      <div className="flex-1 h-full flex flex-col overflow-hidden pb-14 md:pb-0">
+        <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center justify-between shrink-0 bg-white">
+          <div className="flex items-center gap-3">
+            <Link to={`/chat/${igUsername}`}
+              className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] bg-white border border-[#dfdcd9] text-[#494744] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors">
+              <ArrowLeft size={16} strokeWidth={2} />
+            </Link>
+            <div>
+              <h1 className="text-[15px] font-semibold text-[#191918] tracking-tight">Wingman Sessions</h1>
+              <p className="text-[11px] text-[#615d59]">@{igUsername}</p>
+            </div>
           </div>
-          <button
-            type="submit" disabled={generating || !name.trim()}
-            className="w-full bg-[#0075de] hover:bg-[#005bab] text-white font-medium py-1.5 rounded-[6px] text-[12px] transition-colors disabled:opacity-50 shadow-xs"
-          >
-            {generating ? 'Generating…' : 'Generate Link'}
-          </button>
-        </form>
+          <Link to={`/sessions/${igUsername}/new`}
+            className="flex items-center gap-1.5 bg-[#0075de] hover:bg-[#005bab] text-white px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors shadow-sm">
+            <Plus size={14} strokeWidth={2.5} />
+            <span className="hidden sm:inline">Add Wingman</span>
+          </Link>
+        </header>
 
-        {/* Sessions list */}
-        {loading
-          ? <SessionsSkeleton />
-          : sessions.length === 0
-            ? <div className="text-center text-[12px] text-[#615d59] py-8">No sessions yet. Generate one above.</div>
-            : sessions.map((s) => (
-                <SessionCard
-                  key={s.id}
-                  session={s}
-                  onUpdate={updateSession}
-                  onDelete={deleteSession}
-                />
-              ))
-        }
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 max-w-lg mx-auto w-full">
+          {loading
+            ? <SessionsSkeleton />
+            : sessions.length === 0
+              ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+                  <div className="w-14 h-14 rounded-[12px] bg-[#f9f9f8] border border-[#dfdcd9] flex items-center justify-center text-[#a39e98]">
+                    <Zap size={28} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-medium text-[#191918]">No wingmen yet</p>
+                    <p className="text-[12px] text-[#615d59] mt-0.5">Generate a link to share access with a wingman.</p>
+                  </div>
+                  <Link to={`/sessions/${igUsername}/new`}
+                    className="flex items-center gap-1.5 bg-[#0075de] hover:bg-[#005bab] text-white px-3.5 py-2 rounded-[8px] text-[12px] font-medium transition-colors shadow-sm mt-2">
+                    <Plus size={14} strokeWidth={2.5} />
+                    Add Wingman
+                  </Link>
+                </div>
+              )
+              : sessions.map((s) => (
+                  <SessionCard
+                    key={s.id}
+                    session={s}
+                    onUpdate={updateSession}
+                    onDelete={deleteSession}
+                  />
+                ))
+          }
+        </div>
       </div>
     </div>
   )
