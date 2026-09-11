@@ -28,12 +28,16 @@ class UpdateAccessBody(BaseModel):
     access_level: str
 
 
+@router.get("")
 @router.get("/{ig_username}")
-async def list_sessions(ig_username: str, user=Depends(require_user)):
-    ig_username = ig_username.lower().lstrip("@")
+async def list_sessions(ig_username: str = "all", user=Depends(require_user)):
+    ig_username = (ig_username or "all").lower().lstrip("@")
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await session_repo.get_sessions_for_ig(conn, user["id"], ig_username)
+        if ig_username in ("all", "*", ""):
+            rows = await session_repo.get_all_sessions_for_user(conn, user["id"])
+        else:
+            rows = await session_repo.get_sessions_for_ig(conn, user["id"], ig_username)
     return {"sessions": [format_session_for_display(dict(r)) for r in rows]}
 
 

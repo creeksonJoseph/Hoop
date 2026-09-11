@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Key, Link2, CircleCheck as CheckCircle2, Loader as Loader2, TriangleAlert as AlertTriangle, Unlink, Shield, Eye } from 'lucide-react'
+import { Key, Link2, CircleCheck as CheckCircle2, Loader as Loader2, TriangleAlert as AlertTriangle, Unlink, Shield, ArrowLeft } from 'lucide-react'
 import { useSettings } from '../hooks/useSettings'
 import NavRail from '../components/NavRail'
 import { SettingsSkeleton } from '../components/skeletons/Skeletons'
@@ -36,9 +36,18 @@ export default function SettingsPage() {
 
       <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar px-4 py-5 pb-24 sm:px-6 md:pb-6">
         <div className="max-w-lg space-y-5">
-          <div className="flex items-center gap-2.5 mb-1">
-            <Shield size={20} className="text-[#191918]" strokeWidth={2} />
-            <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">Settings</h1>
+          <div className="flex items-center gap-3 mb-1">
+            <button
+              onClick={() => navigate('/home')}
+              className="flex size-8 items-center justify-center rounded-[8px] border border-[#dfdcd9] bg-white text-[#494744] hover:bg-[#f6f5f4] hover:text-[#191918] transition-colors shadow-xs cursor-pointer"
+              title="Back to Home"
+            >
+              <ArrowLeft size={16} strokeWidth={2} />
+            </button>
+            <div className="flex items-center gap-2">
+              <Shield size={20} className="text-[#191918]" strokeWidth={2} />
+              <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">Settings</h1>
+            </div>
           </div>
 
           {loading ? <SettingsSkeleton /> : (

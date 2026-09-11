@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import api from '../lib/api'
+import { clearDMsCache } from '../hooks/useDMs'
 
 const AuthContext = createContext(null)
 
@@ -23,6 +24,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('hoop_token')
+    clearDMsCache()
     setUser(null)
   }
 
