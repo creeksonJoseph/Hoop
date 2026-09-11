@@ -5,6 +5,8 @@ import { useToast } from '../context/ToastContext'
 
 export function useChat(igUsername) {
   const [messages, setMessages] = useState([])
+  const [participantName, setParticipantName] = useState(null)
+  const [profilePicUrl, setProfilePicUrl] = useState(null)
   const [convId, setConvId] = useState(null)
   const [loading, setLoading] = useState(true)
   const seenIds = useRef(new Set())
@@ -42,6 +44,8 @@ export function useChat(igUsername) {
     setLoading(true)
     setMessages([])
     setConvId(null)
+    setParticipantName(null)
+    setProfilePicUrl(null)
 
     const load = async () => {
       try {
@@ -53,6 +57,8 @@ export function useChat(igUsername) {
         data.messages.forEach((m) => seenIds.current.add(m.id))
         setMessages(data.messages)
         setConvId(data.conversation_id)
+        setParticipantName(data.participant_name || null)
+        setProfilePicUrl(data.profile_pic_url || null)
         console.log('[useChat] load done — conv_id:', data.conversation_id, '| seenIds count:', seenIds.current.size)
       } catch (err) {
         if (!cancelled) toastRef.current('Failed to load messages', 'error')
@@ -172,5 +178,5 @@ export function useChat(igUsername) {
     }
   }
 
-  return { messages, loading, sendMessage, deleteMessage }
+  return { messages, participantName, profilePicUrl, loading, sendMessage, deleteMessage }
 }

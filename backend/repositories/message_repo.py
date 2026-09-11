@@ -83,18 +83,20 @@ async def upsert_conversation(
     conversation_id: str,
     participant_username: str,
     participant_name: Optional[str] = None,
+    profile_pic_url: Optional[str] = None,
 ) -> None:
     clean = participant_username.lower().strip().lstrip("@")
     await conn.execute(
         """
-        INSERT INTO conversations (conversation_id, participant_username, participant_name, fetched_at)
-        VALUES ($1, $2, $3, NOW())
+        INSERT INTO conversations (conversation_id, participant_username, participant_name, profile_pic_url, fetched_at)
+        VALUES ($1, $2, $3, $4, NOW())
         ON CONFLICT (conversation_id) DO UPDATE SET
             participant_username = EXCLUDED.participant_username,
             participant_name     = COALESCE(EXCLUDED.participant_name, conversations.participant_name),
+            profile_pic_url      = COALESCE(EXCLUDED.profile_pic_url, conversations.profile_pic_url),
             fetched_at           = NOW()
         """,
-        str(conversation_id), clean, participant_name
+        str(conversation_id), clean, participant_name, profile_pic_url
     )
 
 

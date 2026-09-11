@@ -87,10 +87,11 @@ export function useDMs() {
       const { data } = await api.post('/dms', { ig_username: igUsername })
       cachedDMs = data.dms
       setDMs(data.dms)
-      return true
+      return { success: true }
     } catch (err) {
-      toastRef.current(err.response?.data?.detail || 'Failed to add conversation', 'error')
-      return false
+      const errMsg = err.response?.data?.detail || 'Failed to add conversation'
+      toastRef.current(errMsg, 'error')
+      return { success: false, error: errMsg }
     }
   }
 

@@ -66,12 +66,29 @@ async def add_dm(body: AddDMBody, user=Depends(require_user)):
             if not conv:
                 raise HTTPException(
                     404,
-                    f"No active conversation found for @{ig_username}. "
-                    f"Make sure @{ig_username} has sent a DM to your Instagram account first."
+                    f"Username @{ig_username} not found. Please add a username of someone you already have a current DM with on Instagram."
                 )
 
-            # Pre-seed DB with conversation & initial messages
-            await message_repo.upsert_conversation(conn, conv["id"], ig_username, conv.get("participantName"))
+            # Pre-seed DB with conversation metadata & initial messages
+            p_data = conv.get("instagramProfile") or conv.get("participant") or {}
+            display_name = (
+                p_data.get("name")
+                or p_data.get("displayName")
+                or p_data.get("full_name")
+                or conv.get("participantName")
+                or conv.get("name")
+                or ig_username
+            )
+            avatar_url = (
+                p_data.get("profilePicUrl")
+                or p_data.get("profile_pic")
+                or p_data.get("profile_picture")
+                or p_data.get("avatar")
+                or conv.get("participantPicture")
+                or conv.get("profilePicUrl")
+                or conv.get("profile_pic")
+            )
+            await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url)
             try:
                 data = await zernio_service.get_messages(
                     conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], limit=50
