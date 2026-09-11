@@ -90,13 +90,15 @@ async def list_dm_usernames_with_session_counts(
     conn: asyncpg.Connection, user_id: int
 ) -> List[asyncpg.Record]:
     return await conn.fetch("""
-        SELECT t.ig_username, t.last_message,
+        SELECT t.ig_username, t.last_message, c.participant_name, c.profile_pic_url,
                COUNT(s.id) AS session_count
         FROM tracked_dms t
+        LEFT JOIN conversations c
+            ON LOWER(c.participant_username) = LOWER(t.ig_username)
         LEFT JOIN wingman_sessions s
             ON s.ig_username = t.ig_username AND s.user_id = t.user_id
         WHERE t.user_id = $1
-        GROUP BY t.ig_username, t.last_message, t.added_at
+        GROUP BY t.ig_username, t.last_message, t.added_at, c.participant_name, c.profile_pic_url
         ORDER BY t.added_at DESC
     """, user_id)
 

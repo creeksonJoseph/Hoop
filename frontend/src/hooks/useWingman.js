@@ -9,6 +9,8 @@ const publicApi = axios.create({
 export function useWingman(token) {
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [participantName, setParticipantName] = useState(null);
+  const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [convId, setConvId] = useState(null);
   const [loading, setLoading] = useState(true);
   const seenIds = useRef(new Set());
@@ -49,6 +51,8 @@ export function useWingman(token) {
         if (!active) return;
         data.messages.forEach((msg) => seenIds.current.add(msg.id));
         setMessages(data.messages);
+        setParticipantName(data.participant_name || null);
+        setProfilePicUrl(data.profile_pic_url || null);
         setConvId(data.conversation_id || null);
       })
       .catch(() => {});
@@ -102,5 +106,5 @@ export function useWingman(token) {
     }
   };
 
-  return { session, messages, loading, sendMessage };
+  return { session, messages, participantName, profilePicUrl, loading, sendMessage };
 }

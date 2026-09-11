@@ -53,8 +53,12 @@ async def wingman_messages(token: str):
 
     if db_messages:
         conv_id = conv_rec["conversation_id"] if conv_rec else (db_messages[0].get("conversation_id") or "db_conv")
+        pic_url = conv_rec.get("profile_pic_url") if conv_rec else None
+        p_name = conv_rec.get("participant_name") if conv_rec else ig_username
         return {
             "conversation_id": conv_id,
+            "participant_name": p_name,
+            "profile_pic_url": pic_url,
             "messages": [
                 {
                     "id": m["id"],
@@ -87,12 +91,33 @@ async def wingman_messages(token: str):
     )
     raw_messages = list(reversed(data.get("messages", [])))
 
+    p_data = conv.get("instagramProfile") or conv.get("participant") or {}
+    display_name = (
+        p_data.get("name")
+        or p_data.get("displayName")
+        or p_data.get("full_name")
+        or conv.get("participantName")
+        or conv.get("name")
+        or ig_username
+    )
+    avatar_url = (
+        p_data.get("profilePicUrl")
+        or p_data.get("profile_pic")
+        or p_data.get("profile_picture")
+        or p_data.get("avatar")
+        or conv.get("participantPicture")
+        or conv.get("profilePicUrl")
+        or conv.get("profile_pic")
+    )
+
     async with pool.acquire() as conn:
-        await message_repo.upsert_conversation(conn, conv["id"], ig_username, conv.get("participantName"))
+        await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url)
         await message_repo.upsert_messages_batch(conn, raw_messages, conv["id"])
 
     return {
         "conversation_id": conv["id"],
+        "participant_name": display_name,
+        "profile_pic_url": avatar_url,
         "messages": [
             {
                 "id": m["id"], "message": m.get("text") or m.get("message"),

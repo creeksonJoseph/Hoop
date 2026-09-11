@@ -43,10 +43,10 @@ async def get_messages(
         existing_conv = await message_repo.get_conversation_by_participant(conn, target_user)
 
     # 2. If messages exist in DB and force_sync is False -> return directly from local DB
-    #    This avoids hitting Zernio API rate limits on every chat view!
     if existing_msgs and not force_sync:
         conv_id = existing_conv["conversation_id"] if existing_conv else (existing_msgs[0].get("conversation_id") or "db_conv")
         p_name = existing_conv["participant_name"] if existing_conv else target_user
+        pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
         formatted = [
             {
                 "id": m["id"],
@@ -62,6 +62,7 @@ async def get_messages(
             "conversation_id": conv_id,
             "participant_name": p_name,
             "instagram_username": target_user,
+            "profile_pic_url": pic_url,
             "total_returned": len(formatted),
             "pagination": None,
             "messages": formatted,
@@ -77,6 +78,7 @@ async def get_messages(
         )
     except Exception as e:
         if existing_msgs:
+            pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
             formatted = [
                 {
                     "id": m["id"],
@@ -92,6 +94,7 @@ async def get_messages(
                 "conversation_id": existing_msgs[0].get("conversation_id") or "db_conv",
                 "participant_name": target_user,
                 "instagram_username": target_user,
+                "profile_pic_url": pic_url,
                 "total_returned": len(formatted),
                 "pagination": None,
                 "messages": formatted,
@@ -100,6 +103,7 @@ async def get_messages(
 
     if not conv:
         if existing_msgs:
+            pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
             formatted = [
                 {
                     "id": m["id"],
@@ -115,16 +119,37 @@ async def get_messages(
                 "conversation_id": existing_msgs[0].get("conversation_id") or "db_conv",
                 "participant_name": target_user,
                 "instagram_username": target_user,
+                "profile_pic_url": pic_url,
                 "total_returned": len(formatted),
                 "pagination": None,
                 "messages": formatted,
             }
         raise HTTPException(404, f"No conversation found for: @{target_user}")
 
-    # 4. Store conversation mapping into DB
+    # Extract display name and avatar URL from Zernio metadata
+    p_data = conv.get("instagramProfile") or conv.get("participant") or {}
+    display_name = (
+        p_data.get("name")
+        or p_data.get("displayName")
+        or p_data.get("full_name")
+        or conv.get("participantName")
+        or conv.get("name")
+        or target_user
+    )
+    avatar_url = (
+        p_data.get("profilePicUrl")
+        or p_data.get("profile_pic")
+        or p_data.get("profile_picture")
+        or p_data.get("avatar")
+        or conv.get("participantPicture")
+        or conv.get("profilePicUrl")
+        or conv.get("profile_pic")
+    )
+
+    # 4. Store conversation mapping into DB with display name & avatar URL
     async with pool.acquire() as conn:
         await message_repo.upsert_conversation(
-            conn, conv["id"], target_user, conv.get("participantName")
+            conn, conv["id"], target_user, display_name, avatar_url
         )
 
     # 5. Fetch messages from Zernio and bulk upsert to DB
@@ -155,6 +180,7 @@ async def get_messages(
                 "conversation_id": conv["id"],
                 "participant_name": conv.get("participantName"),
                 "instagram_username": target_user,
+                "profile_pic_url": avatar_url,
                 "total_returned": len(formatted),
                 "pagination": None,
                 "messages": formatted,
@@ -186,6 +212,7 @@ async def get_messages(
         "conversation_id": conv["id"],
         "participant_name": conv.get("participantName"),
         "instagram_username": target_user,
+        "profile_pic_url": avatar_url,
         "total_returned": len(formatted),
         "pagination": data.get("pagination"),
         "messages": formatted,

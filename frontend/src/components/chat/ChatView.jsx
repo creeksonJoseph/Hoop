@@ -6,11 +6,16 @@ import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
 
 export default function ChatView({ igUsername }) {
-  const { messages, loading, sendMessage, deleteMessage } = useChat(igUsername)
+  const { messages, participantName, profilePicUrl, loading, sendMessage, deleteMessage } = useChat(igUsername)
   const [input, setInput] = useState('')
+  const [headerImgError, setHeaderImgError] = useState(false)
   const [ctxMenu, setCtxMenu] = useState(null)
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
+
+  const displayName = participantName && participantName.toLowerCase() !== igUsername.toLowerCase()
+    ? participantName
+    : null
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -46,14 +51,28 @@ export default function ChatView({ igUsername }) {
             className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] bg-white border border-[#dfdcd9] text-[#494744] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors">
             <ArrowLeft size={16} strokeWidth={2} />
           </Link>
-          <div className="w-8 h-8 rounded-[8px] bg-[#e6f3fe] border border-[#0075de]/20 flex items-center justify-center font-bold text-xs text-[#0075de] shrink-0">
-            {igUsername[0].toUpperCase()}
-          </div>
+          {profilePicUrl && !headerImgError ? (
+            <img
+              src={profilePicUrl}
+              alt={igUsername}
+              onError={() => setHeaderImgError(true)}
+              className="w-8 h-8 rounded-[8px] object-cover border border-[#0075de]/20 shrink-0 shadow-xs"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-[8px] bg-[#e6f3fe] border border-[#0075de]/20 flex items-center justify-center font-bold text-xs text-[#0075de] shrink-0">
+              {igUsername[0].toUpperCase()}
+            </div>
+          )}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1">
-              <h2 className="text-[14px] font-semibold text-[#191918] truncate">@{igUsername}</h2>
+              <h2 className="text-[14px] font-semibold text-[#191918] truncate">
+                {displayName || `@${igUsername}`}
+              </h2>
               <BadgeCheck size={15} className="text-[#0075de]" fill="currentColor" />
             </div>
+            {displayName && (
+              <p className="text-[11px] text-[#615d59] font-mono leading-none">@{igUsername}</p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -71,7 +90,7 @@ export default function ChatView({ igUsername }) {
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
-              <MessageBubble key={msg.id} msg={msg} igUsername={igUsername} onContextMenu={handleContextMenu} />
+              <MessageBubble key={msg.id} msg={msg} igUsername={igUsername} avatarUrl={profilePicUrl} onContextMenu={handleContextMenu} />
             ))
         }
         <div ref={messagesEndRef} />

@@ -7,8 +7,9 @@ import { MessagesSkeleton } from '../components/skeletons/Skeletons'
 
 export default function WingmanPage() {
   const { token } = useParams()
-  const { session, messages, loading, sendMessage } = useWingman(token)
+  const { session, messages, participantName, profilePicUrl, loading, sendMessage } = useWingman(token)
   const [input, setInput] = useState('')
+  const [headerImgError, setHeaderImgError] = useState(false)
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
@@ -38,9 +39,18 @@ export default function WingmanPage() {
     <div className="fluid-page h-[100dvh] flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
       <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center justify-between bg-white shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[8px] bg-[#191918] flex items-center justify-center font-bold text-white text-[12px]">H</div>
+          {profilePicUrl && !headerImgError ? (
+            <img
+              src={profilePicUrl}
+              alt={session?.ig_username || 'Avatar'}
+              onError={() => setHeaderImgError(true)}
+              className="w-8 h-8 rounded-[8px] object-cover border border-[#0075de]/20 shrink-0 shadow-xs"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-[8px] bg-[#191918] flex items-center justify-center font-bold text-white text-[12px]">H</div>
+          )}
           <div>
-            <p className="text-[14px] font-semibold text-[#191918] tracking-tight">{session?.wingman_name || '…'}</p>
+            <p className="text-[14px] font-semibold text-[#191918] tracking-tight">{participantName || session?.ig_username || '…'}</p>
             <p className="text-[11px] text-[#615d59]">@{session?.ig_username}</p>
           </div>
         </div>
@@ -58,7 +68,7 @@ export default function WingmanPage() {
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
-              <MessageBubble key={msg.id} msg={msg} igUsername={session?.ig_username || ''} onContextMenu={() => {}} />
+              <MessageBubble key={msg.id} msg={msg} igUsername={session?.ig_username || ''} avatarUrl={profilePicUrl} onContextMenu={() => {}} />
             ))
         }
         <div ref={messagesEndRef} />

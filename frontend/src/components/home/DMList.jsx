@@ -56,21 +56,36 @@ export default function DMList({ dms, onDelete, activeUsername }) {
               }`}
               onClick={() => navigate(`/chat/${dm.ig_username}`)}
             >
-              <div className={`w-9 h-9 rounded-[8px] flex items-center justify-center font-semibold text-[13px] shrink-0 ${
+              {dm.profile_pic_url ? (
+                <img
+                  src={dm.profile_pic_url}
+                  alt={dm.ig_username}
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                  className="w-9 h-9 rounded-[8px] object-cover shrink-0 border border-[#0075de]/20 shadow-xs"
+                />
+              ) : null}
+              <div className={`w-9 h-9 rounded-[8px] flex items-center justify-center font-semibold text-[13px] shrink-0 ${dm.profile_pic_url ? 'hidden' : ''} ${
                 isActive ? 'bg-[#0075de] text-white' : 'bg-[#e6f3fe] text-[#0075de] border border-[#0075de]/20'
               }`}>
                 {dm.ig_username[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`text-[13px] font-medium truncate ${isActive ? 'text-[#0075de]' : 'text-[#191918]'}`}>
-                  @{dm.ig_username}
+                  {dm.participant_name && dm.participant_name.toLowerCase() !== dm.ig_username.toLowerCase()
+                    ? dm.participant_name
+                    : `@${dm.ig_username}`}
                 </p>
-                {dm.session_count > 0 && (
-                  <p className="text-[10px] text-[#615d59] flex items-center gap-1 mt-0.5">
-                    <Zap size={10} className="text-[#0075de]" strokeWidth={2} />
-                    {dm.session_count} wingman{dm.session_count !== 1 ? 's' : ''}
-                  </p>
-                )}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {dm.participant_name && dm.participant_name.toLowerCase() !== dm.ig_username.toLowerCase() && (
+                    <span className="text-[11px] text-[#615d59] font-mono truncate">@{dm.ig_username}</span>
+                  )}
+                  {dm.session_count > 0 && (
+                    <span className="text-[10px] text-[#615d59] flex items-center gap-0.5 shrink-0">
+                      <Zap size={10} className="text-[#0075de]" strokeWidth={2} />
+                      {dm.session_count}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setDeletingDM(dm.ig_username) }}

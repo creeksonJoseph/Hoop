@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ExternalLink, Film, Paperclip } from 'lucide-react'
 
 function fmt(iso) {
@@ -14,10 +15,11 @@ function isReelUrl(url) {
   return /instagram\.com\/(reel|reels|p)\//i.test(url) || /instagr\.am\/(reel|p)\//i.test(url)
 }
 
-export default function MessageBubble({ msg, igUsername, onContextMenu }) {
+export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMenu }) {
   const isOut = msg.direction === 'outgoing'
   const text = msg.message || ''
   const attachments = msg.attachments || []
+  const [imgError, setImgError] = useState(false)
 
   const match = text.match(URL_REGEX)
   const textUrl = match ? match[0] : null
@@ -27,10 +29,19 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
 
   return (
     <div className={`flex gap-2.5 max-w-[92%] sm:max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
-      <div className={`w-7 h-7 rounded-[8px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
-        ${isOut ? 'bg-[#191918] text-white border-[#191918]' : 'bg-[#e6f3fe] text-[#0075de] border-[#0075de]/20'}`}>
-        {isOut ? 'H' : igUsername[0].toUpperCase()}
-      </div>
+      {!isOut && avatarUrl && !imgError ? (
+        <img
+          src={avatarUrl}
+          alt={igUsername}
+          onError={() => setImgError(true)}
+          className="w-7 h-7 rounded-[8px] object-cover shrink-0 border border-[#0075de]/20 mt-0.5 shadow-xs"
+        />
+      ) : (
+        <div className={`w-7 h-7 rounded-[8px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
+          ${isOut ? 'bg-[#191918] text-white border-[#191918]' : 'bg-[#e6f3fe] text-[#0075de] border-[#0075de]/20'}`}>
+          {isOut ? 'H' : (igUsername ? igUsername[0].toUpperCase() : '?')}
+        </div>
+      )}
 
       <div className={`flex flex-col gap-0.5 ${isOut ? 'items-end' : ''}`}>
         <div className={`flex items-baseline gap-2 text-[10px] text-[#615d59] ${isOut ? 'mr-1 flex-row-reverse' : 'ml-1'}`}>
