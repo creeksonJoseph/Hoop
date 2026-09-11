@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Copy, Check, Trash as Trash2, Eye, Send, Ban, Loader2, MessageSquare, ExternalLink } from 'lucide-react'
+import ConfirmModal from '../common/ConfirmModal'
 
 export default function SessionCard({ session, onUpdate, onDelete }) {
   const [copied, setCopied] = useState(false)
   const [loadingAction, setLoadingAction] = useState(null) // 'read' | 'send' | 'revoked' | 'delete' | null
+  const [confirmModalState, setConfirmModalState] = useState(null) // { action: 'toggle'|'revoke'|'delete', title, description, confirmText, isDestructive }
 
   const levelConfig = {
     read: { label: 'Read Only', icon: Eye, color: 'text-[#0075de] bg-[#e6f3fe] border-[#0075de]/20' },
@@ -14,32 +16,68 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
 
   const level = levelConfig[session.access_level] || levelConfig.revoked
   const LevelIcon = level.icon
+  const wingmanName = session.wingman_name || 'this wingman'
+  const nextLevel = session.access_level === 'read' ? 'send' : 'read'
+  const nextLevelLabel = nextLevel === 'send' ? 'Read & Write' : 'Read Only'
 
-  const handleToggleAccess = async () => {
-    const nextLevel = session.access_level === 'read' ? 'send' : 'read'
-    setLoadingAction(nextLevel)
-    try {
-      await onUpdate(session.id, nextLevel)
-    } finally {
-      setLoadingAction(null)
-    }
+  const promptToggleAccess = () => {
+    setConfirmModalState({
+      action: 'toggle',
+      title: 'Change Access Level?',
+      description: `Are you sure you want to change ${wingmanName}'s access for @${session.ig_username} to ${nextLevelLabel}?`,
+      confirmText: `Switch to ${nextLevelLabel}`,
+      isDestructive: false,
+    })
   }
 
-  const handleRevoke = async () => {
-    setLoadingAction('revoked')
-    try {
-      await onUpdate(session.id, 'revoked')
-    } finally {
-      setLoadingAction(null)
-    }
+  const promptRevoke = () => {
+    setConfirmModalState({
+      action: 'revoke',
+      title: 'Revoke Wingman Access?',
+      description: `Are you sure you want to revoke ${wingmanName}'s access link for @${session.ig_username}? They will no longer be able to view or send messages.`,
+      confirmText: 'Revoke Link',
+      isDestructive: true,
+    })
   }
 
-  const handleDelete = async () => {
-    setLoadingAction('delete')
-    try {
-      await onDelete(session.id)
-    } finally {
-      setLoadingAction(null)
+  const promptDelete = () => {
+    setConfirmModalState({
+      action: 'delete',
+      title: 'Delete Wingman Link?',
+      description: `Are you sure you want to permanently delete this link for ${wingmanName} (@${session.ig_username})?`,
+      confirmText: 'Delete Link',
+      isDestructive: true,
+    })
+  }
+
+  const handleConfirmModalAction = async () => {
+    if (!confirmModalState) return
+    const { action } = confirmModalState
+
+    if (action === 'toggle') {
+      setLoadingAction(nextLevel)
+      try {
+        await onUpdate(session.id, nextLevel)
+        setConfirmModalState(null)
+      } finally {
+        setLoadingAction(null)
+      }
+    } else if (action === 'revoke') {
+      setLoadingAction('revoked')
+      try {
+        await onUpdate(session.id, 'revoked')
+        setConfirmModalState(null)
+      } finally {
+        setLoadingAction(null)
+      }
+    } else if (action === 'delete') {
+      setLoadingAction('delete')
+      try {
+        await onDelete(session.id)
+        setConfirmModalState(null)
+      } finally {
+        setLoadingAction(null)
+      }
     }
   }
 
@@ -85,7 +123,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
         {session.access_level !== 'revoked' && (
           <>
             <button
-              onClick={handleToggleAccess}
+              onClick={promptToggleAccess}
               disabled={loadingAction !== null}
               className="flex-1 min-w-[8.5rem] text-[11px] font-medium bg-white border border-[#dfdcd9] hover:bg-[#f6f5f4] text-[#494744] py-1 px-2.5 rounded-[6px] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 shadow-xs cursor-pointer"
             >
@@ -98,7 +136,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
               )}
             </button>
             <button
-              onClick={handleRevoke}
+              onClick={promptRevoke}
               disabled={loadingAction !== null}
               className="flex-1 min-w-[6.5rem] text-[11px] font-medium bg-[#fef3f1] border border-[#fdd3cd] text-[#e32d14] hover:bg-[#e32d14] hover:text-white py-1 px-2.5 rounded-[6px] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 shadow-xs cursor-pointer"
             >
@@ -111,7 +149,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
           </>
         )}
         <button
-          onClick={handleDelete}
+          onClick={promptDelete}
           disabled={loadingAction !== null}
           className="w-7 h-7 flex items-center justify-center rounded-[6px] text-[#615d59] hover:text-[#e32d14] hover:bg-[#fef3f1] border border-[#dfdcd9] transition-colors shrink-0 disabled:opacity-60 cursor-pointer"
           title="Delete Link"
@@ -140,6 +178,18 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
           {copied ? <Check size={13} className="text-[#0f6220]" strokeWidth={2} /> : <Copy size={13} strokeWidth={2} />}
         </button>
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(confirmModalState)}
+        title={confirmModalState?.title || ''}
+        description={confirmModalState?.description || ''}
+        confirmText={confirmModalState?.confirmText || 'Confirm'}
+        isDestructive={confirmModalState?.isDestructive || false}
+        loading={loadingAction !== null}
+        onConfirm={handleConfirmModalAction}
+        onClose={() => setConfirmModalState(null)}
+      />
     </div>
   )
 }
+

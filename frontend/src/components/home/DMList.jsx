@@ -1,14 +1,28 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Trash as Trash2, MessageCircle, Zap } from 'lucide-react'
+import ConfirmModal from '../common/ConfirmModal'
 
 export default function DMList({ dms, onDelete, activeUsername }) {
   const [query, setQuery] = useState('')
+  const [deletingDM, setDeletingDM] = useState(null)
+  const [loadingDelete, setLoadingDelete] = useState(false)
   const navigate = useNavigate()
 
   const filtered = dms.filter((d) =>
     (d.ig_username || '').toLowerCase().includes(query.toLowerCase())
   )
+
+  const handleConfirmDelete = async () => {
+    if (!deletingDM) return
+    setLoadingDelete(true)
+    try {
+      await onDelete(deletingDM)
+      setDeletingDM(null)
+    } finally {
+      setLoadingDelete(false)
+    }
+  }
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden font-sans">
@@ -59,8 +73,9 @@ export default function DMList({ dms, onDelete, activeUsername }) {
                 )}
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); onDelete(dm.ig_username) }}
-                className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-[6px] text-[#615d59] hover:text-[#e32d14] hover:bg-[#fef3f1] transition-all"
+                onClick={(e) => { e.stopPropagation(); setDeletingDM(dm.ig_username) }}
+                className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-[6px] text-[#615d59] hover:text-[#e32d14] hover:bg-[#fef3f1] transition-all cursor-pointer"
+                title="Delete Conversation"
               >
                 <Trash2 size={15} strokeWidth={2} />
               </button>
@@ -68,6 +83,18 @@ export default function DMList({ dms, onDelete, activeUsername }) {
           )
         })}
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(deletingDM)}
+        title="Delete Conversation?"
+        description={`Are you sure you want to delete @${deletingDM}? This will remove the tracked thread and revoke associated wingman links.`}
+        confirmText="Delete Thread"
+        isDestructive={true}
+        loading={loadingDelete}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeletingDM(null)}
+      />
     </div>
   )
 }
+
