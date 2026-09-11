@@ -20,6 +20,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
+import logging
+
 from config import FRONTEND_URL, ZERNIO_WEBHOOK_SECRET
 from db import get_pool, init_db
 
@@ -120,7 +122,7 @@ async def zernio_webhook(request: Request):
     except Exception:
         raise HTTPException(400, "Invalid JSON payload")
 
-    logging.info(f"[zernio_webhook] received payload: {payload}")
+    logging.info(f"[webhook] raw payload keys={list(payload.keys())} event={payload.get('event')}")
 
     event_type = payload.get("event")
     if event_type == "account.connected":
@@ -147,6 +149,11 @@ async def zernio_webhook(request: Request):
     msg  = payload.get("message") or {}
     conv = payload.get("conversation") or {}
 
+    logging.info(f"[webhook] msg keys={list(msg.keys())}")
+    logging.info(f"[webhook] conv keys={list(conv.keys())}")
+    logging.info(f"[webhook] conv.id={conv.get('id')} conv.platformConversationId={conv.get('platformConversationId')}")
+    logging.info(f"[webhook] msg.id={msg.get('id')} msg.conversationId={msg.get('conversationId')} msg.direction={msg.get('direction')}")
+
     msg_id  = msg.get("id")
     conv_id = conv.get("id")
 
@@ -165,19 +172,12 @@ async def zernio_webhook(request: Request):
         created_at = raw_ts  # already a string or None
 
     if not msg_id or not conv_id:
-        logging.warning(f"[zernio_webhook] Ignored missing ids: msg_id={msg_id}, conv_id={conv_id}")
+        logging.warning(f"[webhook] ignored: msg_id={msg_id} conv_id={conv_id}")
         return {"status": "ignored", "reason": "missing id or conversationId"}
 
     pool = await get_pool()
     async with pool.acquire() as conn:
-        # conv_id from webhook is Instagram's platformConversationId (numeric).
-        # Look up the Zernio internal ID so it matches what the frontend subscribes to.
-        mapped = await conn.fetchval(
-            "SELECT zernio_conv_id FROM conv_id_map WHERE platform_conv_id = $1",
-            str(conv_id),
-        )
-        zernio_conv_id = mapped or str(conv_id)
-        logging.info(f"[zernio_webhook] inserting msg_id={msg_id} platform_conv_id={conv_id} zernio_conv_id={zernio_conv_id} direction={direction}")
+        logging.info(f"[webhook] inserting msg_id={msg_id} conversation_id={conv_id} direction={direction} text={text[:40]!r}")
         await conn.execute(
             """
             INSERT INTO messages
@@ -185,7 +185,7 @@ async def zernio_webhook(request: Request):
             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
             ON CONFLICT (id) DO NOTHING
             """,
-            str(msg_id), zernio_conv_id, sender_id, sender_name,
+            str(msg_id), str(conv_id), sender_id, sender_name,
             text, direction, created_at, "instagram",
         )
 
