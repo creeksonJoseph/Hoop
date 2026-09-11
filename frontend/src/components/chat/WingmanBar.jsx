@@ -35,7 +35,7 @@ export default function WingmanBar({ igUsername, onUseSuggestion }) {
           <span>Refresh</span>
         </button>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex max-w-full flex-wrap gap-2">
         {suggestions.map((s, i) => (
           <button
             key={i}
