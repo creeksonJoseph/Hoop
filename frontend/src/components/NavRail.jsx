@@ -16,7 +16,7 @@ export default function NavRail({ activePage }) {
 
   return (
     <>
-      <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-border bg-white px-4 py-5">
+      <aside className="hidden md:flex w-56 lg:w-64 shrink-0 flex-col border-r border-border bg-white px-3 lg:px-4 py-5">
         <Link to="/home" className="flex items-center gap-3 px-2 mb-8">
           <span className="flex size-9 items-center justify-center rounded-xl bg-foreground text-sm font-bold text-background shadow-sm">H</span>
           <span className="font-semibold tracking-tight">Hoop</span>
@@ -36,7 +36,7 @@ export default function NavRail({ activePage }) {
         </div>
         <button onClick={handleLogout} className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><LogOut size={18} /> Sign out</button>
       </aside>
-      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-16 items-center justify-around border-t border-border bg-white/95 px-2 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-start justify-around border-t border-border bg-white/95 px-1 pt-1 backdrop-blur md:hidden safe-bottom">
         {navItems.map(({ href, icon: Icon, label, key }) => {
           const active = current === key
           return <Link key={key} to={href} className={`flex min-w-16 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}><Icon size={20} strokeWidth={active ? 2.5 : 2} /><span>{label}</span></Link>
