@@ -58,34 +58,55 @@ export function useChat(igUsername) {
   useEffect(() => {
     if (!convId) return
 
-    const channel = supabase
-      .channel(`messages_realtime_${convId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${convId}`,
-        },
-        (payload) => {
-          const row = payload.new
-          addMessage({
-            id: row.id,
-            message: row.message,
-            direction: row.direction,
-            sender_name: row.sender_name,
-            created_at: row.created_at,
-            attachments: [],
-          })
-        }
-      )
-      .subscribe((status, err) => {
-        if (err) console.error('[Supabase Realtime] subscription error:', err)
-        else console.log('[Supabase Realtime] status:', status, 'conv_id:', convId)
-      })
+    let retryTimer = null
+    let active = true
+    const channelRef = { current: null }
 
-    return () => { supabase.removeChannel(channel) }
+    const subscribe = () => {
+      if (!active) return
+
+      const channel = supabase
+        .channel(`messages_realtime_${convId}_${Date.now()}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${convId}`,
+          },
+          (payload) => {
+            const row = payload.new
+            addMessage({
+              id: row.id,
+              message: row.message,
+              direction: row.direction,
+              sender_name: row.sender_name,
+              created_at: row.created_at,
+              attachments: [],
+            })
+          }
+        )
+        .subscribe((status, err) => {
+          console.log('[Supabase Realtime] status:', status, 'conv_id:', convId)
+          if (err) console.error('[Supabase Realtime] error:', err)
+          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active) {
+            console.warn('[Supabase Realtime] channel lost — retrying in 2s')
+            supabase.removeChannel(channel)
+            retryTimer = setTimeout(subscribe, 2000)
+          }
+        })
+
+      channelRef.current = channel
+    }
+
+    subscribe()
+
+    return () => {
+      active = false
+      clearTimeout(retryTimer)
+      if (channelRef.current) supabase.removeChannel(channelRef.current)
+    }
   }, [convId, addMessage])
 
   const sendMessage = async (text) => {

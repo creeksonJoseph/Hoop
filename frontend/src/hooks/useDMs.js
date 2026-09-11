@@ -28,22 +28,39 @@ export function useDMs() {
 
   // Supabase Realtime — refresh list when new message is inserted
   useEffect(() => {
-    const channel = supabase
-      .channel('dms_list_realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        () => {
-          fetchDMs()
-        }
-      )
-      .subscribe()
+    let retryTimer = null
+    let active = true
+    const channelRef = { current: null }
 
-    return () => { supabase.removeChannel(channel) }
+    const subscribe = () => {
+      if (!active) return
+
+      const channel = supabase
+        .channel(`dms_list_realtime_${Date.now()}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages' },
+          () => { fetchDMs() }
+        )
+        .subscribe((status, err) => {
+          if (err) console.error('[Supabase DMs Realtime] error:', err)
+          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active) {
+            console.warn('[Supabase DMs Realtime] channel lost — retrying in 2s')
+            supabase.removeChannel(channel)
+            retryTimer = setTimeout(subscribe, 2000)
+          }
+        })
+
+      channelRef.current = channel
+    }
+
+    subscribe()
+
+    return () => {
+      active = false
+      clearTimeout(retryTimer)
+      if (channelRef.current) supabase.removeChannel(channelRef.current)
+    }
   }, [fetchDMs])
 
   const addDM = async (igUsername) => {
