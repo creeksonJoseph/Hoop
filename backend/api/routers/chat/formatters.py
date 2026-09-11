@@ -4,10 +4,11 @@ api/routers/chat/formatters.py
 LAYER: Router helpers — pure functions for extracting and formatting
 conversation / message data. No I/O, no FastAPI dependencies.
 """
-from typing import Optional
+from typing import Optional, Tuple
 
 
-def extract_profile_data(conv: dict, fallback_username: str) -> tuple[str, Optional[str]]:
+def extract_profile_data(conv: dict, fallback_username: str) -> Tuple[str, Optional[str]]:
+
     """
     Extract (display_name, avatar_url) from a Zernio conversation dict.
     Falls back gracefully so the UI never shows an empty name.
