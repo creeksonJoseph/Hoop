@@ -73,8 +73,10 @@ async def get_messages(
             if isinstance(raw_ts, (int, float)):
                 ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
                 parsed_ts = str(int(ts_sec))
+            elif raw_ts is not None:
+                parsed_ts = str(raw_ts)
             else:
-                parsed_ts = raw_ts  # already a string or None
+                parsed_ts = None
             await conn.execute(
                 """
                 INSERT INTO messages
