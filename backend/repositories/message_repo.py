@@ -133,3 +133,29 @@ async def get_messages_for_participant(
         clean
     )
 
+
+async def delete_messages_and_conversation(
+    conn: asyncpg.Connection, participant_username: str
+) -> None:
+    """
+    Deletes all messages and conversation records associated with a participant handle.
+    Ensures that re-adding a thread starts on a completely clean slate.
+    """
+    clean = participant_username.lower().strip().lstrip("@")
+    await conn.execute(
+        """
+        DELETE FROM messages
+        WHERE conversation_id IN (
+            SELECT conversation_id FROM conversations WHERE LOWER(participant_username) = $1
+        )
+        OR LOWER(sender_name) = $1
+        OR conversation_id = $1
+        """,
+        clean,
+    )
+    await conn.execute(
+        "DELETE FROM conversations WHERE LOWER(participant_username) = $1",
+        clean,
+    )
+
+

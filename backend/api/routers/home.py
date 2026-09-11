@@ -110,13 +110,19 @@ async def delete_dm(ig_username: str, user=Depends(require_user)):
     ig_username = ig_username.strip().lstrip("@").lower()
     pool = await get_pool()
     async with pool.acquire() as conn:
+        # 1. Delete all wingman sessions associated with this thread
         revoked_tokens = await session_repo.delete_all_sessions_for_ig(
             conn, user["id"], ig_username
         )
+        # 2. Delete all messages & conversation records for this participant from local DB
+        await message_repo.delete_messages_and_conversation(conn, ig_username)
+        # 3. Delete tracked DM record for this user
         await account_repo.delete_tracked_dm(conn, user["id"], ig_username)
+        # 4. Return updated DM list
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
 
     for token in revoked_tokens:
         pass  # Supabase Realtime notifies clients
 
     return {"dms": [dict(r) for r in rows]}
+

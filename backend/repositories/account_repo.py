@@ -75,15 +75,17 @@ async def add_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username: st
 
 
 async def delete_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username: str) -> None:
-    clean_user = ig_username.lower().strip()
+    clean_user = ig_username.lower().strip().lstrip("@")
     await conn.execute(
-        "DELETE FROM tracked_dms WHERE user_id = $1 AND ig_username = $2",
+        "DELETE FROM tracked_dms WHERE user_id = $1 AND LOWER(ig_username) = $2",
         user_id, clean_user,
     )
     await conn.execute(
-        "DELETE FROM conversations WHERE participant_username = $1",
+        "DELETE FROM conversations WHERE LOWER(participant_username) = $1",
         clean_user,
     )
+
+
 
 
 async def list_dm_usernames_with_session_counts(
