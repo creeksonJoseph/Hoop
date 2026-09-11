@@ -13,7 +13,11 @@ export function useChat(igUsername) {
   toastRef.current = toast
 
   const addMessage = useCallback((msg) => {
-    if (seenIds.current.has(msg.id)) return
+    console.log('[addMessage] called with id:', msg.id, 'direction:', msg.direction, 'text:', msg.message)
+    if (seenIds.current.has(msg.id)) {
+      console.warn('[addMessage] SKIPPED — already in seenIds:', msg.id)
+      return
+    }
     seenIds.current.add(msg.id)
     // Replace any optimistic placeholder that has the same text + direction
     setMessages((prev) => {
@@ -21,11 +25,13 @@ export function useChat(igUsername) {
         (m) => m.id.startsWith('opt_') && m.message === msg.message && m.direction === msg.direction
       )
       if (optIdx !== -1) {
+        console.log('[addMessage] replacing optimistic bubble at index', optIdx)
         seenIds.current.delete(prev[optIdx].id)
         const next = [...prev]
         next[optIdx] = msg
         return next
       }
+      console.log('[addMessage] appending new message, total will be:', prev.length + 1)
       return [...prev, msg]
     })
   }, [])
@@ -43,7 +49,7 @@ export function useChat(igUsername) {
         data.messages.forEach((m) => seenIds.current.add(m.id))
         setMessages(data.messages)
         setConvId(data.conversation_id)
-        console.log('[useChat] subscribed conv_id:', data.conversation_id)
+        console.log('[useChat] initial load done — conv_id:', data.conversation_id, '| seenIds count:', seenIds.current.size)
       } catch (err) {
         if (!cancelled) toastRef.current('Failed to load messages', 'error')
       } finally {
@@ -65,18 +71,28 @@ export function useChat(igUsername) {
     const subscribe = () => {
       if (!active) return
 
+      const channelName = `messages_realtime_${convId}_${Date.now()}`
+      const filterStr = `conversation_id=eq.${convId}`
+      console.log('[Supabase Realtime] subscribing — channel:', channelName, '| filter:', filterStr)
+
       const channel = supabase
-        .channel(`messages_realtime_${convId}_${Date.now()}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
             table: 'messages',
-            filter: `conversation_id=eq.${convId}`,
+            filter: filterStr,
           },
           (payload) => {
+            console.log('[Supabase Realtime] 🔔 RAW EVENT received:', JSON.stringify(payload.new))
             const row = payload.new
+            if (!row || !row.id) {
+              console.error('[Supabase Realtime] payload.new is missing or has no id:', payload)
+              return
+            }
+            console.log('[Supabase Realtime] row.conversation_id:', row.conversation_id, '| subscribed convId:', convId)
             addMessage({
               id: row.id,
               message: row.message,
@@ -88,8 +104,8 @@ export function useChat(igUsername) {
           }
         )
         .subscribe((status, err) => {
-          console.log('[Supabase Realtime] status:', status, 'conv_id:', convId)
-          if (err) console.error('[Supabase Realtime] error:', err)
+          console.log('[Supabase Realtime] status:', status, '| conv_id:', convId)
+          if (err) console.error('[Supabase Realtime] subscription error:', err)
           if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active) {
             console.warn('[Supabase Realtime] channel lost — retrying in 2s')
             supabase.removeChannel(channel)
