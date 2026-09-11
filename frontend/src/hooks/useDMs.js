@@ -44,10 +44,12 @@ export function useDMs() {
         )
         .subscribe((status, err) => {
           if (err) console.error('[Supabase DMs Realtime] error:', err)
-          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active) {
+          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active && !retryTimer) {
             console.warn('[Supabase DMs Realtime] channel lost — retrying in 2s')
-            supabase.removeChannel(channel)
-            retryTimer = setTimeout(subscribe, 2000)
+            retryTimer = setTimeout(() => {
+              retryTimer = null
+              subscribe()
+            }, 2000)
           }
         })
 

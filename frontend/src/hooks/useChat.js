@@ -106,10 +106,16 @@ export function useChat(igUsername) {
         .subscribe((status, err) => {
           console.log('[Supabase Realtime] status:', status, '| conv_id:', convId)
           if (err) console.error('[Supabase Realtime] subscription error:', err)
-          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active) {
+          // Guard: removeChannel() itself fires CLOSED — use a flag to prevent
+          // the cascade: CHANNEL_ERROR → removeChannel → CLOSED → removeChannel → ...
+          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active && !retryTimer) {
             console.warn('[Supabase Realtime] channel lost — retrying in 2s')
-            supabase.removeChannel(channel)
-            retryTimer = setTimeout(subscribe, 2000)
+            // Don't call removeChannel here — the socket is already dead (1006).
+            // Calling it now just triggers another CLOSED callback and the loop repeats.
+            retryTimer = setTimeout(() => {
+              retryTimer = null
+              subscribe()
+            }, 2000)
           }
         })
 
