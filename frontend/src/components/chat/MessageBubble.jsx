@@ -6,38 +6,115 @@ function fmt(iso) {
     d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g
+
+function isReelUrl(url) {
+  return /instagram\.com\/(reel|reels|p)\//i.test(url) || /instagr\.am\/(reel|p)\//i.test(url)
+}
+
 export default function MessageBubble({ msg, igUsername, onContextMenu }) {
   const isOut = msg.direction === 'outgoing'
+  const text = msg.message || ''
+  const attachments = msg.attachments || []
+
+  // Extract first URL from text or attachments
+  const match = text.match(URL_REGEX)
+  const textUrl = match ? match[0] : null
+  const attUrl = attachments.find(a => a.url)?.url
+  const primaryUrl = textUrl || attUrl
+
+  const isReel = primaryUrl && isReelUrl(primaryUrl)
 
   return (
-    <div className={`flex gap-3 max-w-[85%] fade-up ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
-      <div className={`w-8 h-8 rounded-full shrink-0 border border-[#4d4638] mt-1 flex items-center justify-center text-xs font-bold
-        ${isOut ? 'bg-[#ffe19e] text-[#3e2e00] border-[#ffe19e]' : 'bg-[#353534] text-[#e5e2e1]'}`}>
+    <div className={`flex gap-2.5 max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
+      <div className={`w-7 h-7 rounded-[6px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
+        ${isOut ? 'bg-[#191918] text-white border-[#191918]' : 'bg-[#e6f3fe] text-[#0075de] border-[#0075de]/20'}`}>
         {isOut ? 'H' : igUsername[0].toUpperCase()}
       </div>
-      <div className={`flex flex-col gap-1 ${isOut ? 'items-end' : ''}`}>
-        <div className={`flex items-baseline gap-2 text-[10px] text-[#d0c5b2] ${isOut ? 'mr-1 flex-row-reverse' : 'ml-1'}`}>
-          <span className="font-semibold text-[#e5e2e1]">{isOut ? 'You' : `@${igUsername}`}</span>
+
+      <div className={`flex flex-col gap-0.5 ${isOut ? 'items-end' : ''}`}>
+        <div className={`flex items-baseline gap-2 text-[10px] text-[#615d59] ${isOut ? 'mr-1 flex-row-reverse' : 'ml-1'}`}>
+          <span className="font-semibold text-[#191918]">{isOut ? 'You' : `@${igUsername}`}</span>
           {msg.created_at && <span>{fmt(msg.created_at)}</span>}
         </div>
+
+        {/* Single Unified Card Component */}
         <div
           onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, msg.id) }}
-          className={`px-4 py-2.5 text-sm leading-relaxed shadow-sm cursor-context-menu
+          className={`overflow-hidden text-[13px] leading-relaxed shadow-xs cursor-context-menu
             ${isOut
-              ? 'bg-[#e9c46a] border border-[#e9c46a] rounded-xl rounded-tr-sm text-[#3e2e00]'
-              : 'bg-[#2a2a2a] border border-[#4d4638] rounded-xl rounded-tl-sm text-[#e5e2e1]'
+              ? 'bg-[#0075de] text-white border border-[#0075de] rounded-[8px] rounded-tr-[2px]'
+              : 'bg-white border border-[#dfdcd9] text-[#191918] rounded-[8px] rounded-tl-[2px]'
             }`}
         >
-          {msg.message}
-          {(msg.attachments || []).map((att, i) =>
-            att.type === 'image' && att.url
-              ? <img key={i} src={att.url} className="max-w-[220px] rounded-lg mt-2 border border-[#4d4638]" alt="" />
-              : att.url
-                ? <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-[#201f1f] border border-[#4d4638] rounded-lg text-xs text-[#ffe19e] hover:underline">
-                    📎 {att.payload?.title?.slice(0, 40) || att.type || 'Attachment'}
+          {isReel ? (
+            /* Single Reel Card */
+            <a
+              href={primaryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block p-3 transition-colors ${
+                isOut ? 'hover:bg-[#0068c7] text-white' : 'hover:bg-[#f6f5f4] text-[#191918]'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1">
+                <span>🎬</span>
+                <span>Instagram Reel</span>
+                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+              </div>
+              {text && !text.startsWith('http') && (
+                <p className="text-[12px] opacity-90 mb-1 line-clamp-2">{text}</p>
+              )}
+              <span className={`text-[11px] underline font-mono opacity-85 block truncate ${isOut ? 'text-white' : 'text-[#0075de]'}`}>
+                {primaryUrl}
+              </span>
+            </a>
+          ) : (
+            /* Standard Text / Attachment Bubble */
+            <div className="px-3.5 py-2">
+              {text && (
+                <p className="whitespace-pre-wrap break-words">
+                  {text.split(URL_REGEX).map((part, i) =>
+                    URL_REGEX.test(part) ? (
+                      <a
+                        key={i}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`underline font-medium ${isOut ? 'text-white' : 'text-[#0075de]'}`}
+                      >
+                        {part}
+                      </a>
+                    ) : (
+                      part
+                    )
+                  )}
+                </p>
+              )}
+
+              {attachments.map((att, i) =>
+                att.type === 'image' && att.url ? (
+                  <img
+                    key={i}
+                    src={att.url}
+                    className="max-w-[240px] rounded-[6px] mt-1.5 border border-black/10"
+                    alt="Attachment"
+                  />
+                ) : att.url && !isReel ? (
+                  <a
+                    key={i}
+                    href={att.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1.5 mt-1.5 text-[11px] font-medium underline ${
+                      isOut ? 'text-white' : 'text-[#0075de]'
+                    }`}
+                  >
+                    📎 {att.payload?.title || att.type || 'View Attachment'} ↗
                   </a>
-                : null
+                ) : null
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -38,38 +38,38 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#131313] text-[#e5e2e1] overflow-hidden relative"
+    <div className="h-screen w-full flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden relative font-sans"
       onClick={() => setCtxMenu(null)}>
 
       {/* Header */}
-      <header className="h-16 px-6 border-b border-[#4d4638] flex items-center justify-between bg-[#1c1b1b] shrink-0 z-30">
+      <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center justify-between bg-white shrink-0 z-30 shadow-2xs">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/home"
-            className="w-8 h-8 flex items-center justify-center rounded-[1rem] bg-[#2a2a2a] border border-[#4d4638] text-[#d0c5b2] hover:text-[#e5e2e1] hover:border-[#ffe19e] transition-all">
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            className="w-7 h-7 flex items-center justify-center rounded-[6px] bg-white border border-[#dfdcd9] text-[#494744] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors">
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           </Link>
-          <div className="w-9 h-9 rounded-full bg-[#ffe19e]/20 border border-[#4d4638] flex items-center justify-center font-bold text-sm text-[#ffe19e] shrink-0">
+          <div className="w-8 h-8 rounded-[6px] bg-[#e6f3fe] border border-[#0075de]/20 flex items-center justify-center font-bold text-xs text-[#0075de] shrink-0">
             {igUsername[0].toUpperCase()}
           </div>
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h2 className="text-sm font-semibold text-[#e5e2e1] truncate">@{igUsername}</h2>
-              <span className="material-symbols-outlined text-[#ffe19e] text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <div className="flex items-center gap-1">
+              <h2 className="text-[14px] font-semibold text-[#191918] truncate">@{igUsername}</h2>
+              <span className="material-symbols-outlined text-[#0075de] text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Link to={`/sessions/${igUsername}`}
-            className="flex items-center gap-1 bg-[#201f1f] border border-[#4d4638] hover:border-[#ffe19e] text-[#ffe19e] px-2.5 py-1 rounded-[1rem] text-[11px] transition-all">
-            <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+            className="flex items-center gap-1 bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1 rounded-[6px] text-[11px] font-medium transition-colors">
+            <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
             <span className="hidden sm:inline">Sessions</span>
           </Link>
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500" title="Supabase Realtime" />
+          <div className="w-2 h-2 rounded-full bg-emerald-500" title="Supabase Realtime" />
         </div>
       </header>
 
       {/* Messages */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3 pb-24">
+      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]">
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
@@ -80,8 +80,8 @@ export default function ChatPage() {
       </main>
 
       {/* Input bar */}
-      <div className="px-4 pb-4 pt-3 border-t border-[#4d4638] bg-[#131313] z-40">
-        <div className="relative w-full flex items-center bg-[#201f1f] border border-[#4d4638] focus-within:border-[#ffe19e] focus-within:ring-1 focus-within:ring-[#ffe19e] rounded-xl transition-all shadow-lg">
+      <div className="px-4 pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">
+        <div className="relative w-full flex items-center bg-white border border-[#dfdcd9] focus-within:border-[#0075de] focus-within:ring-1 focus-within:ring-[#0075de] rounded-[8px] transition-colors shadow-sm">
           <textarea
             ref={textareaRef}
             value={input}
@@ -89,16 +89,16 @@ export default function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Type a reply… (Enter to send, Shift+Enter for newline)"
             rows={1}
-            className="w-full bg-transparent border-none focus:ring-0 text-[#e5e2e1] py-3 px-4 resize-none custom-scrollbar max-h-28 text-sm placeholder:text-[#d0c5b2]/50 outline-none"
-            style={{ minHeight: '44px' }}
+            className="w-full bg-transparent border-none focus:ring-0 text-[#191918] py-2.5 px-3.5 resize-none custom-scrollbar max-h-28 text-[13px] placeholder:text-[#a39e98] outline-none"
+            style={{ minHeight: '40px' }}
           />
           <div className="flex items-center pr-2 shrink-0">
             <button
               onClick={handleSend}
               disabled={!input.trim()}
-              className="p-2 bg-[#ffe19e] text-[#3e2e00] rounded-lg transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[6px] transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+              <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
             </button>
           </div>
         </div>
@@ -107,15 +107,15 @@ export default function ChatPage() {
       {/* Context menu */}
       {ctxMenu && (
         <div
-          className="fixed z-50 bg-[#2a2a2a] border border-[#4d4638] rounded-xl shadow-2xl overflow-hidden min-w-[160px]"
+          className="fixed z-50 bg-white border border-[#dfdcd9] rounded-[8px] shadow-lg overflow-hidden min-w-[150px] font-sans"
           style={{ left: ctxMenu.x, top: ctxMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={handleDelete}
-            className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#ffb4ab] hover:bg-[#93000a]/30 transition-colors flex items-center gap-2"
+            className="w-full text-left px-3.5 py-2 text-[12px] font-medium text-[#e32d14] hover:bg-[#fef3f1] transition-colors flex items-center gap-2"
           >
-            <span className="material-symbols-outlined text-[16px]">delete</span>
+            <span className="material-symbols-outlined text-[15px]">delete</span>
             Delete Message
           </button>
         </div>
