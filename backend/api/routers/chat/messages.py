@@ -21,7 +21,7 @@ from .formatters import extract_profile_data, format_db_messages, format_zernio_
 router = APIRouter()
 
 
-@router.get("")
+@router.get("/")
 async def get_messages(
     username: Optional[str] = Query(default=None),
     limit: int = Query(default=50, ge=1, le=100),
