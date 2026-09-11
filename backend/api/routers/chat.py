@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from db import get_pool
 from dependencies import require_user
-from repositories import account_repo
+from repositories import account_repo, message_repo
 from services import zernio_service
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
@@ -67,29 +67,7 @@ async def get_messages(
 
     pool2 = await get_pool()
     async with pool2.acquire() as conn:
-        for msg in raw:
-            sender = msg.get("sender") or {}
-            raw_ts = msg.get("sentAt") or msg.get("createdAt")
-            if isinstance(raw_ts, (int, float)):
-                ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
-                parsed_ts = str(int(ts_sec))
-            elif raw_ts is not None:
-                parsed_ts = str(raw_ts)
-            else:
-                parsed_ts = None
-            await conn.execute(
-                """
-                INSERT INTO messages
-                    (id, conversation_id, sender_id, sender_name, message, direction, created_at, platform)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-                ON CONFLICT (id) DO NOTHING
-                """,
-                msg["id"], conv["id"],
-                sender.get("id") or msg.get("senderId"),
-                sender.get("name") or sender.get("username") or msg.get("senderName"),
-                msg.get("text") or msg.get("message"),
-                msg.get("direction"), parsed_ts, "instagram",
-            )
+        await message_repo.upsert_messages_batch(conn, raw, conv["id"])
 
     return {
         "conversation_id": conv["id"],

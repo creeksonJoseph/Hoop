@@ -14,44 +14,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
-from config import WINGMAN_SECRET
 from db import get_pool
 from dependencies import require_user
 from repositories import account_repo
-from services import zernio_service
+from services import zernio_service, auth_service
 from crypto import encrypt_api_key
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
 FRONTEND_BASE = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
-
-
-# ── State token helpers ───────────────────────────────────────────────────────
-
-def _make_state(user_id: int) -> str:
-    """HMAC-signed state token: '<user_id>.<timestamp>.<sig>'"""
-    ts = int(time.time())
-    msg = f"{user_id}.{ts}".encode()
-    sig = hmac.new(WINGMAN_SECRET.encode(), msg, hashlib.sha256).hexdigest()[:16]
-    return f"{user_id}.{ts}.{sig}"
-
-
-def _verify_state(state: str, max_age: int = 3600) -> Optional[int]:
-    """Returns user_id if state is valid and not expired, else None."""
-    try:
-        parts = state.split(".")
-        if len(parts) != 3:
-            return None
-        user_id, ts, sig = int(parts[0]), int(parts[1]), parts[2]
-        if time.time() - ts > max_age:
-            return None
-        msg = f"{user_id}.{ts}".encode()
-        expected = hmac.new(WINGMAN_SECRET.encode(), msg, hashlib.sha256).hexdigest()[:16]
-        if not hmac.compare_digest(sig, expected):
-            return None
-        return user_id
-    except Exception:
-        return None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -61,7 +32,7 @@ class ConnectBody(BaseModel):
 
 
 @router.post("/connect")
-async def onboarding_connect(body: ConnectBody, user=Depends(require_user)):
+async def onboarding_connect(request: Request, body: ConnectBody, user=Depends(require_user)):
     """
     Validates user's Zernio key, encrypts it, saves accounts.
     Raw key is used once then discarded — only Fernet cipher is persisted.
@@ -88,7 +59,7 @@ async def onboarding_connect(body: ConnectBody, user=Depends(require_user)):
         async with pool.acquire() as conn:
             await account_repo.upsert_account(conn, user["id"], "__pending__", "pending", enc_key)
 
-        state = _make_state(user["id"])
+        state = auth_service.make_state(user["id"])
         backend_base = f"{request.url.scheme}://{request.url.netloc}"
         redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
 
@@ -127,7 +98,7 @@ async def connect_instagram(request: Request, user=Depends(require_user)):
         raise HTTPException(400, "No API key found — complete step 1 first")
 
     # Embed signed user identity in the callback URL (no JWT cookie needed on return)
-    state = _make_state(user["id"])
+    state = auth_service.make_state(user["id"])
     backend_base = f"{request.url.scheme}://{request.url.netloc}"
     redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
 
@@ -162,7 +133,8 @@ async def onboarding_callback(
         return RedirectResponse(f"{FRONTEND_BASE}/settings?error=oauth_failed")
 
     # Resolve user from signed state token
-    user_id = _verify_state(state) if state else None
+    user_id = auth_service.verify_state(state) if state else None
+
     if not user_id:
         logging.warning(f"[onboarding/callback] Invalid or missing state: {state!r}")
         return RedirectResponse(f"{FRONTEND_BASE}/settings?error=invalid_state")
