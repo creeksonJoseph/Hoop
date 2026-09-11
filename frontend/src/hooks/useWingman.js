@@ -16,7 +16,18 @@ export function useWingman(token) {
   const addMessage = useCallback((msg) => {
     if (seenIds.current.has(msg.id)) return;
     seenIds.current.add(msg.id);
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => {
+      const optIdx = prev.findIndex(
+        (m) => m.id.startsWith('opt_') && m.message === msg.message && m.direction === msg.direction
+      );
+      if (optIdx !== -1) {
+        seenIds.current.delete(prev[optIdx].id);
+        const next = [...prev];
+        next[optIdx] = msg;
+        return next;
+      }
+      return [...prev, msg];
+    });
   }, []);
 
   useEffect(() => {
@@ -72,7 +83,10 @@ export function useWingman(token) {
           });
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (err) console.error('[Supabase Realtime wingman] error:', err);
+        else console.log('[Supabase Realtime wingman] status:', status, 'conv_id:', convId);
+      });
     return () => {
       supabase.removeChannel(channel);
     };

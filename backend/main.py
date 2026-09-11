@@ -20,7 +20,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-from config import FRONTEND_URL
+from config import FRONTEND_URL, ZERNIO_WEBHOOK_SECRET
 from db import get_pool, init_db
 
 from api.routers import auth, home, chat, sessions, wingman, onboarding, admin, settings
@@ -103,12 +103,24 @@ async def zernio_webhook(request: Request):
     """
     Receives inbound events (messages, account.connected) from Zernio.
     """
+    import logging
+    from datetime import datetime, timezone
+
+    # Validate webhook secret if configured
+    if ZERNIO_WEBHOOK_SECRET:
+        token = (
+            request.headers.get("x-zernio-secret")
+            or request.headers.get("x-webhook-secret")
+            or request.headers.get("authorization", "").removeprefix("Bearer ")
+        )
+        if token != ZERNIO_WEBHOOK_SECRET:
+            raise HTTPException(401, "Invalid webhook secret")
+
     try:
         payload = await request.json()
     except Exception:
         raise HTTPException(400, "Invalid JSON payload")
 
-    import logging
     logging.info(f"[zernio_webhook] received payload: {payload}")
 
     event_type = payload.get("event")
@@ -128,36 +140,44 @@ async def zernio_webhook(request: Request):
                     )
         return {"status": "ok", "event": "account.connected"}
 
-    # Extract message data structure
-    data = payload.get("data") or payload.get("message") or payload.get("payload") or payload
-    if isinstance(data, dict) and "message" in data and isinstance(data["message"], dict):
-        msg = data["message"]
-    else:
-        msg = data if isinstance(data, dict) else payload
+    # Zernio webhook shape (message.received):
+    #   payload.message = { id, conversationId, platformMessageId, text, sentAt, direction, sender: {id, name, username}, attachments }
+    #   payload.conversation = { id, platformConversationId, participantId, participantName, participantUsername, ... }
+    # conv_id MUST come from conversation.id (Zernio internal) — never from message.conversationId
+    # which may be platformConversationId (Instagram's ID) and won't match what the REST API returns.
+    msg  = payload.get("message") or {}
+    conv = payload.get("conversation") or {}
 
-    msg_id = msg.get("id") or msg.get("messageId") or msg.get("_id")
-    conv = (payload.get("conversation") if isinstance(payload.get("conversation"), dict) else {}) or (msg.get("conversation") if isinstance(msg.get("conversation"), dict) else {})
-    conv_id = (
-        conv.get("id")
-        or msg.get("conversationId")
-        or msg.get("conversation_id")
-        or payload.get("conversationId")
-        or payload.get("conversation_id")
-    )
+    msg_id  = msg.get("id")
+    conv_id = conv.get("id")
 
     direction   = msg.get("direction") or ("incoming" if event_type in ("message.received", "inbound") else "outgoing")
-    text        = msg.get("message") or msg.get("text") or msg.get("body") or msg.get("content") or ""
-    sender_id   = msg.get("senderId") or (msg.get("sender") or {}).get("id")
-    sender_name = msg.get("senderName") or (msg.get("sender") or {}).get("name") or (msg.get("sender") or {}).get("username")
-    created_at  = msg.get("createdAt") or msg.get("created_at") or msg.get("timestamp")
+    text        = msg.get("text") or msg.get("message") or msg.get("body") or msg.get("content") or ""
+    sender      = msg.get("sender") or {}
+    sender_id   = sender.get("id")
+    sender_name = sender.get("name") or sender.get("username") or conv.get("participantName")
+
+    # sentAt is the confirmed Zernio timestamp field; fall back gracefully
+    raw_ts = msg.get("sentAt") or msg.get("createdAt") or msg.get("created_at") or msg.get("timestamp")
+    if isinstance(raw_ts, (int, float)):
+        ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
+        created_at = datetime.fromtimestamp(ts_sec, tz=timezone.utc)
+    elif isinstance(raw_ts, str):
+        try:
+            created_at = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
+        except ValueError:
+            created_at = datetime.now(tz=timezone.utc)
+    else:
+        created_at = datetime.now(tz=timezone.utc)
 
     if not msg_id or not conv_id:
         logging.warning(f"[zernio_webhook] Ignored missing ids: msg_id={msg_id}, conv_id={conv_id}")
         return {"status": "ignored", "reason": "missing id or conversationId"}
 
+    logging.info(f"[zernio_webhook] inserting msg_id={msg_id} conv_id={conv_id} direction={direction}")
+
     pool = await get_pool()
     async with pool.acquire() as conn:
-        # Insert primary record
         await conn.execute(
             """
             INSERT INTO messages
@@ -168,19 +188,6 @@ async def zernio_webhook(request: Request):
             str(msg_id), str(conv_id), sender_id, sender_name,
             text, direction, created_at, "instagram",
         )
-        # If alternative conversation ID exists in payload, also insert for seamless matching
-        alt_conv_id = conv.get("id") if (conv.get("id") and str(conv.get("id")) != str(conv_id)) else None
-        if alt_conv_id:
-            await conn.execute(
-                """
-                INSERT INTO messages
-                    (id, conversation_id, sender_id, sender_name, message, direction, created_at, platform)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-                ON CONFLICT (id) DO NOTHING
-                """,
-                f"{msg_id}_alt", str(alt_conv_id), sender_id, sender_name,
-                text, direction, created_at, "instagram",
-            )
 
     return {"status": "ok"}
 

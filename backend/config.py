@@ -32,6 +32,7 @@ JWT_SECRET: str     = os.getenv("JWT_SECRET", secrets.token_hex(32))
 JWT_ALGORITHM       = "HS256"
 JWT_EXPIRE_HOURS    = 72
 WINGMAN_SECRET: str = os.getenv("WINGMAN_SECRET", secrets.token_hex(32))
+ZERNIO_WEBHOOK_SECRET: str = os.getenv("ZERNIO_WEBHOOK_SECRET", "")
 
 APP_MASTER_KEY: str = os.getenv("APP_MASTER_KEY", "")
 if not APP_MASTER_KEY:
