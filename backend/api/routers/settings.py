@@ -9,12 +9,11 @@ from pydantic import BaseModel
 from db import get_pool
 from dependencies import require_user
 from repositories import account_repo, session_repo
-from services import zernio_service
+from services import zernio_service, auth_service
 from crypto import encrypt_api_key, mask_api_key
 
-from api.routers.onboarding import _make_state
-
 router = APIRouter(prefix="/settings", tags=["Settings"])
+
 
 
 class ApiKeyBody(BaseModel):
@@ -62,7 +61,7 @@ async def get_settings(request: Request, user=Depends(require_user)):
                 import logging
                 logging.warning(f"[get_settings] auto-sync check failed: {e}")
 
-        state = _make_state(user["id"])
+        state = auth_service.make_state(user["id"])
         backend_base = f"{request.url.scheme}://{request.url.netloc}"
         redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
         oauth_url = await zernio_service.get_connect_url(
