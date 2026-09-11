@@ -168,8 +168,10 @@ async def zernio_webhook(request: Request):
     if isinstance(raw_ts, (int, float)):
         ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
         created_at = str(int(ts_sec))
+    elif raw_ts is not None:
+        created_at = str(raw_ts)
     else:
-        created_at = raw_ts  # already a string or None
+        created_at = None
 
     if not msg_id or not conv_id:
         logging.warning(f"[webhook] ignored: msg_id={msg_id} conv_id={conv_id} full_msg={msg} full_conv={conv}")
