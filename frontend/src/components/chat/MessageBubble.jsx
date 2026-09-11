@@ -1,3 +1,5 @@
+import { ExternalLink, Film, Paperclip } from 'lucide-react'
+
 function fmt(iso) {
   const d = new Date(iso), now = new Date()
   if (d.toDateString() === now.toDateString())
@@ -17,17 +19,15 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
   const text = msg.message || ''
   const attachments = msg.attachments || []
 
-  // Extract first URL from text or attachments
   const match = text.match(URL_REGEX)
   const textUrl = match ? match[0] : null
   const attUrl = attachments.find(a => a.url)?.url
   const primaryUrl = textUrl || attUrl
-
   const isReel = primaryUrl && isReelUrl(primaryUrl)
 
   return (
     <div className={`flex gap-2.5 max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
-      <div className={`w-7 h-7 rounded-[6px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
+      <div className={`w-7 h-7 rounded-[8px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
         ${isOut ? 'bg-[#191918] text-white border-[#191918]' : 'bg-[#e6f3fe] text-[#0075de] border-[#0075de]/20'}`}>
         {isOut ? 'H' : igUsername[0].toUpperCase()}
       </div>
@@ -38,17 +38,15 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
           {msg.created_at && <span>{fmt(msg.created_at)}</span>}
         </div>
 
-        {/* Single Unified Card Component */}
         <div
           onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, msg.id) }}
-          className={`overflow-hidden text-[13px] leading-relaxed shadow-xs cursor-context-menu
+          className={`overflow-hidden text-[13px] leading-relaxed shadow-sm cursor-context-menu transition-colors
             ${isOut
-              ? 'bg-[#0075de] text-white border border-[#0075de] rounded-[8px] rounded-tr-[2px]'
-              : 'bg-white border border-[#dfdcd9] text-[#191918] rounded-[8px] rounded-tl-[2px]'
+              ? 'bg-[#0075de] text-white border border-[#0075de] rounded-[12px] rounded-tr-[4px]'
+              : 'bg-white border border-[#dfdcd9] text-[#191918] rounded-[12px] rounded-tl-[4px]'
             }`}
         >
           {isReel ? (
-            /* Single Reel Card */
             <a
               href={primaryUrl}
               target="_blank"
@@ -58,9 +56,9 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
               }`}
             >
               <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1">
-                <span>🎬</span>
+                <Film size={14} strokeWidth={2} />
                 <span>Instagram Reel</span>
-                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                <ExternalLink size={12} strokeWidth={2} />
               </div>
               {text && !text.startsWith('http') && (
                 <p className="text-[12px] opacity-90 mb-1 line-clamp-2">{text}</p>
@@ -70,7 +68,6 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
               </span>
             </a>
           ) : (
-            /* Standard Text / Attachment Bubble */
             <div className="px-3.5 py-2">
               {text && (
                 <p className="whitespace-pre-wrap break-words">
@@ -97,7 +94,7 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
                   <img
                     key={i}
                     src={att.url}
-                    className="max-w-[240px] rounded-[6px] mt-1.5 border border-black/10"
+                    className="max-w-[240px] rounded-[8px] mt-1.5 border border-black/10"
                     alt="Attachment"
                   />
                 ) : att.url && !isReel ? (
@@ -110,7 +107,9 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
                       isOut ? 'text-white' : 'text-[#0075de]'
                     }`}
                   >
-                    📎 {att.payload?.title || att.type || 'View Attachment'} ↗
+                    <Paperclip size={12} strokeWidth={2} />
+                    {att.payload?.title || att.type || 'View Attachment'}
+                    <ExternalLink size={10} strokeWidth={2} />
                   </a>
                 ) : null
               )}
