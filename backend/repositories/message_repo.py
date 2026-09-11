@@ -66,3 +66,68 @@ async def upsert_messages_batch(
             created_at=parsed_ts,
             platform=platform,
         )
+
+
+async def get_conversation_by_participant(
+    conn: asyncpg.Connection, participant_username: str
+) -> Optional[asyncpg.Record]:
+    clean = participant_username.lower().strip().lstrip("@")
+    return await conn.fetchrow(
+        "SELECT * FROM conversations WHERE LOWER(participant_username) = $1 LIMIT 1",
+        clean,
+    )
+
+
+async def upsert_conversation(
+    conn: asyncpg.Connection,
+    conversation_id: str,
+    participant_username: str,
+    participant_name: Optional[str] = None,
+) -> None:
+    clean = participant_username.lower().strip().lstrip("@")
+    await conn.execute(
+        """
+        INSERT INTO conversations (conversation_id, participant_username, participant_name, fetched_at)
+        VALUES ($1, $2, $3, NOW())
+        ON CONFLICT (conversation_id) DO UPDATE SET
+            participant_username = EXCLUDED.participant_username,
+            participant_name     = COALESCE(EXCLUDED.participant_name, conversations.participant_name),
+            fetched_at           = NOW()
+        """,
+        str(conversation_id), clean, participant_name
+    )
+
+
+async def get_messages_by_conversation_id(
+    conn: asyncpg.Connection, conversation_id: str
+) -> List[asyncpg.Record]:
+    return await conn.fetch(
+        """
+        SELECT * FROM messages
+        WHERE conversation_id = $1
+        ORDER BY created_at ASC
+        """,
+        str(conversation_id)
+    )
+
+
+async def get_messages_for_participant(
+    conn: asyncpg.Connection, participant_username: str
+) -> List[asyncpg.Record]:
+    clean = participant_username.lower().strip().lstrip("@")
+    conv = await get_conversation_by_participant(conn, clean)
+    if conv and conv.get("conversation_id"):
+        msgs = await get_messages_by_conversation_id(conn, conv["conversation_id"])
+        if msgs:
+            return msgs
+
+    return await conn.fetch(
+        """
+        SELECT * FROM messages
+        WHERE LOWER(sender_name) = $1
+           OR conversation_id = $1
+        ORDER BY created_at ASC
+        """,
+        clean
+    )
+
