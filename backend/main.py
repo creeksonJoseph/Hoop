@@ -122,7 +122,7 @@ async def zernio_webhook(request: Request):
     except Exception:
         raise HTTPException(400, "Invalid JSON payload")
 
-    logging.info(f"[webhook] raw payload keys={list(payload.keys())} event={payload.get('event')}")
+    print(f"[webhook] raw payload keys={list(payload.keys())} event={payload.get('event')}")
 
     event_type = payload.get("event")
     if event_type == "account.connected":
@@ -149,10 +149,10 @@ async def zernio_webhook(request: Request):
     msg  = payload.get("message") or {}
     conv = payload.get("conversation") or {}
 
-    logging.info(f"[webhook] msg keys={list(msg.keys())}")
-    logging.info(f"[webhook] conv keys={list(conv.keys())}")
-    logging.info(f"[webhook] conv.id={conv.get('id')} conv.platformConversationId={conv.get('platformConversationId')}")
-    logging.info(f"[webhook] msg.id={msg.get('id')} msg.conversationId={msg.get('conversationId')} msg.direction={msg.get('direction')}")
+    print(f"[webhook] msg keys={list(msg.keys())}")
+    print(f"[webhook] conv keys={list(conv.keys())}")
+    print(f"[webhook] conv.id={conv.get('id')} conv.platformConversationId={conv.get('platformConversationId')}")
+    print(f"[webhook] msg.id={msg.get('id')} msg.conversationId={msg.get('conversationId')} msg.direction={msg.get('direction')}")
 
     msg_id  = msg.get("id")
     conv_id = conv.get("id")
@@ -172,12 +172,12 @@ async def zernio_webhook(request: Request):
         created_at = raw_ts  # already a string or None
 
     if not msg_id or not conv_id:
-        logging.warning(f"[webhook] ignored: msg_id={msg_id} conv_id={conv_id}")
-        return {"status": "ignored", "reason": "missing id or conversationId"}
+        logging.warning(f"[webhook] ignored: msg_id={msg_id} conv_id={conv_id} full_msg={msg} full_conv={conv}")
+        return {"status": "ignored", "reason": "missing id or conversationId", "msg_id": msg_id, "conv_id": conv_id, "msg_keys": list(msg.keys()), "conv_keys": list(conv.keys())}
 
     pool = await get_pool()
     async with pool.acquire() as conn:
-        logging.info(f"[webhook] inserting msg_id={msg_id} conversation_id={conv_id} direction={direction} text={text[:40]!r}")
+        print(f"[webhook] inserting msg_id={msg_id} conversation_id={conv_id} direction={direction} text={text[:40]!r}")
         await conn.execute(
             """
             INSERT INTO messages
