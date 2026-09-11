@@ -43,7 +43,7 @@ export function useChat(igUsername) {
         data.messages.forEach((m) => seenIds.current.add(m.id))
         setMessages(data.messages)
         setConvId(data.conversation_id)
-        console.log('[useChat] zernio_conv_id:', data.conversation_id, 'platform_conv_id:', data.platform_conversation_id)
+        console.log('[useChat] subscribed conv_id:', data.conversation_id)
       } catch (err) {
         if (!cancelled) toastRef.current('Failed to load messages', 'error')
       } finally {
