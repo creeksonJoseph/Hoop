@@ -21,31 +21,31 @@ export default function SessionsPage() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#131313] text-[#e5e2e1] overflow-hidden">
-      <header className="h-16 px-6 border-b border-[#4d4638] flex items-center gap-3 shrink-0 bg-[#1c1b1b]">
+    <div className="h-screen w-full flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
+      <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center gap-3 shrink-0 bg-white shadow-2xs">
         <Link to={`/chat/${igUsername}`}
-          className="w-8 h-8 flex items-center justify-center rounded-[1rem] bg-[#2a2a2a] border border-[#4d4638] text-[#d0c5b2] hover:text-[#e5e2e1] hover:border-[#ffe19e] transition-all">
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          className="w-7 h-7 flex items-center justify-center rounded-[6px] bg-white border border-[#dfdcd9] text-[#494744] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
         </Link>
         <div>
-          <h1 className="text-sm font-semibold text-[#e5e2e1]">Wingman Sessions</h1>
-          <p className="text-[10px] text-[#d0c5b2]">@{igUsername}</p>
+          <h1 className="text-[15px] font-semibold text-[#191918] tracking-tight">Wingman Sessions</h1>
+          <p className="text-[11px] text-[#615d59]">@{igUsername}</p>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 max-w-lg mx-auto w-full">
         {/* Generate form */}
-        <form onSubmit={handleGenerate} className="bg-[#201f1f] border border-[#4d4638] rounded-[18px] p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-[#e5e2e1]">Generate Wingman Link</h2>
+        <form onSubmit={handleGenerate} className="bg-white border border-[#dfdcd9] rounded-[12px] p-4 space-y-3 shadow-xs">
+          <h2 className="text-[14px] font-semibold text-[#191918]">Generate Wingman Link</h2>
           <div className="flex gap-2">
             <input
               value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Wingman name"
-              className="flex-1 bg-[#1c1b1b] border border-[#4d4638] rounded-[10px] px-3 py-2 text-sm text-[#e5e2e1] placeholder:text-[#d0c5b2]/50 focus:outline-none focus:border-[#ffe19e] transition-all"
+              className="flex-1 bg-white border border-[#dfdcd9] rounded-[6px] px-3 py-1.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-1 focus:ring-[#0075de] transition-colors"
             />
             <select
               value={level} onChange={(e) => setLevel(e.target.value)}
-              className="bg-[#1c1b1b] border border-[#4d4638] rounded-[10px] px-3 py-2 text-sm text-[#e5e2e1] focus:outline-none focus:border-[#ffe19e] transition-all"
+              className="bg-white border border-[#dfdcd9] rounded-[6px] px-3 py-1.5 text-[13px] text-[#191918] focus:outline-none focus:border-[#0075de] transition-colors cursor-pointer"
             >
               <option value="read">Read</option>
               <option value="send">Send</option>
@@ -53,7 +53,7 @@ export default function SessionsPage() {
           </div>
           <button
             type="submit" disabled={generating || !name.trim()}
-            className="w-full bg-[#ffe19e] text-[#3e2e00] font-semibold py-2 rounded-[10px] text-sm hover:bg-[#e9c46a] active:scale-95 transition-all disabled:opacity-50"
+            className="w-full bg-[#0075de] hover:bg-[#005bab] text-white font-medium py-1.5 rounded-[6px] text-[12px] transition-colors disabled:opacity-50 shadow-xs"
           >
             {generating ? 'Generating…' : 'Generate Link'}
           </button>
@@ -63,7 +63,7 @@ export default function SessionsPage() {
         {loading
           ? <SessionsSkeleton />
           : sessions.length === 0
-            ? <div className="text-center text-xs text-[#d0c5b2] py-8">No sessions yet. Generate one above.</div>
+            ? <div className="text-center text-[12px] text-[#615d59] py-8">No sessions yet. Generate one above.</div>
             : sessions.map((s) => (
                 <SessionCard
                   key={s.id}

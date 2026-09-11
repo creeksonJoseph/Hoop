@@ -23,7 +23,7 @@ export default function WingmanPage() {
 
   if (!loading && !session) {
     return (
-      <div className="min-h-screen bg-[#131313] flex items-center justify-center text-[#d0c5b2] text-sm">
+      <div className="min-h-screen bg-[#f9f9f8] flex items-center justify-center text-[#615d59] text-[13px] font-sans">
         Link not found or has been removed.
       </div>
     )
@@ -33,26 +33,26 @@ export default function WingmanPage() {
   const canSend = session?.access_level === 'send'
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#131313] text-[#e5e2e1] overflow-hidden">
-      <header className="h-16 px-6 border-b border-[#4d4638] flex items-center justify-between bg-[#1c1b1b] shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#ffe19e] flex items-center justify-center font-bold text-[#3e2e00] text-sm">H</div>
+    <div className="h-screen w-full flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
+      <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center justify-between bg-white shrink-0 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-[6px] bg-[#191918] flex items-center justify-center font-bold text-white text-[11px]">H</div>
           <div>
-            <p className="text-sm font-semibold text-[#e5e2e1]">{session?.wingman_name || '…'}</p>
-            <p className="text-[10px] text-[#d0c5b2]">@{session?.ig_username}</p>
+            <p className="text-[14px] font-semibold text-[#191918] tracking-tight">{session?.wingman_name || '…'}</p>
+            <p className="text-[11px] text-[#615d59]">@{session?.ig_username}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {isRevoked && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab]">
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-[#fef3f1] border border-[#fdd3cd] text-[#e32d14]">
               Access Revoked
             </span>
           )}
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500" title="Realtime" />
+          <div className="w-2 h-2 rounded-full bg-emerald-500" title="Realtime" />
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3 pb-24">
+      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]">
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
@@ -63,25 +63,25 @@ export default function WingmanPage() {
       </main>
 
       {canSend && !isRevoked && (
-        <div className="p-4 border-t border-[#4d4638] bg-[#131313] flex gap-2">
+        <div className="p-3 border-t border-[#dfdcd9] bg-white flex gap-2">
           <textarea
             value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
             placeholder="Type a reply…"
             rows={1}
-            className="flex-1 bg-[#201f1f] border border-[#4d4638] rounded-xl px-4 py-2.5 text-sm text-[#e5e2e1] placeholder:text-[#d0c5b2]/50 focus:outline-none focus:border-[#ffe19e] resize-none"
+            className="flex-1 bg-white border border-[#dfdcd9] rounded-[6px] px-3 py-2 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] resize-none"
           />
           <button
             onClick={handleSend} disabled={!input.trim()}
-            className="p-2.5 bg-[#ffe19e] text-[#3e2e00] rounded-xl transition-all disabled:opacity-40"
+            className="p-2 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[6px] transition-colors disabled:opacity-40 shadow-xs"
           >
-            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+            <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
           </button>
         </div>
       )}
 
       {!canSend && !isRevoked && !loading && (
-        <div className="p-4 border-t border-[#4d4638] text-center text-xs text-[#d0c5b2]">
+        <div className="p-3 border-t border-[#dfdcd9] bg-white text-center text-[12px] text-[#615d59]">
           Read-only access — you cannot send messages.
         </div>
       )}
