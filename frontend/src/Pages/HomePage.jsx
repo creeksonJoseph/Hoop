@@ -12,12 +12,12 @@ export default function HomePage() {
   const [showModal, setShowModal] = useState(false)
 
   return (
-    <div className="min-h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans">
+    <div className="fluid-page min-h-screen flex overflow-hidden bg-white text-[#191918] font-sans">
       <NavRail activePage="home" />
 
       <div className="flex-1 h-full flex overflow-hidden pb-14 md:pb-0">
         {/* Conversation list column */}
-        <div className="w-full md:w-[340px] h-full flex flex-col bg-white border-r border-[#dfdcd9] shrink-0 z-10">
+        <div className="w-full md:w-[clamp(18rem,34vw,22rem)] h-full min-w-0 flex flex-col bg-white border-r border-[#dfdcd9] shrink-0 z-10">
           <div className="h-14 px-4 border-b border-[#dfdcd9] flex justify-between items-center shrink-0">
             <h1 className="font-semibold text-[15px] text-[#191918] tracking-tight">Conversations</h1>
             <button

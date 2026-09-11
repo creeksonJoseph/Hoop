@@ -40,7 +40,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-[100dvh] w-full flex overflow-hidden bg-white text-[#191918] font-sans relative">
+    <div className="fluid-page h-[100dvh] flex overflow-hidden bg-white text-[#191918] font-sans relative">
       <NavRail activePage="home" />
 
       <div className="flex-1 h-full flex flex-col overflow-hidden pb-14 md:pb-0">
@@ -72,7 +72,7 @@ export default function ChatPage() {
         </header>
 
         {/* Messages */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]" onClick={() => setCtxMenu(null)}>
+        <main className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]" onClick={() => setCtxMenu(null)}>
           {loading
             ? <MessagesSkeleton />
             : messages.map((msg) => (
@@ -83,7 +83,7 @@ export default function ChatPage() {
         </main>
 
         {/* Input bar */}
-        <div className="px-4 pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">
+        <div className="px-[clamp(.75rem,3vw,1rem)] pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">
           <div className="relative w-full flex items-center bg-white border border-[#dfdcd9] focus-within:border-[#0075de] focus-within:ring-2 focus-within:ring-[#0075de]/15 rounded-[10px] transition-all shadow-sm">
             <textarea
               ref={textareaRef}
