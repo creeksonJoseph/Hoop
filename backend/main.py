@@ -104,7 +104,6 @@ async def zernio_webhook(request: Request):
     Receives inbound events (messages, account.connected) from Zernio.
     """
     import logging
-    from datetime import datetime, timezone
 
     # Validate webhook secret if configured
     if ZERNIO_WEBHOOK_SECRET:
@@ -161,14 +160,9 @@ async def zernio_webhook(request: Request):
     raw_ts = msg.get("sentAt") or msg.get("createdAt") or msg.get("created_at") or msg.get("timestamp")
     if isinstance(raw_ts, (int, float)):
         ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
-        created_at = datetime.fromtimestamp(ts_sec, tz=timezone.utc)
-    elif isinstance(raw_ts, str):
-        try:
-            created_at = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
-        except ValueError:
-            created_at = datetime.now(tz=timezone.utc)
+        created_at = str(int(ts_sec))
     else:
-        created_at = datetime.now(tz=timezone.utc)
+        created_at = raw_ts  # already a string or None
 
     if not msg_id or not conv_id:
         logging.warning(f"[zernio_webhook] Ignored missing ids: msg_id={msg_id}, conv_id={conv_id}")
