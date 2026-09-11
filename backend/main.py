@@ -168,10 +168,16 @@ async def zernio_webhook(request: Request):
         logging.warning(f"[zernio_webhook] Ignored missing ids: msg_id={msg_id}, conv_id={conv_id}")
         return {"status": "ignored", "reason": "missing id or conversationId"}
 
-    logging.info(f"[zernio_webhook] inserting msg_id={msg_id} conv_id={conv_id} direction={direction}")
-
     pool = await get_pool()
     async with pool.acquire() as conn:
+        # conv_id from webhook is Instagram's platformConversationId (numeric).
+        # Look up the Zernio internal ID so it matches what the frontend subscribes to.
+        mapped = await conn.fetchval(
+            "SELECT zernio_conv_id FROM conv_id_map WHERE platform_conv_id = $1",
+            str(conv_id),
+        )
+        zernio_conv_id = mapped or str(conv_id)
+        logging.info(f"[zernio_webhook] inserting msg_id={msg_id} platform_conv_id={conv_id} zernio_conv_id={zernio_conv_id} direction={direction}")
         await conn.execute(
             """
             INSERT INTO messages
@@ -179,7 +185,7 @@ async def zernio_webhook(request: Request):
             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
             ON CONFLICT (id) DO NOTHING
             """,
-            str(msg_id), str(conv_id), sender_id, sender_name,
+            str(msg_id), zernio_conv_id, sender_id, sender_name,
             text, direction, created_at, "instagram",
         )
 

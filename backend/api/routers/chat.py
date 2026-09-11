@@ -67,7 +67,17 @@ async def get_messages(
         raw = list(reversed(raw))
 
     pool2 = await get_pool()
+    platform_conv_id = conv.get("platformConversationId")
     async with pool2.acquire() as conn:
+        if platform_conv_id:
+            await conn.execute(
+                """
+                INSERT INTO conv_id_map (platform_conv_id, zernio_conv_id)
+                VALUES ($1, $2)
+                ON CONFLICT (platform_conv_id) DO UPDATE SET zernio_conv_id = EXCLUDED.zernio_conv_id
+                """,
+                str(platform_conv_id), str(conv["id"]),
+            )
         for msg in raw:
             sender = msg.get("sender") or {}
             raw_ts = msg.get("sentAt") or msg.get("createdAt")
@@ -92,6 +102,7 @@ async def get_messages(
 
     return {
         "conversation_id": conv["id"],
+        "platform_conversation_id": conv.get("platformConversationId"),
         "participant_name": conv.get("participantName"),
         "instagram_username": (conv.get("instagramProfile") or {}).get("username"),
         "total_returned": len(raw),
