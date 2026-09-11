@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, MessageCircle, CircleAlert as AlertCircle, ArrowRight } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useDMs } from '../hooks/useDMs'
 import NavRail from '../components/NavRail'
 import DMList from '../components/home/DMList'
@@ -12,6 +12,20 @@ export default function HomePage() {
   const { igUsername } = useParams()
   const { dms, hasRealAccount, loading, addDM, deleteDM } = useDMs()
   const [showModal, setShowModal] = useState(false)
+  const navigate = useNavigate()
+
+  // Auto-clear active chat pane if the selected DM is deleted or removed
+  useEffect(() => {
+    if (igUsername && !loading && Array.isArray(dms)) {
+      const exists = dms.some(
+        (d) => (d.ig_username || '').toLowerCase() === igUsername.toLowerCase()
+      )
+      if (!exists && dms.length >= 0) {
+        navigate('/home', { replace: true })
+      }
+    }
+  }, [igUsername, dms, loading, navigate])
+
 
   return (
     <div className="h-screen h-dvh w-full flex overflow-hidden bg-[#f9f9f8] text-[#191918] font-sans">

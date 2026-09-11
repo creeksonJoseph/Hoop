@@ -1,14 +1,68 @@
 """
 api/routers/chat/formatters.py
 ================================
-LAYER: Router helpers — pure functions for extracting and formatting
-conversation / message data. No I/O, no FastAPI dependencies.
+LAYER: Router helpers — Pydantic schemas and pure helper functions for
+extracting and formatting conversation / message data.
 """
-from typing import Optional, Tuple
+from typing import Any, List, Optional, Tuple
+from pydantic import BaseModel, Field
+
+
+class MessageItem(BaseModel):
+    """Pydantic schema representing a normalized DM message in API responses."""
+    id: str
+    message: Optional[str] = None
+    direction: Optional[str] = None
+    sender_name: Optional[str] = None
+    created_at: Optional[str] = None
+    attachments: List[Any] = Field(default_factory=list)
+
+    @classmethod
+    def from_db(cls, m: Any, fallback_sender: str) -> "MessageItem":
+        """Construct MessageItem schema from an asyncpg DB record."""
+        return cls(
+            id=str(m["id"]),
+            message=m.get("message"),
+            direction=m.get("direction"),
+            sender_name=m.get("sender_name") or fallback_sender,
+            created_at=m.get("created_at"),
+            attachments=[],
+        )
+
+    @classmethod
+    def from_zernio(cls, m: Any, fallback_sender: str) -> "MessageItem":
+        """Construct MessageItem schema from a raw Zernio dict."""
+        if isinstance(m, dict):
+            sender = m.get("sender") or {}
+            sender_name = (
+                sender.get("name")
+                or sender.get("username")
+                or m.get("senderName")
+                or m.get("sender_name")
+                or fallback_sender
+            )
+            msg_text = m.get("text") or m.get("message")
+            created_at = m.get("sentAt") or m.get("createdAt") or m.get("created_at")
+            msg_id = m.get("id")
+            attachments = m.get("attachments") or []
+        else:
+            msg_id = m.get("id")
+            msg_text = m.get("message")
+            sender_name = m.get("sender_name") or fallback_sender
+            created_at = m.get("created_at")
+            attachments = []
+
+        return cls(
+            id=str(msg_id),
+            message=msg_text,
+            direction=m.get("direction") if isinstance(m, dict) else m.get("direction"),
+            sender_name=sender_name,
+            created_at=created_at,
+            attachments=attachments,
+        )
 
 
 def extract_profile_data(conv: dict, fallback_username: str) -> Tuple[str, Optional[str]]:
-
     """
     Extract (display_name, avatar_url) from a Zernio conversation dict.
     Falls back gracefully so the UI never shows an empty name.
@@ -34,44 +88,12 @@ def extract_profile_data(conv: dict, fallback_username: str) -> Tuple[str, Optio
     return display_name, avatar_url
 
 
-def format_db_messages(messages: list, fallback_sender: str) -> list:
-    """
-    Normalise DB message records into the standard API response shape.
-    """
-    return [
-        {
-            "id": m["id"],
-            "message": m.get("message"),
-            "direction": m.get("direction"),
-            "sender_name": m.get("sender_name") or fallback_sender,
-            "created_at": m.get("created_at"),
-            "attachments": [],
-        }
-        for m in messages
-    ]
+def format_db_messages(messages: list, fallback_sender: str) -> List[dict]:
+    """Normalise DB message records into Pydantic model dicts."""
+    return [MessageItem.from_db(m, fallback_sender).model_dump() for m in messages]
 
 
-def format_zernio_messages(messages: list, fallback_sender: str) -> list:
-    """
-    Normalise raw Zernio message dicts into the standard API response shape.
-    Zernio may use different field names (text vs message, sentAt vs createdAt).
-    """
-    return [
-        {
-            "id": m["id"] if isinstance(m, dict) else m.get("id"),
-            "message": (m.get("text") or m.get("message")) if isinstance(m, dict) else m.get("message"),
-            "direction": m.get("direction"),
-            "sender_name": (
-                ((m.get("sender") or {}).get("name") or m.get("senderName") or m.get("sender_name"))
-                if isinstance(m, dict)
-                else (m.get("sender_name") or fallback_sender)
-            ),
-            "created_at": (
-                (m.get("sentAt") or m.get("createdAt") or m.get("created_at"))
-                if isinstance(m, dict)
-                else m.get("created_at")
-            ),
-            "attachments": m.get("attachments", []) if isinstance(m, dict) else [],
-        }
-        for m in messages
-    ]
+def format_zernio_messages(messages: list, fallback_sender: str) -> List[dict]:
+    """Normalise raw Zernio message dicts into Pydantic model dicts."""
+    return [MessageItem.from_zernio(m, fallback_sender).model_dump() for m in messages]
+

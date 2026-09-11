@@ -17,12 +17,17 @@ export default function DMList({ dms, onDelete, activeUsername }) {
     if (!deletingDM) return
     setLoadingDelete(true)
     try {
-      await onDelete(deletingDM)
+      const target = deletingDM
+      await onDelete(target)
+      if (activeUsername && activeUsername.toLowerCase() === target.toLowerCase()) {
+        navigate('/home')
+      }
       setDeletingDM(null)
     } finally {
       setLoadingDelete(false)
     }
   }
+
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden font-sans">
