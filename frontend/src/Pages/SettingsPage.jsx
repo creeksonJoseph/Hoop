@@ -34,7 +34,7 @@ export default function SettingsPage() {
     <div className="h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans">
       <NavRail activePage="settings" />
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-20 md:pb-6">
+      <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar px-4 py-5 pb-24 sm:px-6 md:pb-6">
         <div className="max-w-lg space-y-5">
           <div className="flex items-center gap-2.5 mb-1">
             <Shield size={20} className="text-[#191918]" strokeWidth={2} />

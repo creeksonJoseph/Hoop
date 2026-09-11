@@ -12,7 +12,7 @@ export default function HomePage() {
   const [showModal, setShowModal] = useState(false)
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans">
+    <div className="min-h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans">
       <NavRail activePage="home" />
 
       <div className="flex-1 h-full flex overflow-hidden pb-14 md:pb-0">

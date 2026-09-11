@@ -37,18 +37,18 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {session.access_level !== 'revoked' && (
           <>
             <button
               onClick={() => onUpdate(session.id, session.access_level === 'read' ? 'send' : 'read')}
-              className="flex-1 text-[11px] font-medium bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#dfdcd9] text-[#494744] py-1.5 rounded-[8px] transition-colors flex items-center justify-center gap-1.5"
+              className="min-w-[9rem] flex-1 text-[11px] font-medium bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#dfdcd9] text-[#494744] py-1.5 rounded-[8px] transition-colors flex items-center justify-center gap-1.5"
             >
               {session.access_level === 'read' ? <><Send size={12} strokeWidth={2} /> Switch to Send</> : <><Eye size={12} strokeWidth={2} /> Switch to Read</>}
             </button>
             <button
               onClick={() => onUpdate(session.id, 'revoked')}
-              className="flex-1 text-[11px] font-medium bg-[#fef3f1] border border-[#fdd3cd] text-[#e32d14] hover:bg-[#e32d14] hover:text-white py-1.5 rounded-[8px] transition-colors flex items-center justify-center gap-1.5"
+              className="min-w-[9rem] flex-1 text-[11px] font-medium bg-[#fef3f1] border border-[#fdd3cd] text-[#e32d14] hover:bg-[#e32d14] hover:text-white py-1.5 rounded-[8px] transition-colors flex items-center justify-center gap-1.5"
             >
               <Ban size={12} strokeWidth={2} /> Revoke
             </button>
@@ -64,6 +64,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
 
       <div className="flex items-center gap-2 pt-2 border-t border-[#f0f0f0]">
         <input
+          aria-label="Wingman access link"
           readOnly
           value={`${window.location.origin}/wingman/${session.token}`}
           className="flex-1 bg-[#f9f9f8] border border-[#dfdcd9] rounded-[6px] px-2.5 py-1.5 text-[10px] text-[#494744] font-mono focus:outline-none"

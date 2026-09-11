@@ -40,7 +40,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans relative">
+    <div className="h-[100dvh] w-full flex overflow-hidden bg-white text-[#191918] font-sans relative">
       <NavRail activePage="home" />
 
       <div className="flex-1 h-full flex flex-col overflow-hidden pb-14 md:pb-0">

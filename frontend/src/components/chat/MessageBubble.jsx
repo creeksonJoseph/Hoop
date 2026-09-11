@@ -26,7 +26,7 @@ export default function MessageBubble({ msg, igUsername, onContextMenu }) {
   const isReel = primaryUrl && isReelUrl(primaryUrl)
 
   return (
-    <div className={`flex gap-2.5 max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
+    <div className={`flex gap-2.5 max-w-[92%] sm:max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
       <div className={`w-7 h-7 rounded-[8px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
         ${isOut ? 'bg-[#191918] text-white border-[#191918]' : 'bg-[#e6f3fe] text-[#0075de] border-[#0075de]/20'}`}>
         {isOut ? 'H' : igUsername[0].toUpperCase()}

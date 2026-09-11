@@ -33,7 +33,7 @@ export default function DMList({ dms, onDelete }) {
         {filtered.map((dm) => (
           <div
             key={dm.ig_username}
-            className="group flex items-center gap-2.5 px-2.5 py-2.5 rounded-[8px] hover:bg-[#f6f5f4] cursor-pointer transition-colors"
+            className="group flex min-h-11 items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 hover:bg-[#f6f5f4] cursor-pointer transition-colors"
             onClick={() => navigate(`/chat/${dm.ig_username}`)}
           >
             <div className="w-9 h-9 rounded-[8px] bg-[#e6f3fe] border border-[#0075de]/20 flex items-center justify-center font-semibold text-[13px] text-[#0075de] shrink-0">
