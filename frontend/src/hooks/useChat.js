@@ -15,7 +15,19 @@ export function useChat(igUsername) {
   const addMessage = useCallback((msg) => {
     if (seenIds.current.has(msg.id)) return
     seenIds.current.add(msg.id)
-    setMessages((prev) => [...prev, msg])
+    // Replace any optimistic placeholder that has the same text + direction
+    setMessages((prev) => {
+      const optIdx = prev.findIndex(
+        (m) => m.id.startsWith('opt_') && m.message === msg.message && m.direction === msg.direction
+      )
+      if (optIdx !== -1) {
+        seenIds.current.delete(prev[optIdx].id)
+        const next = [...prev]
+        next[optIdx] = msg
+        return next
+      }
+      return [...prev, msg]
+    })
   }, [])
 
   // Initial fetch
@@ -67,7 +79,10 @@ export function useChat(igUsername) {
           })
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        if (err) console.error('[Supabase Realtime] subscription error:', err)
+        else console.log('[Supabase Realtime] status:', status, 'conv_id:', convId)
+      })
 
     return () => { supabase.removeChannel(channel) }
   }, [convId, addMessage])
@@ -87,6 +102,8 @@ export function useChat(igUsername) {
       await api.post('/messages/reply', { message: text }, {
         params: { username: igUsername },
       })
+      // Realtime will deliver the real message and replace the optimistic one.
+      // If Realtime is down, keep the optimistic bubble so the UI isn't blank.
       return true
     } catch (err) {
       toastRef.current(err.response?.data?.detail || 'Send failed', 'error')

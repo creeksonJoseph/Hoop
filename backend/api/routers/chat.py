@@ -69,6 +69,19 @@ async def get_messages(
     pool2 = await get_pool()
     async with pool2.acquire() as conn:
         for msg in raw:
+            sender = msg.get("sender") or {}
+            raw_ts = msg.get("sentAt") or msg.get("createdAt")
+            from datetime import datetime, timezone
+            if isinstance(raw_ts, (int, float)):
+                ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
+                parsed_ts = datetime.fromtimestamp(ts_sec, tz=timezone.utc)
+            elif isinstance(raw_ts, str):
+                try:
+                    parsed_ts = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
+                except ValueError:
+                    parsed_ts = datetime.now(tz=timezone.utc)
+            else:
+                parsed_ts = datetime.now(tz=timezone.utc)
             await conn.execute(
                 """
                 INSERT INTO messages
@@ -76,9 +89,11 @@ async def get_messages(
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
                 ON CONFLICT (id) DO NOTHING
                 """,
-                msg["id"], conv["id"], msg.get("senderId"), msg.get("senderName"),
-                msg.get("message"), msg.get("direction"), msg.get("createdAt"),
-                msg.get("platform", "instagram"),
+                msg["id"], conv["id"],
+                sender.get("id") or msg.get("senderId"),
+                sender.get("name") or sender.get("username") or msg.get("senderName"),
+                msg.get("text") or msg.get("message"),
+                msg.get("direction"), parsed_ts, "instagram",
             )
 
     return {
@@ -89,9 +104,12 @@ async def get_messages(
         "pagination": data.get("pagination"),
         "messages": [
             {
-                "id": m["id"], "message": m.get("message"),
-                "direction": m.get("direction"), "sender_name": m.get("senderName"),
-                "created_at": m.get("createdAt"), "attachments": m.get("attachments", []),
+                "id": m["id"],
+                "message": m.get("text") or m.get("message"),
+                "direction": m.get("direction"),
+                "sender_name": (m.get("sender") or {}).get("name") or (m.get("sender") or {}).get("username") or m.get("senderName"),
+                "created_at": m.get("sentAt") or m.get("createdAt"),
+                "attachments": m.get("attachments", []),
             }
             for m in raw
         ],
