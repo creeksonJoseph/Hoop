@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Users, Search, UserCheck } from 'lucide-react'
+import { ArrowLeft, Plus, Users, Search } from 'lucide-react'
 import { useSessions } from '../hooks/useSessions'
 import NavRail from '../components/NavRail'
-import SessionCard from '../components/sessions/SessionCard'
+import WingmanGroup from '../components/sessions/WingmanGroup'
 import { SessionsSkeleton } from '../components/skeletons/Skeletons'
 
 export default function SessionsPage() {
@@ -104,45 +104,15 @@ export default function SessionsPage() {
                 )}
               </div>
             ) : (
-              wingmanNames.map((wingmanName) => {
-                const items = grouped[wingmanName]
-                return (
-                  <div key={wingmanName} className="bg-white border border-[#dfdcd9] rounded-[12px] shadow-xs overflow-hidden">
-                    {/* Wingman Group Header */}
-                    <div className="flex items-center justify-between border-b border-[#dfdcd9] px-5 py-3.5 bg-[#f9f9f8]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-[8px] bg-[#191918] text-white flex items-center justify-center font-semibold text-xs">
-                          {wingmanName[0].toUpperCase()}
-                        </div>
-                        <div>
-                          <h2 className="font-semibold text-[15px] text-[#191918]">{wingmanName}</h2>
-                          <p className="text-[11px] text-[#615d59]">
-                            {items.length} shared DM{items.length !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium px-2.5 py-1 rounded-[6px] bg-[#e6f3fe] text-[#0075de] border border-[#0075de]/20 flex items-center gap-1">
-                          <UserCheck size={12} /> Wingman
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* DMs listed under this Wingman */}
-                    <div className="p-4 space-y-3 bg-white">
-                      {items.map((session) => (
-                        <SessionCard
-                          key={session.id}
-                          session={session}
-                          onUpdate={updateSession}
-                          onDelete={deleteSession}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })
+              wingmanNames.map((wingmanName) => (
+                <WingmanGroup
+                  key={wingmanName}
+                  wingmanName={wingmanName}
+                  sessions={grouped[wingmanName]}
+                  onUpdate={updateSession}
+                  onDelete={deleteSession}
+                />
+              ))
             )}
           </div>
         </div>
