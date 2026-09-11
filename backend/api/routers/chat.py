@@ -71,17 +71,11 @@ async def get_messages(
         for msg in raw:
             sender = msg.get("sender") or {}
             raw_ts = msg.get("sentAt") or msg.get("createdAt")
-            from datetime import datetime, timezone
             if isinstance(raw_ts, (int, float)):
                 ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
-                parsed_ts = datetime.fromtimestamp(ts_sec, tz=timezone.utc)
-            elif isinstance(raw_ts, str):
-                try:
-                    parsed_ts = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
-                except ValueError:
-                    parsed_ts = datetime.now(tz=timezone.utc)
+                parsed_ts = str(int(ts_sec))
             else:
-                parsed_ts = datetime.now(tz=timezone.utc)
+                parsed_ts = raw_ts  # already a string or None
             await conn.execute(
                 """
                 INSERT INTO messages
