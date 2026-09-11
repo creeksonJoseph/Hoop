@@ -27,7 +27,7 @@ export default function AddDMModal({ onAdd, onClose }) {
           <div>
             <label className="block text-[12px] font-medium text-[#494744] mb-1.5">Instagram Username</label>
             <div className="relative">
-              <AtSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a39e98] strokeWidth={2} />
+              <AtSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a39e98]" strokeWidth={2} />
               <input
                 type="text" required value={username} onChange={(e) => setUsername(e.target.value)}
                 placeholder="username"
@@ -51,5 +51,3 @@ export default function AddDMModal({ onAdd, onClose }) {
   )
 }
 
-  )
-}
