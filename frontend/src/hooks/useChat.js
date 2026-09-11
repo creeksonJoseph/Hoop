@@ -36,9 +36,13 @@ export function useChat(igUsername) {
     })
   }, [])
 
-  // Initial fetch
+  // Initial fetch on mount or when igUsername changes
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setMessages([])
+    setConvId(null)
+
     const load = async () => {
       try {
         const { data } = await api.get('/messages', {
@@ -49,7 +53,7 @@ export function useChat(igUsername) {
         data.messages.forEach((m) => seenIds.current.add(m.id))
         setMessages(data.messages)
         setConvId(data.conversation_id)
-        console.log('[useChat] initial load done — conv_id:', data.conversation_id, '| seenIds count:', seenIds.current.size)
+        console.log('[useChat] load done — conv_id:', data.conversation_id, '| seenIds count:', seenIds.current.size)
       } catch (err) {
         if (!cancelled) toastRef.current('Failed to load messages', 'error')
       } finally {
