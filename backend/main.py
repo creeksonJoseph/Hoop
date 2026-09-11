@@ -155,7 +155,11 @@ async def zernio_webhook(request: Request):
     print(f"[webhook] msg.id={msg.get('id')} msg.conversationId={msg.get('conversationId')} msg.direction={msg.get('direction')}")
 
     msg_id  = msg.get("id")
-    conv_id = conv.get("id")
+    # The REST API (find_conversation) returns platformConversationId as conv["id"].
+    # The webhook's conv.id is Zernio's internal MongoDB ID — different namespace.
+    # We must store using platformConversationId so the Supabase subscription filter matches.
+    conv_id = conv.get("platformConversationId") or conv.get("id")
+    print(f"[webhook] using conv_id={conv_id} (platformConversationId={conv.get('platformConversationId')} zernio_internal={conv.get('id')})")
 
     direction   = msg.get("direction") or ("incoming" if event_type in ("message.received", "inbound") else "outgoing")
     text        = msg.get("text") or msg.get("message") or msg.get("body") or msg.get("content") or ""
