@@ -1,24 +1,26 @@
 import { useState } from 'react'
 import { Plus, MessageCircle, CircleAlert as AlertCircle, ArrowRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useDMs } from '../hooks/useDMs'
 import NavRail from '../components/NavRail'
 import DMList from '../components/home/DMList'
 import AddDMModal from '../components/home/AddDMModal'
 import { DMListSkeleton } from '../components/skeletons/Skeletons'
+import ChatView from '../components/chat/ChatView'
 
 export default function HomePage() {
+  const { igUsername } = useParams()
   const { dms, hasRealAccount, loading, addDM, deleteDM } = useDMs()
   const [showModal, setShowModal] = useState(false)
 
   return (
-    <div className="fluid-page min-h-screen flex overflow-hidden bg-white text-[#191918] font-sans">
+    <div className="h-screen h-dvh w-full flex overflow-hidden bg-[#f9f9f8] text-[#191918] font-sans">
       <NavRail activePage="home" />
 
-      <div className="flex-1 h-full flex overflow-hidden pb-14 md:pb-0">
-        {/* Conversation list column */}
-        <div className="w-full md:w-[clamp(18rem,34vw,22rem)] h-full min-w-0 flex flex-col bg-white border-r border-[#dfdcd9] shrink-0 z-10">
-          <div className="h-14 px-4 border-b border-[#dfdcd9] flex justify-between items-center shrink-0">
+      <div className="flex-1 h-full w-full flex overflow-hidden pb-16 md:pb-0 bg-[#f9f9f8]">
+        {/* Conversation list column (sidebar) */}
+        <div className={`w-full md:w-[clamp(18rem,34vw,22rem)] h-full min-w-0 flex flex-col bg-white border-r border-[#dfdcd9] shrink-0 z-10 ${igUsername ? 'hidden md:flex' : 'flex'}`}>
+          <div className="h-14 px-4 border-b border-[#dfdcd9] flex justify-between items-center shrink-0 bg-white">
             <h1 className="font-semibold text-[15px] text-[#191918] tracking-tight">Conversations</h1>
             <button
               onClick={() => hasRealAccount ? setShowModal(true) : window.location.href = '/settings'}
@@ -41,18 +43,24 @@ export default function HomePage() {
             </div>
           )}
 
-          {loading ? <DMListSkeleton /> : <DMList dms={dms} onDelete={deleteDM} />}
+          {loading ? <DMListSkeleton /> : <DMList dms={dms} onDelete={deleteDM} activeUsername={igUsername} />}
         </div>
 
-        {/* Empty canvas */}
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-[#f9f9f8] p-12 text-center">
-          <div className="w-16 h-16 rounded-[14px] bg-white border border-[#dfdcd9] flex items-center justify-center mb-4 text-[#0075de] shadow-sm">
-            <MessageCircle size={30} strokeWidth={1.5} />
-          </div>
-          <h2 className="font-semibold text-[16px] text-[#191918] mb-1 tracking-tight">Select a Conversation</h2>
-          <p className="text-[13px] text-[#615d59] max-w-sm leading-relaxed">
-            Choose an Instagram thread from the sidebar to view real-time messages and generate AI Wingman suggestions.
-          </p>
+        {/* Right pane: ChatView if igUsername selected, else Empty canvas */}
+        <div className={`flex-1 h-full min-h-full min-w-0 ${igUsername ? 'flex' : 'hidden md:flex'}`}>
+          {igUsername ? (
+            <ChatView igUsername={igUsername} />
+          ) : (
+            <div className="flex-1 h-full flex flex-col items-center justify-center bg-[#f9f9f8] p-12 text-center">
+              <div className="w-16 h-16 rounded-[14px] bg-white border border-[#dfdcd9] flex items-center justify-center mb-4 text-[#0075de] shadow-sm">
+                <MessageCircle size={30} strokeWidth={1.5} />
+              </div>
+              <h2 className="font-semibold text-[16px] text-[#191918] mb-1 tracking-tight">Select a Conversation</h2>
+              <p className="text-[13px] text-[#615d59] max-w-sm leading-relaxed">
+                Choose a conversation from the sidebar to open it in this tab.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

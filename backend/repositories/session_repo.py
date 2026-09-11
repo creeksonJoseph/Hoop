@@ -17,6 +17,15 @@ async def get_sessions_for_ig(
     )
 
 
+async def get_all_sessions_for_user(
+    conn: asyncpg.Connection, user_id: int
+) -> List[asyncpg.Record]:
+    return await conn.fetch(
+        "SELECT * FROM wingman_sessions WHERE user_id = $1 ORDER BY wingman_name ASC, created_at DESC",
+        user_id,
+    )
+
+
 async def get_session_by_token(conn: asyncpg.Connection, token: str) -> Optional[asyncpg.Record]:
     return await conn.fetchrow(
         "SELECT * FROM wingman_sessions WHERE token = $1", token

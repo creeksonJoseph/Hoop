@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Trash as Trash2, MessageCircle, Zap } from 'lucide-react'
 
-export default function DMList({ dms, onDelete }) {
+export default function DMList({ dms, onDelete, activeUsername }) {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
 
@@ -30,32 +30,43 @@ export default function DMList({ dms, onDelete }) {
             <span>No conversations yet</span>
           </div>
         )}
-        {filtered.map((dm) => (
-          <div
-            key={dm.ig_username}
-            className="group flex min-h-11 items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 hover:bg-[#f6f5f4] cursor-pointer transition-colors"
-            onClick={() => navigate(`/chat/${dm.ig_username}`)}
-          >
-            <div className="w-9 h-9 rounded-[8px] bg-[#e6f3fe] border border-[#0075de]/20 flex items-center justify-center font-semibold text-[13px] text-[#0075de] shrink-0">
-              {dm.ig_username[0].toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-[#191918] truncate">@{dm.ig_username}</p>
-              {dm.session_count > 0 && (
-                <p className="text-[10px] text-[#615d59] flex items-center gap-1 mt-0.5">
-                  <Zap size={10} className="text-[#0075de]" strokeWidth={2} />
-                  {dm.session_count} wingman{dm.session_count !== 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(dm.ig_username) }}
-              className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-[6px] text-[#615d59] hover:text-[#e32d14] hover:bg-[#fef3f1] transition-all"
+        {filtered.map((dm) => {
+          const isActive = activeUsername && activeUsername.toLowerCase() === dm.ig_username.toLowerCase()
+          return (
+            <div
+              key={dm.ig_username}
+              className={`group flex min-h-11 items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 cursor-pointer transition-colors ${
+                isActive
+                  ? 'bg-[#e6f3fe] border border-[#0075de]/20'
+                  : 'hover:bg-[#f6f5f4] border border-transparent'
+              }`}
+              onClick={() => navigate(`/chat/${dm.ig_username}`)}
             >
-              <Trash2 size={15} strokeWidth={2} />
-            </button>
-          </div>
-        ))}
+              <div className={`w-9 h-9 rounded-[8px] flex items-center justify-center font-semibold text-[13px] shrink-0 ${
+                isActive ? 'bg-[#0075de] text-white' : 'bg-[#e6f3fe] text-[#0075de] border border-[#0075de]/20'
+              }`}>
+                {dm.ig_username[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-medium truncate ${isActive ? 'text-[#0075de]' : 'text-[#191918]'}`}>
+                  @{dm.ig_username}
+                </p>
+                {dm.session_count > 0 && (
+                  <p className="text-[10px] text-[#615d59] flex items-center gap-1 mt-0.5">
+                    <Zap size={10} className="text-[#0075de]" strokeWidth={2} />
+                    {dm.session_count} wingman{dm.session_count !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(dm.ig_username) }}
+                className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-[6px] text-[#615d59] hover:text-[#e32d14] hover:bg-[#fef3f1] transition-all"
+              >
+                <Trash2 size={15} strokeWidth={2} />
+              </button>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

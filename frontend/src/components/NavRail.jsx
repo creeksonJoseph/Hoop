@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { MessageCircle, Settings, LogOut, Users, Home, Sparkles } from 'lucide-react'
+import { Settings, LogOut, Users, Home } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function NavRail({ activePage }) {
@@ -7,7 +7,7 @@ export default function NavRail({ activePage }) {
   const navigate = useNavigate()
   const location = useLocation()
   const navItems = [
-    { href: '/home', icon: Home, label: 'Overview', key: 'home' },
+    { href: '/home', icon: Home, label: 'Home', key: 'home' },
     { href: '/wingmen', icon: Users, label: 'Wingmen', key: 'sessions' },
     { href: '/settings', icon: Settings, label: 'Settings', key: 'settings' },
   ]
@@ -30,10 +30,7 @@ export default function NavRail({ activePage }) {
             </Link>
           })}
         </nav>
-        <div className="mt-auto rounded-2xl border border-border bg-muted/50 p-3">
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold"><Sparkles size={14} className="text-primary" /> Stay in control</div>
-          <p className="text-xs leading-5 text-muted-foreground">Give your team the right access to every conversation.</p>
-        </div>
+        <div className="mt-auto"></div>
         <button onClick={handleLogout} className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><LogOut size={18} /> Sign out</button>
       </aside>
       <nav className="fixed inset-x-0 bottom-0 z-50 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-start justify-around border-t border-border bg-white/95 px-1 pt-1 backdrop-blur md:hidden safe-bottom">

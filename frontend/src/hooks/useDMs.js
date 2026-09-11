@@ -3,18 +3,35 @@ import api from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 
+// Module-level cache so DM list persists instantly across route transitions and re-mounts
+let cachedDMs = null
+let cachedHasRealAccount = false
+let initialFetchDone = false
+
+export function clearDMsCache() {
+  cachedDMs = null
+  cachedHasRealAccount = false
+  initialFetchDone = false
+}
+
 export function useDMs() {
-  const [dms, setDMs] = useState([])
-  const [hasRealAccount, setHasRealAccount] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [dms, setDMs] = useState(cachedDMs || [])
+  const [hasRealAccount, setHasRealAccount] = useState(cachedHasRealAccount)
+  const [loading, setLoading] = useState(!initialFetchDone && cachedDMs === null)
   const { toast } = useToast()
   const toastRef = useRef(toast)
   toastRef.current = toast
 
   const fetchDMs = useCallback(async () => {
-    setLoading(true)
+    // Only show loading skeleton on absolute initial load when no cache exists
+    if (!initialFetchDone && cachedDMs === null) {
+      setLoading(true)
+    }
     try {
       const { data } = await api.get('/dms')
+      cachedDMs = data.dms
+      cachedHasRealAccount = data.has_real_account
+      initialFetchDone = true
       setDMs(data.dms)
       setHasRealAccount(data.has_real_account)
     } catch (err) {
@@ -26,7 +43,7 @@ export function useDMs() {
 
   useEffect(() => { fetchDMs() }, [fetchDMs])
 
-  // Supabase Realtime — refresh list when new message is inserted
+  // Supabase Realtime — refresh list silently when new message is inserted
   useEffect(() => {
     let retryTimer = null
     let active = true
@@ -68,6 +85,7 @@ export function useDMs() {
   const addDM = async (igUsername) => {
     try {
       const { data } = await api.post('/dms', { ig_username: igUsername })
+      cachedDMs = data.dms
       setDMs(data.dms)
       return true
     } catch (err) {
@@ -79,6 +97,7 @@ export function useDMs() {
   const deleteDM = async (igUsername) => {
     try {
       const { data } = await api.delete(`/dms/${igUsername}`)
+      cachedDMs = data.dms
       setDMs(data.dms)
     } catch (err) {
       toastRef.current(err.response?.data?.detail || 'Failed to delete conversation', 'error')
@@ -87,3 +106,4 @@ export function useDMs() {
 
   return { dms, hasRealAccount, loading, fetchDMs, addDM, deleteDM }
 }
+
