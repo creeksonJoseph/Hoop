@@ -20,7 +20,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
   }
 
   return (
-    <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-4 space-y-3 fade-up shadow-sm font-sans">
+    <div className="fluid-card w-full bg-white border border-[#dfdcd9] rounded-[12px] p-[clamp(.75rem,3vw,1rem)] space-y-3 fade-up shadow-sm font-sans">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className={`w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0 ${level.color}`}>
@@ -62,7 +62,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 pt-2 border-t border-[#f0f0f0]">
+      <div className="flex min-w-0 items-center gap-2 pt-2 border-t border-[#f0f0f0]">
         <input
           aria-label="Wingman access link"
           readOnly

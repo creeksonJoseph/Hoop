@@ -15,7 +15,7 @@ export default function AddDMModal({ onAdd, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm font-sans fade-in" onClick={onClose}>
-      <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-5 w-full max-w-sm shadow-xl scale-in space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-[clamp(1rem,5vw,1.25rem)] w-[calc(100%-2rem)] max-w-sm shadow-xl scale-in space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-[16px] font-semibold text-[#191918]">Add a DM Conversation</h2>
           <button onClick={onClose} aria-label="Close dialog" className="flex size-11 items-center justify-center text-[#615d59] hover:text-[#191918] transition-colors rounded-[6px] hover:bg-[#f6f5f4]">

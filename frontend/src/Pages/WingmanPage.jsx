@@ -35,7 +35,7 @@ export default function WingmanPage() {
   const canSend = session?.access_level === 'send'
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
+    <div className="fluid-page h-[100dvh] flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
       <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center justify-between bg-white shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-[8px] bg-[#191918] flex items-center justify-center font-bold text-white text-[12px]">H</div>
@@ -54,7 +54,7 @@ export default function WingmanPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]">
+      <main className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]">
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
