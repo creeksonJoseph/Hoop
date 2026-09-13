@@ -15,7 +15,7 @@ export default function ChatView({ igUsername }) {
   const textareaRef = useRef(null)
   const mainRef = useRef(null)
   const isInitialLoad = useRef(true)
-  const prevScrollHeightRef = useRef(null)
+  const paginationAnchorRef = useRef(null)
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640)
@@ -40,29 +40,37 @@ export default function ChatView({ igUsername }) {
     isInitialLoad.current = true
   }, [igUsername])
 
-  // Restore scroll position after older messages are prepended
-  const prevMsgCountRef = useRef(0)
+  // Preserve the user's viewport when older messages are prepended.
+  const previousMessageCountRef = useRef(0)
   useEffect(() => {
     const container = mainRef.current
-    if (!container || prevScrollHeightRef.current === null) return
-    if (messages.length > prevMsgCountRef.current) {
-      // New messages were prepended — restore position
+    const anchor = paginationAnchorRef.current
+    if (!container || !anchor) return
+
+    if (messages.length > previousMessageCountRef.current) {
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight - prevScrollHeightRef.current
+        const heightDelta = container.scrollHeight - anchor.scrollHeight
+        container.scrollTop = anchor.scrollTop + heightDelta
+        paginationAnchorRef.current = null
       })
-      prevScrollHeightRef.current = null
+    } else if (!loadingMore) {
+      paginationAnchorRef.current = null
     }
-    prevMsgCountRef.current = messages.length
-  }, [messages])
+
+    previousMessageCountRef.current = messages.length
+  }, [messages, loadingMore])
 
   const handleScroll = () => {
     const container = mainRef.current
     if (!container || loading || loadingMore || !hasMore || !loadMore) return
-    if (prevScrollHeightRef.current !== null) return // already loading, don't double-fire
+    if (paginationAnchorRef.current !== null) return // already loading, don't double-fire
 
-    // Trigger loading older messages when near top (< 120px)
+    // Trigger loading older messages when near top (< 120px).
     if (container.scrollTop < 120) {
-      prevScrollHeightRef.current = container.scrollHeight
+      paginationAnchorRef.current = {
+        scrollHeight: container.scrollHeight,
+        scrollTop: container.scrollTop,
+      }
       loadMore()
     }
   }

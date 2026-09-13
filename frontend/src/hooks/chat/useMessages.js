@@ -10,6 +10,21 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '../../lib/api'
 import { useToast } from '../../context/ToastContext'
 
+function messageTime(message) {
+  const value = message.created_at || message.createdAt || message.sentAt || message.timestamp
+  const time = value == null ? Number.NaN : new Date(value).getTime()
+  return Number.isNaN(time) ? null : time
+}
+
+function sortChronologically(messages) {
+  return [...messages].sort((a, b) => {
+    const aTime = messageTime(a)
+    const bTime = messageTime(b)
+    if (aTime == null || bTime == null) return 0
+    return aTime - bTime
+  })
+}
+
 export function useMessages(igUsername) {
   const [messages, setMessages] = useState([])
   const [participantName, setParticipantName] = useState(null)
@@ -25,11 +40,7 @@ export function useMessages(igUsername) {
   toastRef.current = toast
 
   const addMessage = useCallback((msg) => {
-    console.log('[addMessage] called with id:', msg.id, 'direction:', msg.direction)
-    if (seenIds.current.has(msg.id)) {
-      console.warn('[addMessage] SKIPPED — already in seenIds:', msg.id)
-      return
-    }
+    if (seenIds.current.has(msg.id)) return
     seenIds.current.add(msg.id)
     // Replace any optimistic placeholder that has the same text + direction
     setMessages((prev) => {
@@ -37,14 +48,12 @@ export function useMessages(igUsername) {
         (m) => m.id.startsWith('opt_') && m.message === msg.message && m.direction === msg.direction
       )
       if (optIdx !== -1) {
-        console.log('[addMessage] replacing optimistic bubble at index', optIdx)
         seenIds.current.delete(prev[optIdx].id)
         const next = [...prev]
         next[optIdx] = msg
-        return next
+        return sortChronologically(next)
       }
-      console.log('[addMessage] appending new message, total will be:', prev.length + 1)
-      return [...prev, msg]
+      return sortChronologically([...prev, msg])
     })
   }, [])
 
@@ -66,7 +75,7 @@ export function useMessages(igUsername) {
         if (cancelled) return
         seenIds.current.clear()
         data.messages.forEach((m) => seenIds.current.add(m.id))
-        setMessages(data.messages)
+        setMessages(sortChronologically(data.messages || []))
         setConvId(data.conversation_id)
         setParticipantName(data.participant_name || null)
         setProfilePicUrl(data.profile_pic_url || null)
@@ -75,7 +84,6 @@ export function useMessages(igUsername) {
         const cur = pag.nextCursor || null
         setNextCursor(cur)
         setHasMore(Boolean(pag.hasMore || cur))
-        console.log('[useMessages] load done — conv_id:', data.conversation_id, 'hasMore:', Boolean(pag.hasMore || cur))
       } catch (err) {
         if (!cancelled) toastRef.current('Failed to load messages', 'error')
       } finally {
@@ -98,7 +106,7 @@ export function useMessages(igUsername) {
       const pag = data.pagination || {}
       const cur = pag.nextCursor || null
       setNextCursor(cur)
-      setHasMore(Boolean(pag.hasMore && cur))
+      setHasMore(Boolean(pag.hasMore ?? cur))
 
       // Only prepend messages we haven't seen yet (older ones arrive first)
       const fetchedMsgs = data.messages || []
@@ -106,12 +114,10 @@ export function useMessages(igUsername) {
       newOlderMsgs.forEach((m) => seenIds.current.add(m.id))
 
       if (newOlderMsgs.length > 0) {
-        setMessages((prev) => [...newOlderMsgs, ...prev])
+        setMessages((prev) => sortChronologically([...newOlderMsgs, ...prev]))
       }
-
-      console.log('[useMessages] loadMore done — fetched:', fetchedMsgs.length, 'new:', newOlderMsgs.length, 'hasMore:', Boolean(pag.hasMore && cur))
     } catch (err) {
-      console.error('[useMessages] loadMore error:', err)
+      toastRef.current('Failed to load older messages', 'error')
     } finally {
       setLoadingMore(false)
     }
