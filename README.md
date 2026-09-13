@@ -1,6 +1,6 @@
 # Hooop Developer Documentation — v1.0.0 (First Version)
 
-Hooop is a platform that lets your hb/hg help you out when you are out of words. It brings all your social conversations into one fast interface and lets your trusted wingmen step in to help you reply when you need a hand.
+Hooop is a platform that lets your hb/hg help you out when you are out of words. It brings all your social conversations into one screen and lets your trusted wingmen step in to help you reply when you need a hand.
 
 > [!NOTE]
 > **Release Version**: `v1.0.0` (First Version). This repository contains the complete full-stack implementation: the **FastAPI backend** (in `backend/`) and the **React Vite frontend** (in `frontend/`).
