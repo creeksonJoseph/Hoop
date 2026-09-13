@@ -19,9 +19,32 @@ export default function DMList({
     if (mobileSearchOpen) searchInputRef.current?.focus();
   }, [mobileSearchOpen]);
 
-  const filtered = dms.filter((d) =>
-    (d.ig_username || "").toLowerCase().includes(query.toLowerCase()),
-  );
+  const normalizeSearchText = (value) =>
+    String(value ?? "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[@_.,•/\\-]+/g, " ")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .trim();
+
+  const normalizedQuery = normalizeSearchText(query);
+  const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  const filtered = dms.filter((d) => {
+    if (queryTokens.length === 0) return true;
+
+    const searchableText = normalizeSearchText(
+      [
+        d.ig_username,
+        d.participant_username,
+        d.participant_name,
+        d.last_message,
+        d.session_count,
+      ].join(" "),
+    );
+
+    return queryTokens.every((token) => searchableText.includes(token));
+  });
 
   const handleConfirmDelete = async () => {
     if (!deletingDM) return;
