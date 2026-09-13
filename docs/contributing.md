@@ -4,7 +4,7 @@ Welcome! Whether you are a human developer or an autonomous AI agent working on 
 
 ---
 
-## 📁 Codebase Directory Structure
+## Codebase Directory Structure
 
 ```
 /Hoop
@@ -46,7 +46,7 @@ Welcome! Whether you are a human developer or an autonomous AI agent working on 
 
 ---
 
-## 🛠️ Step-by-Step: Adding a New Feature
+## Step-by-Step: Adding a New Feature
 
 ### 1. Adding a Backend Endpoint
 
@@ -104,7 +104,7 @@ Follow the Hook-Driven pattern strictly:
 
 ---
 
-## 🤖 Core Rules for AI Agents & Developers
+## Core Rules for AI Agents & Developers
 
 The following rules are enforced in `.agents/AGENTS.md` and must be adhered to on every code edit:
 
@@ -115,7 +115,7 @@ The following rules are enforced in `.agents/AGENTS.md` and must be adhered to o
 
 ---
 
-## 🧪 Verification Checklist
+## Verification Checklist
 
 Before pushing changes or completing a task, run the following verification checks:
 

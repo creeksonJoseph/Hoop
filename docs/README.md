@@ -1,10 +1,10 @@
-# Welcome to Hooop 🏀
+# Welcome to Hooop
 
-> **Hooop** is an Instagram DM management platform that brings all your conversations into one fast interface and lets your trusted wingmen step in to help you reply when you're at a loss for words.
+> **Hooop** is a platform that lets your hb/hg help you out when you are out of words.
 
 ---
 
-## 📚 Documentation Navigation
+## Documentation Navigation
 
 This `docs/` folder contains comprehensive guides detailing every part of the Hooop platform architecture, data flow, security model, and developer standards:
 
@@ -19,7 +19,7 @@ This `docs/` folder contains comprehensive guides detailing every part of the Ho
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 - **Framework**: Python 3.10+ with [FastAPI](https://fastapi.tiangolo.com/)
@@ -37,7 +37,7 @@ This `docs/` folder contains comprehensive guides detailing every part of the Ho
 
 ---
 
-## ⚡ Quick Start Guide
+## Quick Start Guide
 
 ### Prerequisites
 - **Python**: 3.10 or higher
@@ -95,7 +95,7 @@ This `docs/` folder contains comprehensive guides detailing every part of the Ho
 
 ---
 
-## 🔑 Environment Variables Reference
+## Environment Variables Reference
 
 ### Backend `.env`
 | Variable | Description |

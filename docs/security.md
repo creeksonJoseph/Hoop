@@ -4,7 +4,7 @@ Security and privacy are core architectural pillars of **Hooop**. This document 
 
 ---
 
-## 🔐 Bring Your Own Key (BYOK) Model
+## Bring Your Own Key (BYOK) Model
 
 Hooop operates under a **Bring Your Own Key** model for connected social accounts. Instead of storing central access tokens that expose all users if compromised, every connected Instagram account uses an encrypted key associated directly with that user.
 
@@ -15,7 +15,7 @@ Hooop operates under a **Bring Your Own Key** model for connected social account
 
 ---
 
-## 🗝️ Symmetric Fernet Encryption (`crypto.py`)
+## Symmetric Fernet Encryption (`crypto.py`)
 
 All API keys stored in PostgreSQL are encrypted using **Fernet AES-128-CBC** with HMAC authentication, provided by Python's standard `cryptography.fernet` library.
 
@@ -54,7 +54,7 @@ def decrypt_key(encrypted_key: str) -> str:
 
 ---
 
-## 🛂 JWT Authentication & Token Lifecycle
+## JWT Authentication & Token Lifecycle
 
 Authentication between the React frontend and FastAPI backend relies on signed **JSON Web Tokens (JWT)**.
 
@@ -83,11 +83,3 @@ sequenceDiagram
         note over Client: Axios interceptor catches 401 & redirects to /login
     end
 ```
-
----
-
-## 🛡️ Best Security Practices for Developers
-
-- **Never Log Secrets**: Ensure `logger.info()` or exception handlers never print headers or `encrypted_api_key` values.
-- **Environment Isolation**: Never commit `.env` files to git. Use `.env.example` with placeholder strings only.
-- **CORS Constraints**: Ensure `CORSMiddleware` in `main.py` restricts origin URLs strictly to trusted client domains in production environments.

@@ -4,7 +4,7 @@ This document outlines frontend conventions, React state patterns, component iso
 
 ---
 
-## ⚓ Custom Hook Abstraction Pattern
+## Custom Hook Abstraction Pattern
 
 In Hooop, visual components (`src/components/` and `src/Pages/`) must **never execute network calls or manage raw API state**. All fetching, mutation, and error handling must be encapsulated inside custom hooks (`src/hooks/`).
 
@@ -28,7 +28,7 @@ If a React component contains `axios.get()`, `fetch()`, or `useEffect()` calling
 
 ---
 
-## ⚡ Independent Component Rendering & Isolated Skeletons
+## Independent Component Rendering & Isolated Skeletons
 
 To maximize perceived loading speed, every UI component that does not depend on another component's data **must render immediately on its own**.
 
@@ -39,7 +39,7 @@ To maximize perceived loading speed, every UI component that does not depend on 
 > 3. **No Global Blockers**: Never block the entire page or sidebar behind a single full-page spinner.
 
 ```jsx
-// ❌ BAD: Blocking the entire layout behind one loading state
+// BAD: Blocking the entire layout behind one loading state
 if (loading) return <FullPageSpinner />;
 
 return (
@@ -49,7 +49,7 @@ return (
   </Layout>
 );
 
-// ✅ GOOD: Static frame renders immediately; data containers handle their own loading
+// GOOD: Static frame renders immediately; data containers handle their own loading
 return (
   <Layout>
     {/* Sidebar renders instantly, only the list section shows a skeleton */}
@@ -65,7 +65,7 @@ return (
 
 ---
 
-## 📜 Scroll-Up Pagination & Scroll Restoration
+## Scroll-Up Pagination & Scroll Restoration
 
 The chat message history (`useMessages.js` & `ChatView.jsx`) supports smooth scroll-up pagination:
 
@@ -86,7 +86,7 @@ The chat message history (`useMessages.js` & `ChatView.jsx`) supports smooth scr
 
 ---
 
-## 📱 Responsive Layout & Mobile UI Rules
+## Responsive Layout & Mobile UI Rules
 
 To ensure a seamless user experience across mobile devices, tablets, and desktop displays:
 

@@ -4,7 +4,7 @@ This document details the software architecture, design patterns, layered backen
 
 ---
 
-## 🏗️ High-Level System Architecture
+## High-Level System Architecture
 
 Hooop is built as a decoupled web application with a Python FastAPI backend and a React/Vite single-page application (SPA). It integrates with Supabase PostgreSQL for persistence and realtime event streaming, and uses Zernio API as a secure proxy to Instagram Direct Messages.
 
@@ -27,7 +27,7 @@ graph TD
 
 ---
 
-## 🛡️ Layered Backend Architecture
+## Layered Backend Architecture
 
 The backend strictly enforces a **4-layer architectural pattern**. Code must never bypass intermediate layers (e.g. a Router calling `asyncpg` directly is prohibited).
 
@@ -69,7 +69,7 @@ The backend strictly enforces a **4-layer architectural pattern**. Code must nev
 
 ---
 
-## 🎨 Hook-Driven Frontend Architecture
+## Hook-Driven Frontend Architecture
 
 The frontend follows a **Hook-Driven Architecture**, completely separating visual rendering from state management and network calls.
 
@@ -104,7 +104,7 @@ The frontend follows a **Hook-Driven Architecture**, completely separating visua
 
 ---
 
-## 💡 Key Architectural Decisions & Rationale
+## Key Architectural Decisions & Rationale
 
 ### 1. BYOK (Bring Your Own Key) Security
 - **Decision**: Users provide their own Zernio API keys for social network access.
@@ -133,7 +133,7 @@ The frontend follows a **Hook-Driven Architecture**, completely separating visua
 
 ---
 
-## 🗄️ Database Schema Overview
+## Database Schema Overview
 
 ```mermaid
 erdiagram
