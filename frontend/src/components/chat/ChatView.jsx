@@ -135,7 +135,7 @@ export default function ChatView({ igUsername }) {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setViewMode((prev) => (prev === 'messages' ? 'wingmen' : 'messages'))}
-            className="flex items-center gap-1.5 bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#000000] px-3 py-1.5 rounded-[6px] text-base font-medium transition-colors cursor-pointer shrink-0"
           >
             {viewMode === 'messages' ? 'Wingman' : 'Chats'}
           </button>

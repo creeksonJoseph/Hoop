@@ -31,14 +31,14 @@ export default function HomePage() {
     <div className="h-screen h-dvh w-full flex overflow-hidden bg-[#f9f9f8] text-[#191918] font-sans">
       <NavRail activePage="home" />
 
-      <div className="flex-1 h-full w-full flex overflow-hidden pb-16 md:pb-0 bg-[#f9f9f8]">
+      <div className="flex-1 h-full w-full flex overflow-hidden pt-12 pb-16 md:pt-0 md:pb-0 bg-[#f9f9f8]">
         {/* Conversation list column (sidebar) */}
         <div className={`w-full md:w-[clamp(18rem,34vw,22rem)] h-full min-w-0 flex flex-col bg-white border-r border-[#dfdcd9] shrink-0 z-10 ${igUsername ? 'hidden md:flex' : 'flex'}`}>
           <div className="h-14 px-4 border-b border-[#dfdcd9] flex justify-between items-center shrink-0 bg-white">
             <h1 className="font-semibold text-[15px] text-[#191918] tracking-tight">Conversations</h1>
             <button
               onClick={() => hasRealAccount ? setShowModal(true) : window.location.href = '/settings'}
-              className="flex items-center gap-1.5 bg-[#0075de] hover:bg-[#005bab] text-white px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors shadow-sm"
+              className="flex items-center gap-1.5 bg-[#0075de] hover:bg-[#005bab] text-white px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors shadow-sm cursor-pointer"
             >
               <Plus size={14} strokeWidth={2.5} />
               Add DM

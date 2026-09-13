@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Trash as Trash2, MessageCircle, Zap } from 'lucide-react'
+import { Search, Trash as Trash2, MessageCircle, User } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 
 export default function DMList({ dms, onDelete, activeUsername }) {
@@ -86,7 +86,7 @@ export default function DMList({ dms, onDelete, activeUsername }) {
                   )}
                   {dm.session_count > 0 && (
                     <span className="text-[10px] text-[#615d59] flex items-center gap-0.5 shrink-0">
-                      <Zap size={10} className="text-[#0075de]" strokeWidth={2} />
+                      <User size={10} className="text-[#0075de]" strokeWidth={2} />
                       {dm.session_count}
                     </span>
                   )}
