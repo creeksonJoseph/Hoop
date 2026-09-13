@@ -52,7 +52,7 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
       ) : (
         <div className={`w-7 h-7 rounded-[8px] shrink-0 border flex items-center justify-center text-[11px] font-bold mt-0.5
           ${isOut ? 'bg-[#191918] text-white border-[#191918]' : 'bg-[#e6f3fe] text-[#0075de] border-[#0075de]/20'}`}>
-          {isOut ? 'H' : (igUsername ? igUsername[0].toUpperCase() : '?')}
+          {isOut ? 'H' : (((msg.sender_name || igUsername || '').replace(/^@+/, '').trim()[0]?.toUpperCase()) || '?')}
         </div>
       )}
 

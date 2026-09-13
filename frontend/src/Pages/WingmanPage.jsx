@@ -60,7 +60,6 @@ export default function WingmanPage() {
               <Ban size={11} strokeWidth={2} /> Access Revoked
             </span>
           )}
-          <div className="w-2 h-2 rounded-full bg-emerald-500" title="Realtime" />
         </div>
       </header>
 

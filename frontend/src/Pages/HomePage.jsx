@@ -41,7 +41,7 @@ export default function HomePage() {
               className="flex items-center gap-1.5 bg-[#0075de] hover:bg-[#005bab] text-white px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors shadow-sm"
             >
               <Plus size={14} strokeWidth={2.5} />
-              New Thread
+              Add DM
             </button>
           </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Send, Zap, Trash as Trash2, BadgeCheck, Loader as Loader2 } from 'lucide-react'
+import { ArrowLeft, Send, Trash as Trash2, Loader as Loader2 } from 'lucide-react'
 import { useChat } from '../../hooks/useChat'
 import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
@@ -114,7 +114,7 @@ export default function ChatView({ igUsername }) {
             />
           ) : (
             <div className="w-8 h-8 rounded-[8px] bg-[#e6f3fe] border border-[#0075de]/20 flex items-center justify-center font-bold text-xs text-[#0075de] shrink-0">
-              {igUsername[0].toUpperCase()}
+              {(participantName || igUsername || '').replace(/^@+/, '').trim()[0]?.toUpperCase() || '?'}
             </div>
           )}
           <div className="flex flex-col min-w-0">
@@ -122,7 +122,6 @@ export default function ChatView({ igUsername }) {
               <h2 className="text-[14px] font-semibold text-[#191918] truncate">
                 {displayName || `@${igUsername}`}
               </h2>
-              <BadgeCheck size={15} className="text-[#0075de]" fill="currentColor" />
             </div>
             {displayName && (
               <p className="text-[11px] text-[#615d59] font-mono leading-none">@{igUsername}</p>
@@ -131,11 +130,9 @@ export default function ChatView({ igUsername }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Link to={`/sessions/${igUsername}`}
-            className="flex items-center gap-1.5 bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium transition-colors">
-            <Zap size={14} strokeWidth={2} fill="currentColor" />
-            <span className="hidden sm:inline">Sessions</span>
+            className="flex items-center bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium transition-colors">
+            Wingmen
           </Link>
-          <div className="w-2 h-2 rounded-full bg-emerald-500" title="Realtime" />
         </div>
       </header>
 
