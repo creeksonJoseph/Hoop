@@ -61,7 +61,7 @@ async def get_settings(request: Request, user=Depends(require_user)):
                 import logging
                 logging.warning(f"[get_settings] auto-sync check failed: {e}")
 
-        state = auth_service.make_state(user["id"])
+        state = auth_service.make_oauth_state(user["id"])
         backend_base = f"{request.url.scheme}://{request.url.netloc}"
         redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
         oauth_url = await zernio_service.get_connect_url(
@@ -69,6 +69,7 @@ async def get_settings(request: Request, user=Depends(require_user)):
         )
 
     return {
+        "profile": {"id": user["id"], "email": user["email"]},
         "masked_key": masked_key,
         "ig_username": ig_username,
         "has_connected_account": has_connected_account,
