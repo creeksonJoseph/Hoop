@@ -1,9 +1,184 @@
 import { useState } from 'react'
-import { Plus, Users, Search, ArrowLeft, Loader as Loader2, Zap, Eye, Send, Check } from 'lucide-react'
+import { Plus, Users, Search, ArrowLeft, Loader as Loader2, Zap, Eye, Send, Check, MoreVertical, Copy, Ban, Trash2, Share2 } from 'lucide-react'
 import { useSessions } from '../../hooks/useSessions'
-import WingmanGroup from '../sessions/WingmanGroup'
 import { SessionsSkeleton } from '../skeletons/Skeletons'
 import { useToast } from '../../context/ToastContext'
+
+function ChatWingmanRow({ session, onUpdate, onDelete }) {
+  const [copied, setCopied] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [loadingAction, setLoadingAction] = useState(null)
+  const { toast } = useToast()
+
+  const shareUrl = `${window.location.origin}/wingman/${session.token}`
+  const wingmanName = session.wingman_name || 'Unnamed Wingman'
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(shareUrl)
+    setCopied(true)
+    toast('Link copied to clipboard', 'success')
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleMobileShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Hooop Wingman Link (${wingmanName})`,
+          text: `Wingman access link for ${wingmanName}:`,
+          url: shareUrl,
+        })
+      } catch {
+        copyLink()
+      }
+    } else {
+      copyLink()
+    }
+  }
+
+  const handleToggleAccess = async () => {
+    const nextLevel = session.access_level === 'read' ? 'send' : 'read'
+    setLoadingAction(nextLevel)
+    setMenuOpen(false)
+    try {
+      await onUpdate(session.id, nextLevel)
+      toast(`Access level changed to ${nextLevel === 'send' ? 'Read & reply' : 'Read only'}`, 'success')
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  const handleRevoke = async () => {
+    setLoadingAction('revoked')
+    setMenuOpen(false)
+    try {
+      await onUpdate(session.id, 'revoked')
+      toast('Wingman link revoked', 'success')
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    setLoadingAction('delete')
+    setMenuOpen(false)
+    try {
+      await onDelete(session.id)
+      toast('Wingman link deleted', 'success')
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  return (
+    <div className="relative flex items-center justify-between gap-3 bg-white border border-[#dfdcd9] rounded-[8px] px-3.5 py-2.5 shadow-xs hover:border-[#b4bcd0] transition-all">
+      {/* Left: Wingman Avatar & Name */}
+      <div className="flex items-center gap-2.5 min-w-0 shrink-0">
+        <div className="size-7 rounded-full bg-[#191918] text-white flex items-center justify-center font-bold text-[11px] shrink-0">
+          {wingmanName.replace(/^@+/, '').trim()[0]?.toUpperCase() || '?'}
+        </div>
+        <p className="text-xs font-semibold text-[#191918] truncate max-w-[120px] sm:max-w-[160px]">{wingmanName}</p>
+      </div>
+
+      {/* Middle: Access level badge & Link preview */}
+      <div className="flex items-center gap-2 min-w-0 flex-1 justify-end sm:justify-center">
+        {/* Access level icon / badge */}
+        {session.access_level === 'read' && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-[4px] text-[#0075de] bg-[#e6f3fe] border border-[#0075de]/20 shrink-0">
+            <Eye size={11} strokeWidth={2} /> Read only
+          </span>
+        )}
+        {session.access_level === 'send' && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-[4px] text-[#0f6220] bg-[#f0faf2] border border-[#abe5b8] shrink-0">
+            <Send size={11} strokeWidth={2} /> Read & reply
+          </span>
+        )}
+        {session.access_level === 'revoked' && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-[4px] text-[#b01601] bg-[#fef3f1] border border-[#fdd3cd] shrink-0">
+            <Ban size={11} strokeWidth={2} /> Revoked
+          </span>
+        )}
+
+        {/* Link & Copy Button */}
+        <div className="hidden md:flex items-center gap-1.5 bg-[#f9f9f8] border border-[#dfdcd9] rounded-[6px] px-2 py-0.5 text-[11px] text-[#615d59] font-mono min-w-0 max-w-[200px]">
+          <span className="truncate flex-1">{session.token_preview ? `...${session.token_preview}` : shareUrl}</span>
+          <button
+            type="button"
+            onClick={copyLink}
+            className="text-[#615d59] hover:text-[#0075de] transition-colors p-0.5 shrink-0 cursor-pointer"
+            title="Copy link"
+          >
+            {copied ? <Check size={12} className="text-[#0f6220]" /> : <Copy size={12} />}
+          </button>
+        </div>
+
+        {/* Mobile Share Button */}
+        <button
+          type="button"
+          onClick={handleMobileShare}
+          className="md:hidden text-[#615d59] hover:text-[#0075de] p-1 border border-[#dfdcd9] rounded-[6px] bg-[#f9f9f8] transition-colors cursor-pointer shrink-0"
+          title="Share link"
+        >
+          {copied ? <Check size={12} className="text-[#0f6220]" /> : <Share2 size={12} />}
+        </button>
+      </div>
+
+      {/* Right: Actions Toggle Button & Dropdown */}
+      <div className="relative shrink-0">
+        <button
+          type="button"
+          onClick={() => setMenuOpen((prev) => !prev)}
+          disabled={loadingAction !== null}
+          className="p-1 rounded-[6px] text-[#615d59] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors cursor-pointer"
+          title="Actions"
+        >
+          {loadingAction ? <Loader2 size={15} className="animate-spin text-[#0075de]" /> : <MoreVertical size={15} />}
+        </button>
+
+        {menuOpen && (
+          <>
+            {/* Backdrop to dismiss menu */}
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+
+            <div className="absolute right-0 top-full mt-1 z-50 w-44 bg-white border border-[#dfdcd9] rounded-[8px] shadow-md py-1 text-xs font-medium text-[#191918]">
+              {session.access_level !== 'revoked' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleToggleAccess}
+                    className="w-full px-3 py-1.5 text-left hover:bg-[#e6f3fe] text-[#0075de] flex items-center gap-2 cursor-pointer"
+                  >
+                    {session.access_level === 'read' ? (
+                      <><Send size={13} /> Switch to Read & reply</>
+                    ) : (
+                      <><Eye size={13} /> Switch to Read only</>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRevoke}
+                    className="w-full px-3 py-1.5 text-left hover:bg-[#fef3f1] text-[#b01601] flex items-center gap-2 cursor-pointer"
+                  >
+                    <Ban size={13} /> Revoke link
+                  </button>
+                </>
+              )}
+
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="w-full px-3 py-1.5 text-left hover:bg-[#fef3f1] text-[#b01601] flex items-center gap-2 cursor-pointer border-t border-[#dfdcd9]/60"
+              >
+                <Trash2 size={13} /> Delete link
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function ChatWingmenView({ igUsername }) {
   const { sessions, loading, generateSession, updateSession, deleteSession } = useSessions(igUsername)
@@ -39,16 +214,6 @@ export default function ChatWingmenView({ igUsername }) {
       (s.ig_username || '').toLowerCase().includes(q)
     )
   })
-
-  // Group sessions by wingman_name
-  const grouped = filtered.reduce((acc, session) => {
-    const name = session.wingman_name || 'Unnamed Wingman'
-    if (!acc[name]) acc[name] = []
-    acc[name].push(session)
-    return acc
-  }, {})
-
-  const wingmanNames = Object.keys(grouped)
 
   if (showAddForm) {
     return (
@@ -163,10 +328,10 @@ export default function ChatWingmenView({ igUsername }) {
       </div>
 
       {/* Wingmen List / Full-Height Empty State */}
-      <div className="flex-1 min-h-0 flex flex-col space-y-4">
+      <div className="flex-1 min-h-0 flex flex-col space-y-2">
         {loading ? (
           <SessionsSkeleton />
-        ) : wingmanNames.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="flex-1 w-full min-h-[320px] flex flex-col items-center justify-center gap-2.5 px-6 py-12 text-center bg-white border border-[#dfdcd9] rounded-none shadow-xs">
             <div className="flex size-11 items-center justify-center rounded-xl bg-[#e6f3fe] text-[#0075de]">
               <Users size={22} />
@@ -181,11 +346,10 @@ export default function ChatWingmenView({ igUsername }) {
             </p>
           </div>
         ) : (
-          wingmanNames.map((wingmanName) => (
-            <WingmanGroup
-              key={wingmanName}
-              wingmanName={wingmanName}
-              sessions={grouped[wingmanName]}
+          filtered.map((session) => (
+            <ChatWingmanRow
+              key={session.id}
+              session={session}
               onUpdate={updateSession}
               onDelete={deleteSession}
             />
