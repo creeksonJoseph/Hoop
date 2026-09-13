@@ -7,6 +7,8 @@ const api = axios.create({ baseURL: `${BASE_URL}/api` })
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('hoop_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  const activeInstagramAccount = localStorage.getItem('hoop_active_ig')
+  if (activeInstagramAccount) config.headers['X-Hoop-Instagram-Account'] = activeInstagramAccount
   return config
 })
 

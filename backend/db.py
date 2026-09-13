@@ -39,10 +39,19 @@ async def get_pool() -> asyncpg.Pool:
 
 
 async def init_db():
-    """Verify DB connectivity on startup. Schema is managed via supabase_schema.sql."""
+    """Verify DB connectivity and apply additive account-scoping migrations."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         await conn.fetchval("SELECT 1")
+        await conn.execute("ALTER TABLE tracked_dms ADD COLUMN IF NOT EXISTS account_username TEXT")
+        await conn.execute("""
+            UPDATE tracked_dms t
+            SET account_username = a.ig_username
+            FROM connected_ig_accounts a
+            WHERE t.user_id = a.user_id
+              AND t.account_username IS NULL
+              AND a.ig_username != '__pending__'
+        """)
 
 
 

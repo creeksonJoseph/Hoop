@@ -3,7 +3,7 @@ api/routers/home.py
 ====================
 LAYER: Router — REST endpoints for DM conversation management.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from db import get_pool
@@ -19,10 +19,18 @@ class AddDMBody(BaseModel):
 
 
 @router.get("")
-async def list_dms(user=Depends(require_user)):
+async def list_dms(
+    x_hoop_instagram_account: str | None = Header(default=None),
+    user=Depends(require_user),
+):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
+        account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
+        if x_hoop_instagram_account and not account:
+            raise HTTPException(400, "Selected Instagram account is not connected")
+        rows = await account_repo.list_dm_usernames_with_session_counts(
+            conn, user["id"], account["ig_username"] if account else None
+        )
         accounts = await account_repo.get_accounts_for_user(conn, user["id"])
     has_real_account = any(
         a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts
@@ -31,7 +39,11 @@ async def list_dms(user=Depends(require_user)):
 
 
 @router.post("", status_code=201)
-async def add_dm(body: AddDMBody, user=Depends(require_user)):
+async def add_dm(
+    body: AddDMBody,
+    x_hoop_instagram_account: str | None = Header(default=None),
+    user=Depends(require_user),
+):
     ig_username = body.ig_username.strip().lstrip("@").lower()
     if not ig_username:
         raise HTTPException(400, "Username cannot be empty")
@@ -39,7 +51,9 @@ async def add_dm(body: AddDMBody, user=Depends(require_user)):
     pool = await get_pool()
     async with pool.acquire() as conn:
         accounts = await account_repo.get_accounts_for_user(conn, user["id"])
-        acc = accounts[0] if accounts else None
+        acc = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
+        if x_hoop_instagram_account and not acc:
+            raise HTTPException(400, "Selected Instagram account is not connected")
         has_real_account = any(
             a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts
         )
@@ -101,27 +115,35 @@ async def add_dm(body: AddDMBody, user=Depends(require_user)):
                 logging.warning(f"[add_dm] pre-seed messages fetch failed: {e}")
 
 
-        await account_repo.add_tracked_dm(conn, user["id"], ig_username)
-        rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
+        await account_repo.add_tracked_dm(conn, user["id"], ig_username, acc["ig_username"])
+        rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"], acc["ig_username"])
 
     return {"dms": [dict(r) for r in rows]}
 
 
 @router.delete("/{ig_username}")
-async def delete_dm(ig_username: str, user=Depends(require_user)):
+async def delete_dm(
+    ig_username: str,
+    x_hoop_instagram_account: str | None = Header(default=None),
+    user=Depends(require_user),
+):
     ig_username = ig_username.strip().lstrip("@").lower()
     pool = await get_pool()
     async with pool.acquire() as conn:
         # 1. Delete all wingman sessions associated with this thread
+        acc = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
+        if x_hoop_instagram_account and not acc:
+            raise HTTPException(400, "Selected Instagram account is not connected")
+        account_username = acc["ig_username"] if acc else ""
         revoked_tokens = await session_repo.delete_all_sessions_for_ig(
             conn, user["id"], ig_username
         )
         # 2. Delete all messages & conversation records for this participant from local DB
         await message_repo.delete_messages_and_conversation(conn, ig_username)
         # 3. Delete tracked DM record for this user
-        await account_repo.delete_tracked_dm(conn, user["id"], ig_username)
+        await account_repo.delete_tracked_dm(conn, user["id"], ig_username, account_username)
         # 4. Return updated DM list
-        rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])
+        rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"], account_username)
 
     for token in revoked_tokens:
         pass  # Supabase Realtime notifies clients

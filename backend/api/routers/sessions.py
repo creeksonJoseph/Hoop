@@ -3,12 +3,12 @@ api/routers/sessions.py
 ========================
 LAYER: Router — REST endpoints for wingman session management.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from db import get_pool
 from dependencies import require_user
-from repositories import session_repo
+from repositories import account_repo, session_repo
 from services.session_service import (
     format_session_for_display,
     make_wingman_token,
@@ -30,20 +30,35 @@ class UpdateAccessBody(BaseModel):
 
 @router.get("")
 @router.get("/{ig_username}")
-async def list_sessions(ig_username: str = "all", user=Depends(require_user)):
+async def list_sessions(
+    ig_username: str = "all",
+    x_hoop_instagram_account: str | None = Header(default=None),
+    user=Depends(require_user),
+):
     ig_username = (ig_username or "all").lower().lstrip("@")
     pool = await get_pool()
     async with pool.acquire() as conn:
+        account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
+        if x_hoop_instagram_account and not account:
+            raise HTTPException(400, "Selected Instagram account is not connected")
         if ig_username in ("all", "*", ""):
-            rows = await session_repo.get_all_sessions_for_user(conn, user["id"])
+            rows = await session_repo.get_all_sessions_for_user(
+                conn, user["id"], account["ig_username"] if account else None
+            )
         else:
-            rows = await session_repo.get_sessions_for_ig(conn, user["id"], ig_username)
+            rows = await session_repo.get_sessions_for_ig(
+                conn, user["id"], ig_username,
+                account["ig_username"] if account else None,
+            )
     return {"sessions": [format_session_for_display(dict(r)) for r in rows]}
 
 
 @router.post("/{ig_username}", status_code=201)
 async def generate_session(
-    ig_username: str, body: GenerateBody, user=Depends(require_user)
+    ig_username: str,
+    body: GenerateBody,
+    x_hoop_instagram_account: str | None = Header(default=None),
+    user=Depends(require_user),
 ):
     ig_username = ig_username.lower().lstrip("@")
 
@@ -54,6 +69,9 @@ async def generate_session(
     pool = await get_pool()
 
     async with pool.acquire() as conn:
+        account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
+        if not account:
+            raise HTTPException(400, "No active Instagram account selected")
         exists = await session_repo.session_token_exists(conn, token)
         if exists:
             await session_repo.upsert_session_token(conn, token, body.access_level)

@@ -13,7 +13,7 @@ Strategy:
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from db import get_pool
 from dependencies import require_user
@@ -31,12 +31,13 @@ async def get_messages(
     sort: str = Query(default="desc"),
     cursor: Optional[str] = Query(default=None),
     force_sync: bool = Query(default=False),
+    x_hoop_instagram_account: str | None = Header(default=None),
     user=Depends(require_user),
 ):
     ig_target = (username or "").strip().lstrip("@").lower() or None
     pool = await get_pool()
     async with pool.acquire() as conn:
-        acc = await account_repo.get_any_account_for_user(conn, user["id"])
+        acc = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
 
     if (
         not acc

@@ -33,6 +33,25 @@ async def get_any_account_for_user(conn: asyncpg.Connection, user_id: int) -> Op
     )
 
 
+async def get_active_account(
+    conn: asyncpg.Connection, user_id: int, requested_username: Optional[str] = None
+) -> Optional[asyncpg.Record]:
+    """Resolve the selected account, falling back to the first real account."""
+    clean_username = (requested_username or "").strip().lstrip("@").lower()
+    if clean_username:
+        account = await get_account(conn, user_id, clean_username)
+        if account and account["ig_username"] != "__pending__":
+            return account
+        return None
+    return await conn.fetchrow(
+        """
+        SELECT * FROM connected_ig_accounts
+        WHERE user_id = $1 AND ig_username != '__pending__'
+        ORDER BY added_at ASC LIMIT 1
+        """, user_id
+    )
+
+
 async def get_account_by_ig(conn: asyncpg.Connection, ig_username: str) -> Optional[asyncpg.Record]:
     """Cross-user lookup by ig_username (used by wingman routes)."""
     return await conn.fetchrow(
@@ -66,19 +85,23 @@ async def upsert_account(
 
 
 
-async def add_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username: str) -> None:
+async def add_tracked_dm(
+    conn: asyncpg.Connection, user_id: int, ig_username: str, account_username: str
+) -> None:
     await conn.execute("""
-        INSERT INTO tracked_dms (user_id, ig_username)
-        VALUES ($1, $2)
+        INSERT INTO tracked_dms (user_id, ig_username, account_username)
+        VALUES ($1, $2, $3)
         ON CONFLICT (user_id, ig_username) DO NOTHING
-    """, user_id, ig_username.lower().strip())
+    """, user_id, ig_username.lower().strip(), account_username)
 
 
-async def delete_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username: str) -> None:
+async def delete_tracked_dm(
+    conn: asyncpg.Connection, user_id: int, ig_username: str, account_username: str
+) -> None:
     clean_user = ig_username.lower().strip().lstrip("@")
     await conn.execute(
-        "DELETE FROM tracked_dms WHERE user_id = $1 AND LOWER(ig_username) = $2",
-        user_id, clean_user,
+        "DELETE FROM tracked_dms WHERE user_id = $1 AND LOWER(ig_username) = $2 AND LOWER(account_username) = $3",
+        user_id, clean_user, account_username.lower().strip(),
     )
     await conn.execute(
         "DELETE FROM conversations WHERE LOWER(participant_username) = $1",
@@ -89,7 +112,7 @@ async def delete_tracked_dm(conn: asyncpg.Connection, user_id: int, ig_username:
 
 
 async def list_dm_usernames_with_session_counts(
-    conn: asyncpg.Connection, user_id: int
+    conn: asyncpg.Connection, user_id: int, account_username: Optional[str] = None
 ) -> List[asyncpg.Record]:
     return await conn.fetch("""
         SELECT t.ig_username, t.last_message, c.participant_name, c.profile_pic_url,
@@ -99,10 +122,10 @@ async def list_dm_usernames_with_session_counts(
             ON LOWER(c.participant_username) = LOWER(t.ig_username)
         LEFT JOIN wingman_sessions s
             ON s.ig_username = t.ig_username AND s.user_id = t.user_id
-        WHERE t.user_id = $1
+        WHERE t.user_id = $1 AND ($2::text IS NULL OR LOWER(t.account_username) = LOWER($2))
         GROUP BY t.ig_username, t.last_message, t.added_at, c.participant_name, c.profile_pic_url
         ORDER BY t.added_at DESC
-    """, user_id)
+    """, user_id, account_username)
 
 
 async def is_own_connected_account(conn: asyncpg.Connection, user_id: int, ig_username: str) -> bool:

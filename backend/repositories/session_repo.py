@@ -9,20 +9,37 @@ import asyncpg
 
 
 async def get_sessions_for_ig(
-    conn: asyncpg.Connection, user_id: int, ig_username: str
+    conn: asyncpg.Connection, user_id: int, ig_username: str, account_username: Optional[str] = None
 ) -> List[asyncpg.Record]:
     return await conn.fetch(
-        "SELECT * FROM wingman_sessions WHERE user_id = $1 AND ig_username = $2 ORDER BY created_at DESC",
-        user_id, ig_username,
+        """
+        SELECT * FROM wingman_sessions
+        WHERE user_id = $1 AND ig_username = $2
+          AND ($3::text IS NULL OR EXISTS (
+              SELECT 1 FROM tracked_dms t
+              WHERE t.user_id = $1
+                AND LOWER(t.ig_username) = LOWER($2)
+                AND LOWER(t.account_username) = LOWER($3)
+          ))
+        ORDER BY created_at DESC
+        """,
+        user_id, ig_username, account_username,
     )
 
 
 async def get_all_sessions_for_user(
-    conn: asyncpg.Connection, user_id: int
+    conn: asyncpg.Connection, user_id: int, account_username: Optional[str] = None
 ) -> List[asyncpg.Record]:
     return await conn.fetch(
-        "SELECT * FROM wingman_sessions WHERE user_id = $1 ORDER BY wingman_name ASC, created_at DESC",
-        user_id,
+        """
+        SELECT * FROM wingman_sessions
+        WHERE user_id = $1 AND ($2::text IS NULL OR LOWER(ig_username) IN (
+            SELECT LOWER(ig_username) FROM tracked_dms
+            WHERE user_id = $1 AND LOWER(account_username) = LOWER($2)
+        ))
+        ORDER BY wingman_name ASC, created_at DESC
+        """,
+        user_id, account_username,
     )
 
 
