@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Copy, Check, Trash as Trash2, Eye, Send, Ban, Loader2, MessageSquare, ExternalLink } from 'lucide-react'
+import { Copy, Check, Trash2, Eye, Send, Ban, Loader2, MessageSquare, ExternalLink, Share2 } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
+import { useToast } from '../../context/ToastContext'
 
 export default function SessionCard({ session, onUpdate, onDelete }) {
   const [copied, setCopied] = useState(false)
-  const [loadingAction, setLoadingAction] = useState(null) // 'read' | 'send' | 'revoked' | 'delete' | null
-  const [confirmModalState, setConfirmModalState] = useState(null) // { action: 'toggle'|'revoke'|'delete', title, description, confirmText, isDestructive }
+  const [loadingAction, setLoadingAction] = useState(null)
+  const [confirmModalState, setConfirmModalState] = useState(null)
+  const { toast } = useToast()
 
   const levelConfig = {
     read: { label: 'Read Only', icon: Eye, color: 'text-[#0075de] bg-[#e6f3fe] border-[#0075de]/20' },
@@ -19,6 +21,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
   const wingmanName = session.wingman_name || 'this wingman'
   const nextLevel = session.access_level === 'read' ? 'send' : 'read'
   const nextLevelLabel = nextLevel === 'send' ? 'Read & Write' : 'Read Only'
+  const shareUrl = `${window.location.origin}/wingman/${session.token}`
 
   const promptToggleAccess = () => {
     setConfirmModalState({
@@ -82,9 +85,26 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
   }
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/wingman/${session.token}`)
+    navigator.clipboard.writeText(shareUrl)
     setCopied(true)
+    toast('Link copied to clipboard', 'success')
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleMobileShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Hooop Wingman Link (@${session.ig_username})`,
+          text: `Wingman access link for @${session.ig_username}:`,
+          url: shareUrl
+        })
+      } catch {
+        copyLink()
+      }
+    } else {
+      copyLink()
+    }
   }
 
   return (
@@ -118,7 +138,7 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
         </div>
       </div>
 
-      {/* Progressive action buttons for this DM */}
+      {/* Action Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         {session.access_level !== 'revoked' && (
           <>
@@ -162,20 +182,46 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
         </button>
       </div>
 
-      {/* Copy link bar */}
+      {/* Copy & Share link bar */}
       <div className="flex min-w-0 items-center gap-1.5 pt-1.5 border-t border-[#dfdcd9]">
         <input
           aria-label="Wingman access link"
           readOnly
-          value={`${window.location.origin}/wingman/${session.token}`}
+          value={shareUrl}
           className="flex-1 bg-white border border-[#dfdcd9] rounded-[4px] px-2 py-1 text-[10px] text-[#494744] font-mono focus:outline-none"
         />
+
+        {/* View Wingman link in new tab */}
+        <a
+          href={shareUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="View Wingman Link"
+          className="w-6 h-6 flex items-center justify-center rounded-[4px] bg-white border border-[#dfdcd9] text-[#615d59] hover:text-[#0075de] hover:bg-[#e6f3fe] transition-colors shrink-0 cursor-pointer"
+        >
+          <ExternalLink size={13} strokeWidth={2} />
+        </a>
+
+        {/* Desktop Copy Button (tick indicator on success) */}
         <button
           onClick={copyLink}
-          className="w-6 h-6 flex items-center justify-center rounded-[4px] bg-white border border-[#dfdcd9] text-[#615d59] hover:text-[#0075de] hover:bg-[#e6f3fe] transition-colors shrink-0 cursor-pointer"
-          title="Copy Link"
+          className={`hidden sm:flex w-6 h-6 items-center justify-center rounded-[4px] border transition-colors shrink-0 cursor-pointer ${
+            copied
+              ? 'bg-[#e6f9ed] border-[#abe5b8] text-[#12b76a]'
+              : 'bg-white border-[#dfdcd9] text-[#615d59] hover:text-[#0075de] hover:bg-[#e6f3fe]'
+          }`}
+          title={copied ? 'Copied!' : 'Copy Link'}
         >
-          {copied ? <Check size={13} className="text-[#0f6220]" strokeWidth={2} /> : <Copy size={13} strokeWidth={2} />}
+          {copied ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2} />}
+        </button>
+
+        {/* Mobile Share Button (triggers native mobile share drawer) */}
+        <button
+          onClick={handleMobileShare}
+          className="flex sm:hidden w-6 h-6 items-center justify-center rounded-[4px] bg-white border border-[#dfdcd9] text-[#0075de] hover:bg-[#e6f3fe] transition-colors shrink-0 cursor-pointer"
+          title="Share Link"
+        >
+          <Share2 size={13} strokeWidth={2} />
         </button>
       </div>
 
@@ -192,4 +238,3 @@ export default function SessionCard({ session, onUpdate, onDelete }) {
     </div>
   )
 }
-

@@ -8,9 +8,13 @@ import { SessionsSkeleton } from '../components/skeletons/Skeletons'
 
 export default function SessionsPage() {
   const { igUsername } = useParams()
+  const navigate = useNavigate()
+  const isChatSpecific = Boolean(igUsername && igUsername !== 'all')
+  const cleanUsername = igUsername ? igUsername.replace(/^@+/, '') : ''
+  const formattedUsername = `@${cleanUsername}`
+
   const { sessions, loading, updateSession, deleteSession } = useSessions(igUsername)
   const [query, setQuery] = useState('')
-  const navigate = useNavigate()
 
   // Filter sessions by query
   const filtered = sessions.filter((s) => {
@@ -33,7 +37,7 @@ export default function SessionsPage() {
 
   return (
     <div className="min-h-screen flex bg-background text-foreground font-sans">
-      <NavRail activePage="sessions" />
+      <NavRail activePage={isChatSpecific ? 'chat' : 'sessions'} />
 
       <main className="fluid-page min-w-0 flex-1 pb-20 md:pb-0">
         <div className="fluid-content py-[clamp(1.25rem,4vw,2rem)] max-w-4xl mx-auto">
@@ -41,16 +45,18 @@ export default function SessionsPage() {
           <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate('/home')}
+                onClick={() => navigate(isChatSpecific ? `/chat/${cleanUsername}` : '/home')}
                 className="flex size-8 items-center justify-center rounded-[8px] border border-[#dfdcd9] bg-white text-[#494744] hover:bg-[#f6f5f4] hover:text-[#191918] transition-colors shadow-xs cursor-pointer"
-                title="Back to Home"
+                title={isChatSpecific ? `Back to ${formattedUsername}` : "Back to Home"}
               >
                 <ArrowLeft size={16} strokeWidth={2} />
               </button>
               <div>
-                <h1 className="text-xl font-semibold tracking-tight text-[#191918]">Wingmen</h1>
+                <h1 className="text-xl font-semibold tracking-tight text-[#191918]">
+                  {isChatSpecific ? formattedUsername : 'Wingmen'}
+                </h1>
                 <p className="text-xs text-[#615d59]">
-                  {igUsername && igUsername !== 'all' ? `Filtered by @${igUsername}` : 'Manage all shared Instagram DM access'}
+                  {isChatSpecific ? `sessions shared under ${formattedUsername}` : 'Manage all shared Instagram DM access'}
                 </p>
               </div>
             </div>

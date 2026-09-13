@@ -72,7 +72,7 @@ export default function DMList({ dms, onDelete, activeUsername }) {
               <div className={`w-9 h-9 rounded-[8px] flex items-center justify-center font-semibold text-[13px] shrink-0 ${dm.profile_pic_url ? 'hidden' : ''} ${
                 isActive ? 'bg-[#0075de] text-white' : 'bg-[#e6f3fe] text-[#0075de] border border-[#0075de]/20'
               }`}>
-                {dm.ig_username[0].toUpperCase()}
+                {((dm.participant_name && dm.participant_name.toLowerCase() !== dm.ig_username.toLowerCase() ? dm.participant_name : dm.ig_username) || '').replace(/^@+/, '').trim()[0]?.toUpperCase() || '?'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`text-[13px] font-medium truncate ${isActive ? 'text-[#0075de]' : 'text-[#191918]'}`}>
@@ -107,8 +107,8 @@ export default function DMList({ dms, onDelete, activeUsername }) {
       <ConfirmModal
         isOpen={Boolean(deletingDM)}
         title="Delete Conversation?"
-        description={`Are you sure you want to delete @${deletingDM}? This will remove the tracked thread and revoke associated wingman links.`}
-        confirmText="Delete Thread"
+        description={`Are you sure you want to delete @${deletingDM}? This will remove the tracked DM and revoke associated wingman links.`}
+        confirmText="Delete DM"
         isDestructive={true}
         loading={loadingDelete}
         onConfirm={handleConfirmDelete}
