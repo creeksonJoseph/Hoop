@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext'
 let cachedDMs = null
 let cachedHasRealAccount = false
 let initialFetchDone = false
+let realtimeSubscriptionId = 0
 
 export function clearDMsCache() {
   cachedDMs = null
@@ -52,8 +53,9 @@ export function useDMs() {
     const subscribe = () => {
       if (!active) return
 
+      const channelName = `dms_list_realtime_${Date.now()}_${++realtimeSubscriptionId}`
       const channel = supabase
-        .channel(`dms_list_realtime_${Date.now()}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -78,7 +80,9 @@ export function useDMs() {
     return () => {
       active = false
       clearTimeout(retryTimer)
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
+      const channel = channelRef.current
+      channelRef.current = null
+      if (channel) supabase.removeChannel(channel)
     }
   }, [fetchDMs])
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Settings, LogOut, Users, Home } from 'lucide-react'
+import { Settings, Users, Home, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import ConfirmModal from './common/ConfirmModal'
 
 function TypewriterText({ text = "When you are out of words, let your wingman handle it.", typingSpeed = 55, deletingSpeed = 35, pauseDuration = 2400 }) {
   const [displayedText, setDisplayedText] = useState('')
@@ -36,18 +37,20 @@ function TypewriterText({ text = "When you are out of words, let your wingman ha
       {displayedText}
     </span>
   )
-
 }
 
 export default function NavRail({ activePage }) {
-  const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { logout } = useAuth()
+  const [showSignOutModal, setShowSignOutModal] = useState(false)
+
   const navItems = [
     { href: '/home', icon: Home, label: 'Home', key: 'home' },
     { href: '/wingmen', icon: Users, label: 'Wingmen', key: 'sessions' },
     { href: '/settings', icon: Settings, label: 'Settings', key: 'settings' },
   ]
+
   const current = activePage !== undefined
     ? activePage
     : (location.pathname.startsWith('/settings')
@@ -55,10 +58,27 @@ export default function NavRail({ activePage }) {
         : (location.pathname === '/wingmen' || location.pathname === '/sessions/all' || location.pathname === '/sessions')
           ? 'sessions'
           : 'home')
-  const handleLogout = () => { logout(); navigate('/login') }
+
+  const handleSignOut = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <>
+      {/* Persistent Mobile Top Header with Hooop Logo */}
+      <header className="fixed inset-x-0 top-0 w-full h-12 border-b border-[#dfdcd9] bg-white/95 px-4 backdrop-blur flex items-center justify-between md:hidden z-40">
+        <Link to="/home" className="flex items-center gap-2">
+          <span className="flex size-7 items-center justify-center rounded-[8px] bg-[#191918] text-xs font-bold text-white shadow-xs">
+            H
+          </span>
+          <span className="font-semibold text-base tracking-tight text-[#191918]">
+            Hooop
+          </span>
+        </Link>
+      </header>
+
+      {/* Desktop Left Navigation Sidebar */}
       <aside className="hidden md:flex w-[clamp(13rem,22vw,16rem)] shrink-0 flex-col border-r border-border bg-white px-[clamp(.75rem,2vw,1rem)] py-5">
         <div className="px-2 mb-6">
           <Link to="/home" className="flex items-center gap-2.5 mb-1.5">
@@ -73,21 +93,46 @@ export default function NavRail({ activePage }) {
         <nav className="flex flex-col gap-1">
           {navItems.map(({ href, icon: Icon, label, key }) => {
             const active = current === key
-            return <Link key={key} to={href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
-              <Icon size={18} strokeWidth={active ? 2.4 : 2} />{label}
-            </Link>
+            return (
+              <Link key={key} to={href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                <Icon size={18} strokeWidth={active ? 2.4 : 2} />{label}
+              </Link>
+            )
           })}
+
         </nav>
-        <div className="mt-auto"></div>
-        <button onClick={handleLogout} className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><LogOut size={18} /> Sign out</button>
+        <div className="mt-auto" />
+        <button
+          type="button"
+          onClick={() => setShowSignOutModal(true)}
+          className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+        >
+          <LogOut size={18} strokeWidth={2} />
+          Sign out
+        </button>
       </aside>
+
+      {/* Mobile Bottom Navigation Bar */}
       <nav className="fixed inset-x-0 bottom-0 z-50 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-start justify-around border-t border-border bg-white/95 px-1 pt-1 backdrop-blur md:hidden safe-bottom">
         {navItems.map(({ href, icon: Icon, label, key }) => {
           const active = current === key
-          return <Link key={key} to={href} className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}><Icon size={20} strokeWidth={active ? 2.5 : 2} /><span>{label}</span></Link>
+          return (
+            <Link key={key} to={href} className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Icon size={20} strokeWidth={active ? 2.5 : 2} /><span>{label}</span>
+            </Link>
+          )
         })}
-        <button onClick={handleLogout} className="flex min-w-16 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium text-muted-foreground"><LogOut size={20} /><span>Sign out</span></button>
       </nav>
+
+      <ConfirmModal
+        isOpen={showSignOutModal}
+        title="Sign out?"
+        description="Are you sure you want to sign out of your session on this device?"
+        confirmText="Sign out"
+        isDestructive
+        onConfirm={handleSignOut}
+        onClose={() => setShowSignOutModal(false)}
+      />
     </>
   )
 }

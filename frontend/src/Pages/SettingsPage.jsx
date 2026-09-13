@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Key, Link2, CircleCheck as CheckCircle2, Loader as Loader2, TriangleAlert as AlertTriangle, Unlink, Shield, ArrowLeft } from 'lucide-react'
+import { Link2, CircleCheck as CheckCircle2, Loader as Loader2, TriangleAlert as AlertTriangle, Unlink, ArrowLeft, LogOut } from 'lucide-react'
 import { useSettings } from '../hooks/useSettings'
 import NavRail from '../components/NavRail'
 import { SettingsSkeleton } from '../components/skeletons/Skeletons'
+import ConfirmModal from '../components/common/ConfirmModal'
 import { useAuth } from '../context/AuthContext'
 
 export default function SettingsPage() {
@@ -11,6 +12,7 @@ export default function SettingsPage() {
   const [newKey, setNewKey] = useState('')
   const [saving, setSaving] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [showSignOutModal, setShowSignOutModal] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
 
@@ -34,7 +36,7 @@ export default function SettingsPage() {
     <div className="h-screen w-full flex overflow-hidden bg-white text-[#191918] font-sans">
       <NavRail activePage="settings" />
 
-      <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar px-4 py-5 pb-24 sm:px-6 md:pb-6">
+      <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar px-4 py-5 pt-16 pb-24 sm:px-6 md:pt-5 md:pb-6">
         <div className="max-w-lg space-y-5">
           <div className="flex items-center gap-3 mb-1">
             <button
@@ -44,34 +46,26 @@ export default function SettingsPage() {
             >
               <ArrowLeft size={16} strokeWidth={2} />
             </button>
-            <div className="flex items-center gap-2">
-              <Shield size={20} className="text-[#191918]" strokeWidth={2} />
-              <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">Settings</h1>
-            </div>
+            <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">Settings</h1>
           </div>
 
           {loading ? <SettingsSkeleton /> : (
             <>
               {/* API Key section */}
-              <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-5 space-y-4 shadow-sm fade-up">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-[8px] bg-[#f6f5f4] border border-[#dfdcd9] flex items-center justify-center text-[#494744] shrink-0">
-                    <Key size={16} strokeWidth={2} />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-[14px] font-semibold text-[#191918]">Zernio API Key</h2>
-                    <p className="text-[12px] text-[#615d59] mt-0.5">
-                      {settings?.masked_key
-                        ? <>Current key: <span className="font-mono text-[#0075de]">{settings.masked_key}</span></>
-                        : 'No API key connected'}
-                    </p>
-                  </div>
+              <div className="space-y-4 fade-up">
+                <div>
+                  <h2 className="text-[14px] font-semibold text-[#191918]">Zernio API Key</h2>
+                  <p className="text-[12px] text-[#615d59] mt-0.5">
+                    {settings?.masked_key
+                      ? <>Current key: <span className="font-mono text-[#0075de]">{settings.masked_key}</span></>
+                      : 'No API key connected'}
+                  </p>
                 </div>
 
                 {settings?.ig_username && (
-                  <div className="flex items-center gap-2 p-2.5 bg-[#f0faf2] border border-[#abe5b8] rounded-[8px]">
-                    <CheckCircle2 size={18} className="text-[#14832b] shrink-0" strokeWidth={2} />
-                    <span className="text-[12px] text-[#0f6220] font-medium">Connected as @{settings.ig_username}</span>
+                  <div className="flex items-center gap-2 text-[12px] text-[#0f6220] font-medium">
+                    <CheckCircle2 size={16} className="shrink-0" strokeWidth={2} />
+                    <span>Connected as @{settings.ig_username}</span>
                   </div>
                 )}
 
@@ -105,11 +99,29 @@ export default function SettingsPage() {
                 )}
               </div>
 
+              {/* Account Session & Sign Out section */}
+              <div className="space-y-3 fade-up">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-[14px] font-semibold text-[#191918]">Account Session</h2>
+                    <p className="text-[12px] text-[#615d59] truncate">Sign out of your session on this device</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSignOutModal(true)}
+                    className="bg-[#f6f5f4] hover:bg-[#fef3f1] text-[#494744] hover:text-[#e32d14] border border-[#dfdcd9] px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <LogOut size={14} strokeWidth={2} />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+
               {/* Danger zone */}
               {settings?.has_connected_account && (
-                <div className="bg-[#fef3f1] border border-[#fdd3cd] rounded-[12px] p-5 space-y-3 fade-up">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle size={18} className="text-[#b01601]" strokeWidth={2} />
+                <div className="space-y-3 fade-up">
+                  <div className="flex items-center gap-2 text-[#b01601]">
+                    <AlertTriangle size={18} strokeWidth={2} />
                     <h2 className="text-[14px] font-semibold text-[#b01601]">Danger Zone</h2>
                   </div>
                   <p className="text-[12px] text-[#6f0d00]">
@@ -127,6 +139,16 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showSignOutModal}
+        title="Sign out?"
+        description="Are you sure you want to sign out of your session on this device?"
+        confirmText="Sign out"
+        isDestructive
+        onConfirm={() => { logout(); navigate('/login') }}
+        onClose={() => setShowSignOutModal(false)}
+      />
     </div>
   )
 }
