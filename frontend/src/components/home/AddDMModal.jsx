@@ -59,7 +59,7 @@ export default function AddDMModal({ onAdd, onClose }) {
             </button>
             <button type="submit" disabled={loading}
               className="flex-1 bg-[#0075de] text-white font-medium py-2 rounded-[8px] text-[12px] hover:bg-[#005bab] transition-colors disabled:opacity-50 shadow-sm flex items-center justify-center gap-2 cursor-pointer">
-              {loading ? <><Loader2 size={14} className="animate-spin" /> Checking DM…</> : 'Add Thread'}
+              {loading ? <><Loader2 size={14} className="animate-spin" /> Checking DM…</> : 'Add DM'}
             </button>
           </div>
         </form>

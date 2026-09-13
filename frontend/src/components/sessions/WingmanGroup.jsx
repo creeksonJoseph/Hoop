@@ -20,7 +20,7 @@ export default function WingmanGroup({ wingmanName, sessions, onUpdate, onDelete
       <div className="flex items-center justify-between border-b border-[#dfdcd9] px-5 py-3.5 bg-[#f9f9f8]">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-[8px] bg-[#191918] text-white flex items-center justify-center font-semibold text-xs">
-            {wingmanName[0].toUpperCase()}
+            {(wingmanName || '').replace(/^@+/, '').trim()[0]?.toUpperCase() || '?'}
           </div>
           <div>
             <h2 className="font-semibold text-[15px] text-[#191918]">{wingmanName}</h2>
