@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Send, Zap, Trash as Trash2, BadgeCheck, Loader as Loader2 } from 'lucide-react'
+import { ArrowLeft, Send, Trash as Trash2, BadgeCheck, Loader as Loader2 } from 'lucide-react'
 import { useChat } from '../../hooks/useChat'
 import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
@@ -130,10 +130,11 @@ export default function ChatView({ igUsername }) {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Link to={`/sessions/${igUsername}`}
-            className="flex items-center gap-1.5 bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium transition-colors">
-            <Zap size={14} strokeWidth={2} fill="currentColor" />
-            <span className="hidden sm:inline">Sessions</span>
+          <Link
+            to={`/sessions/${igUsername}`}
+            className="inline-flex w-auto max-w-fit shrink-0 items-center rounded-[7px] border border-[#dfdcd9] bg-[#f6f5f4] px-2 py-1 text-[11px] font-medium leading-4 text-[#0075de] transition-colors hover:bg-[#e6f3fe]"
+          >
+            Wingman
           </Link>
           <div className="w-2 h-2 rounded-full bg-emerald-500" title="Realtime" />
         </div>
