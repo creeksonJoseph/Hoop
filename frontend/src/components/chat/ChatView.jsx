@@ -4,11 +4,13 @@ import { ArrowLeft, Send, Trash as Trash2, Loader as Loader2 } from 'lucide-reac
 import { useChat } from '../../hooks/useChat'
 import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
+import ChatWingmenView from './ChatWingmenView'
 
 export default function ChatView({ igUsername }) {
   const { messages, participantName, profilePicUrl, loading, sendMessage, deleteMessage, hasMore, loadingMore, loadMore } = useChat(igUsername)
   const [input, setInput] = useState('')
   const [headerImgError, setHeaderImgError] = useState(false)
+  const [viewMode, setViewMode] = useState('messages')
   const [ctxMenu, setCtxMenu] = useState(null)
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false)
   const messagesEndRef = useRef(null)
@@ -129,60 +131,67 @@ export default function ChatView({ igUsername }) {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Link to={`/sessions/${igUsername}`}
-            className="flex items-center bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium transition-colors">
-            Wingmen
-          </Link>
+          <button
+            onClick={() => setViewMode((prev) => (prev === 'messages' ? 'wingmen' : 'messages'))}
+            className="flex items-center gap-1.5 bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#0075de] px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium transition-colors cursor-pointer"
+          >
+            {viewMode === 'messages' ? 'Wingman' : 'Chats'}
+          </button>
         </div>
       </header>
 
-      {/* Messages */}
-      <main
-        ref={mainRef}
-        onScroll={handleScroll}
-        className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]"
-        onClick={() => setCtxMenu(null)}
-      >
-        {loadingMore && (
-          <div className="flex items-center justify-center py-2 text-[12px] text-[#615d59] gap-2 shrink-0">
-            <Loader2 size={14} className="animate-spin text-[#0075de]" />
-            <span>Loading older messages…</span>
-          </div>
-        )}
-        {loading
-          ? <MessagesSkeleton />
-          : messages.map((msg) => (
-              <MessageBubble key={msg.id} msg={msg} igUsername={igUsername} avatarUrl={profilePicUrl} onContextMenu={handleContextMenu} />
-            ))
-        }
-        <div ref={messagesEndRef} />
-      </main>
+      {viewMode === 'wingmen' ? (
+        <ChatWingmenView igUsername={igUsername} />
+      ) : (
+        <>
+          {/* Messages */}
+          <main
+            ref={mainRef}
+            onScroll={handleScroll}
+            className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]"
+            onClick={() => setCtxMenu(null)}
+          >
+            {loadingMore && (
+              <div className="flex items-center justify-center py-2 text-[12px] text-[#615d59] gap-2 shrink-0">
+                <Loader2 size={14} className="animate-spin text-[#0075de]" />
+                <span>Loading older messages…</span>
+              </div>
+            )}
+            {loading
+              ? <MessagesSkeleton />
+              : messages.map((msg) => (
+                <MessageBubble key={msg.id} msg={msg} igUsername={igUsername} avatarUrl={profilePicUrl} onContextMenu={handleContextMenu} />
+              ))
+            }
+            <div ref={messagesEndRef} />
+          </main>
 
-
-      {/* Input bar */}
-      <div className="px-[clamp(.75rem,3vw,1rem)] pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">
-        <div className="relative w-full flex items-center bg-white border border-[#dfdcd9] focus-within:border-[#0075de] focus-within:ring-2 focus-within:ring-[#0075de]/15 rounded-[10px] transition-all shadow-sm">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={isMobile ? 'Type a reply…' : 'Type a reply… (Enter to send, Shift+Enter for newline)'}
-            rows={1}
-            className="w-full bg-transparent border-none focus:ring-0 text-[#191918] py-2.5 px-3.5 resize-none custom-scrollbar max-h-28 text-[13px] placeholder:text-[#a39e98] outline-none"
-            style={{ minHeight: '40px' }}
-          />
-          <div className="flex items-center pr-2 shrink-0">
-            <button
-              onClick={handleSend}
-              disabled={!input.trim()}
-              className="p-2 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[8px] transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
-            >
-              <Send size={16} strokeWidth={2} />
-            </button>
+          {/* Input bar */}
+          <div className="px-[clamp(.75rem,3vw,1rem)] pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">
+            <div className="relative w-full flex items-center bg-white border border-[#dfdcd9] focus-within:border-[#0075de] focus-within:ring-2 focus-within:ring-[#0075de]/15 rounded-[10px] transition-all shadow-sm">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={isMobile ? 'Type a reply…' : 'Type a reply… (Enter to send, Shift+Enter for newline)'}
+                rows={1}
+                className="w-full bg-transparent border-none focus:ring-0 text-[#191918] py-2.5 px-3.5 resize-none custom-scrollbar max-h-28 text-[13px] placeholder:text-[#a39e98] outline-none"
+                style={{ minHeight: '40px' }}
+              />
+              <div className="flex items-center pr-2 shrink-0">
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="p-2 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[8px] transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <Send size={16} strokeWidth={2} />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Context menu */}
       {ctxMenu && (
