@@ -91,13 +91,15 @@ async def add_dm(body: AddDMBody, user=Depends(require_user)):
             await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url)
             try:
                 data = await zernio_service.get_messages(
-                    conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], limit=50
+                    conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], limit=50, sort="desc"
                 )
-                raw_msgs = data.get("messages", [])
+                raw_msgs = data.get("messages") or data.get("data") or []
                 if raw_msgs:
-                    await message_repo.upsert_messages_batch(conn, raw_msgs, conv["id"])
-            except Exception:
-                pass
+                    await message_repo.upsert_messages_batch(conn, list(reversed(raw_msgs)), conv["id"])
+            except Exception as e:
+                import logging
+                logging.warning(f"[add_dm] pre-seed messages fetch failed: {e}")
+
 
         await account_repo.add_tracked_dm(conn, user["id"], ig_username)
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"])

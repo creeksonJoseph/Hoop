@@ -96,13 +96,15 @@ async def wingman_messages(token: str):
         conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"],
         limit=50, sort="desc",
     )
-    raw_messages = list(reversed(data.get("messages", [])))
+    raw_list = data.get("messages") or data.get("data") or []
+    raw_messages = list(reversed(raw_list))
 
     display_name, avatar_url = _extract_profile(conv, ig_username)
 
     async with pool.acquire() as conn:
         await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url)
         await message_repo.upsert_messages_batch(conn, raw_messages, conv["id"])
+
 
     return {
         "conversation_id": conv["id"],

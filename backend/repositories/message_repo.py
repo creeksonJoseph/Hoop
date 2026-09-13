@@ -4,9 +4,11 @@ repositories/message_repo.py
 LAYER: Repository — raw DB operations for the messages table.
 No business logic. No Zernio calls. Only asyncpg.
 """
+import datetime
 from typing import List, Optional
 
 import asyncpg
+
 
 
 async def upsert_message(
@@ -46,10 +48,10 @@ async def upsert_messages_batch(
     """
     for msg in messages:
         sender = msg.get("sender") or {}
-        raw_ts = msg.get("sentAt") or msg.get("createdAt")
+        raw_ts = msg.get("sentAt") or msg.get("createdAt") or msg.get("created_at") or msg.get("timestamp")
         if isinstance(raw_ts, (int, float)):
             ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
-            parsed_ts = str(int(ts_sec))
+            parsed_ts = datetime.datetime.fromtimestamp(ts_sec, tz=datetime.timezone.utc).isoformat().replace("+00:00", "Z")
         elif raw_ts is not None:
             parsed_ts = str(raw_ts)
         else:
@@ -57,7 +59,7 @@ async def upsert_messages_batch(
 
         await upsert_message(
             conn,
-            msg_id=msg["id"],
+            msg_id=str(msg.get("id") or msg.get("message_id")),
             conversation_id=conversation_id,
             sender_id=sender.get("id") or msg.get("senderId"),
             sender_name=sender.get("name") or sender.get("username") or msg.get("senderName"),
@@ -66,6 +68,7 @@ async def upsert_messages_batch(
             created_at=parsed_ts,
             platform=platform,
         )
+
 
 
 async def get_conversation_by_participant(
