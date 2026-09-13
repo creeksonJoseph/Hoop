@@ -55,13 +55,15 @@ async def get_messages(
         conv_id = existing_conv["conversation_id"] if existing_conv else (existing_msgs[0].get("conversation_id") or "db_conv")
         p_name = existing_conv["participant_name"] if existing_conv else target_user
         pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
+        earliest_id = str(existing_msgs[0]["id"]) if existing_msgs else None
+        pagination_info = {"hasMore": True, "nextCursor": earliest_id} if earliest_id else {"hasMore": False, "nextCursor": None}
         return {
             "conversation_id": conv_id,
             "participant_name": p_name,
             "instagram_username": target_user,
             "profile_pic_url": pic_url,
             "total_returned": len(existing_msgs),
-            "pagination": None,
+            "pagination": pagination_info,
             "messages": format_db_messages(existing_msgs, target_user),
         }
 
@@ -82,7 +84,7 @@ async def get_messages(
                 "instagram_username": target_user,
                 "profile_pic_url": pic_url,
                 "total_returned": len(existing_msgs),
-                "pagination": None,
+                "pagination": {"hasMore": False, "nextCursor": None},
                 "messages": format_db_messages(existing_msgs, target_user),
             }
         raise HTTPException(502, f"Failed to look up conversation on Zernio: {e}")
@@ -96,7 +98,7 @@ async def get_messages(
                 "instagram_username": target_user,
                 "profile_pic_url": pic_url,
                 "total_returned": len(existing_msgs),
-                "pagination": None,
+                "pagination": {"hasMore": False, "nextCursor": None},
                 "messages": format_db_messages(existing_msgs, target_user),
             }
         raise HTTPException(404, f"No conversation found for: @{target_user}")
@@ -126,7 +128,7 @@ async def get_messages(
                 "instagram_username": target_user,
                 "profile_pic_url": avatar_url,
                 "total_returned": len(existing_msgs),
-                "pagination": None,
+                "pagination": {"hasMore": False, "nextCursor": None},
                 "messages": format_db_messages(existing_msgs, target_user),
             }
         raise HTTPException(502, f"Failed to fetch messages from Zernio: {e}")
@@ -135,18 +137,33 @@ async def get_messages(
     if sort_order == "desc":
         raw = list(reversed(raw))
 
-
     async with pool.acquire() as conn:
         await message_repo.upsert_messages_batch(conn, raw, conv["id"])
         db_msgs = await message_repo.get_messages_by_conversation_id(conn, conv["id"])
 
     final_msgs = db_msgs or raw
+
+    pag = data.get("pagination") if isinstance(data.get("pagination"), dict) else {}
+    next_cur = pag.get("nextCursor") or pag.get("cursor")
+    has_more = pag.get("hasMore")
+
+    if has_more is None:
+        has_more = bool(raw and len(raw) >= limit)
+
+    if has_more and not next_cur and db_msgs:
+        next_cur = str(db_msgs[0]["id"])
+
+    pagination_info = {
+        "hasMore": bool(has_more),
+        "nextCursor": next_cur if has_more else None,
+    }
+
     return {
         "conversation_id": conv["id"],
         "participant_name": display_name,
         "instagram_username": target_user,
         "profile_pic_url": avatar_url,
         "total_returned": len(final_msgs),
-        "pagination": data.get("pagination"),
-        "messages": format_zernio_messages(final_msgs, target_user),
+        "pagination": pagination_info,
+        "messages": format_db_messages(db_msgs, target_user) if db_msgs else format_zernio_messages(raw, target_user),
     }
