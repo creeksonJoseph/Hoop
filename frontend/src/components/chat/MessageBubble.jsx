@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { ExternalLink, Film, Paperclip } from 'lucide-react'
+import { ExternalLink, Film, Paperclip, Sparkles, Mic, Smile } from 'lucide-react'
 
 function fmt(iso) {
+  if (!iso) return ''
   const d = new Date(iso), now = new Date()
+  if (isNaN(d.getTime())) return ''
   if (d.toDateString() === now.toDateString())
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
@@ -17,7 +19,7 @@ function isReelUrl(url) {
 
 export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMenu }) {
   const isOut = msg.direction === 'outgoing'
-  const text = msg.message || ''
+  const text = (msg.message || '').trim()
   const attachments = msg.attachments || []
   const [imgError, setImgError] = useState(false)
 
@@ -26,6 +28,17 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
   const attUrl = attachments.find(a => a.url)?.url
   const primaryUrl = textUrl || attUrl
   const isReel = primaryUrl && isReelUrl(primaryUrl)
+
+  const isStory =
+    msg.type === 'story_share' ||
+    msg.type === 'story_mention' ||
+    text.toLowerCase().includes('instagram story') ||
+    text.toLowerCase().includes('replied to your story') ||
+    attachments.some(a => a.type === 'story_share' || a.type === 'story_mention' || a.type === 'story' || (a.payload?.title || '').toLowerCase().includes('story'))
+
+  const hasImage = attachments.some(a => a.type === 'image' && a.url)
+  const hasGenericUrl = attachments.some(a => a.url && !isReelUrl(a.url))
+  const hasRenderableContent = Boolean(text || isReel || isStory || hasImage || hasGenericUrl)
 
   return (
     <div className={`flex gap-2.5 max-w-[92%] sm:max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
@@ -78,6 +91,24 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
                 {primaryUrl}
               </span>
             </a>
+          ) : isStory ? (
+            <div className={`p-3 min-w-[180px] ${isOut ? 'bg-[#0075de] text-white' : 'bg-white text-[#191918]'}`}>
+              <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1">
+                <Sparkles size={14} strokeWidth={2} className={isOut ? 'text-white' : 'text-[#e1306c]'} />
+                <span className={isOut ? 'text-white' : 'text-[#e1306c]'}>Instagram Story</span>
+              </div>
+              <p className="text-[12px] font-medium opacity-90">
+                {text || 'Shared an Instagram Story'}
+              </p>
+              <span className={`text-[10px] block mt-1 opacity-75 ${isOut ? 'text-white/80' : 'text-[#615d59]'}`}>
+                Viewable directly on Instagram
+              </span>
+            </div>
+          ) : !hasRenderableContent ? (
+            <div className={`px-3.5 py-2.5 flex items-center gap-2 text-[12px] font-medium ${isOut ? 'text-white' : 'text-[#615d59]'}`}>
+              {msg.type === 'voice' || msg.type === 'audio' ? <Mic size={14} strokeWidth={2} /> : msg.type === 'sticker' ? <Smile size={14} strokeWidth={2} /> : <Paperclip size={14} strokeWidth={2} />}
+              <span>{msg.type === 'voice' || msg.type === 'audio' ? 'Voice message' : msg.type === 'sticker' ? 'Sent a sticker' : 'Shared media / attachment'}</span>
+            </div>
           ) : (
             <div className="px-3.5 py-2">
               {text && (
@@ -131,3 +162,4 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
     </div>
   )
 }
+

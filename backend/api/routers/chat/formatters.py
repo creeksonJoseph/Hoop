@@ -20,9 +20,10 @@ class MessageItem(BaseModel):
     @classmethod
     def from_db(cls, m: Any, fallback_sender: str) -> "MessageItem":
         """Construct MessageItem schema from an asyncpg DB record."""
+        msg_text = m.get("message")
         return cls(
             id=str(m["id"]),
-            message=m.get("message"),
+            message=msg_text,
             direction=m.get("direction"),
             sender_name=m.get("sender_name") or fallback_sender,
             created_at=m.get("created_at"),
@@ -45,6 +46,20 @@ class MessageItem(BaseModel):
             created_at = m.get("sentAt") or m.get("createdAt") or m.get("created_at")
             msg_id = m.get("id")
             attachments = m.get("attachments") or []
+            msg_type = (m.get("type") or "").lower()
+
+            # Generate descriptive label if message text is blank/missing
+            if not msg_text or not str(msg_text).strip():
+                if "story" in msg_type or any("story" in str(a.get("type", "")).lower() for a in attachments):
+                    msg_text = "Shared an Instagram Story"
+                elif msg_type in ("image", "photo"):
+                    msg_text = "Sent a photo"
+                elif msg_type in ("video", "clip"):
+                    msg_text = "Sent a video"
+                elif msg_type in ("audio", "voice"):
+                    msg_text = "Sent a voice message"
+                elif msg_type == "sticker":
+                    msg_text = "Sent a sticker"
         else:
             msg_id = m.get("id")
             msg_text = m.get("message")
@@ -60,6 +75,7 @@ class MessageItem(BaseModel):
             created_at=created_at,
             attachments=attachments,
         )
+
 
 
 def extract_profile_data(conv: dict, fallback_username: str) -> Tuple[str, Optional[str]]:

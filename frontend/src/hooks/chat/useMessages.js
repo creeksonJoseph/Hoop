@@ -16,6 +16,9 @@ export function useMessages(igUsername) {
   const [profilePicUrl, setProfilePicUrl] = useState(null)
   const [convId, setConvId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [nextCursor, setNextCursor] = useState(null)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const seenIds = useRef(new Set())
   const { toast } = useToast()
   const toastRef = useRef(toast)
@@ -52,6 +55,8 @@ export function useMessages(igUsername) {
     setConvId(null)
     setParticipantName(null)
     setProfilePicUrl(null)
+    setNextCursor(null)
+    setHasMore(false)
 
     const load = async () => {
       try {
@@ -65,7 +70,12 @@ export function useMessages(igUsername) {
         setConvId(data.conversation_id)
         setParticipantName(data.participant_name || null)
         setProfilePicUrl(data.profile_pic_url || null)
-        console.log('[useMessages] load done — conv_id:', data.conversation_id)
+
+        const pag = data.pagination || {}
+        const cur = pag.nextCursor || null
+        setNextCursor(cur)
+        setHasMore(Boolean(pag.hasMore || cur))
+        console.log('[useMessages] load done — conv_id:', data.conversation_id, 'hasMore:', Boolean(pag.hasMore || cur))
       } catch (err) {
         if (!cancelled) toastRef.current('Failed to load messages', 'error')
       } finally {
@@ -76,5 +86,42 @@ export function useMessages(igUsername) {
     return () => { cancelled = true }
   }, [igUsername])
 
-  return { messages, setMessages, participantName, profilePicUrl, convId, loading, seenIds, addMessage }
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || !nextCursor || !igUsername) return
+    setLoadingMore(true)
+
+    try {
+      const { data } = await api.get('/messages', {
+        params: { username: igUsername, limit: 50, sort: 'desc', cursor: nextCursor },
+      })
+
+      const pag = data.pagination || {}
+      const cur = pag.nextCursor || null
+      setNextCursor(cur)
+      setHasMore(Boolean(pag.hasMore || cur))
+
+      const fetchedMsgs = data.messages || []
+      fetchedMsgs.forEach((m) => seenIds.current.add(m.id))
+      setMessages(fetchedMsgs)
+    } catch (err) {
+      console.error('[useMessages] loadMore error:', err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [igUsername, nextCursor, hasMore, loadingMore])
+
+  return {
+    messages,
+    setMessages,
+    participantName,
+    profilePicUrl,
+    convId,
+    loading,
+    seenIds,
+    addMessage,
+    hasMore,
+    loadingMore,
+    loadMore,
+  }
 }
+
