@@ -8,7 +8,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## 📑 Complete Endpoint Summary Table
+## Complete Endpoint Summary Table
 
 | Category | Method | Endpoint | Auth Required | Description |
 |---|---|---|---|---|
@@ -37,7 +37,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## 🔍 Detailed Endpoint Specifications
+## Detailed Endpoint Specifications
 
 ### 1. Chat Messages (`GET /api/chat/messages`)
 
@@ -79,7 +79,7 @@ Send a reply to an Instagram DM thread.
 {
   "account_id": "8f3b...",
   "recipient_id": "instagram_user_123",
-  "text": "Thanks! Really appreciate it 🙏"
+  "text": "Thanks! Really appreciate it."
 }
 ```
 
@@ -92,7 +92,7 @@ Send a reply to an Instagram DM thread.
     "account_id": "8f3b...",
     "sender_id": "my_account_456",
     "recipient_id": "instagram_user_123",
-    "text": "Thanks! Really appreciate it 🙏",
+    "text": "Thanks! Really appreciate it.",
     "timestamp": "2026-09-13T10:15:00Z",
     "is_outgoing": true
   }
