@@ -44,7 +44,7 @@ async def onboarding_callback(
         return RedirectResponse(f"{FRONTEND_BASE}/settings?error=oauth_failed")
 
     # Resolve user from signed state token
-    user_id = auth_service.verify_state(state) if state else None
+    user_id = auth_service.verify_oauth_state(state) if state else None
 
     if not user_id:
         logging.warning(f"[onboarding/callback] Invalid or missing state: {state!r}")

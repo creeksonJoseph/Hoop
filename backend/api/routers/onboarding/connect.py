@@ -57,7 +57,7 @@ async def onboarding_connect(request: Request, body: ConnectBody, user=Depends(r
         async with pool.acquire() as conn:
             await account_repo.upsert_account(conn, user["id"], "__pending__", "pending", enc_key)
 
-        state = auth_service.make_state(user["id"])
+        state = auth_service.make_oauth_state(user["id"])
         backend_base = f"{request.url.scheme}://{request.url.netloc}"
         redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
 
@@ -96,7 +96,7 @@ async def connect_instagram(request: Request, user=Depends(require_user)):
         raise HTTPException(400, "No API key found — complete step 1 first")
 
     # Embed signed user identity in the callback URL (no JWT cookie needed on return)
-    state = auth_service.make_state(user["id"])
+    state = auth_service.make_oauth_state(user["id"])
     backend_base = f"{request.url.scheme}://{request.url.netloc}"
     redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
 
