@@ -130,9 +130,10 @@ async def get_messages(
             }
         raise HTTPException(502, f"Failed to fetch messages from Zernio: {e}")
 
-    raw = data.get("messages", [])
+    raw = data.get("messages") or data.get("data") or []
     if sort_order == "desc":
         raw = list(reversed(raw))
+
 
     async with pool.acquire() as conn:
         await message_repo.upsert_messages_batch(conn, raw, conv["id"])

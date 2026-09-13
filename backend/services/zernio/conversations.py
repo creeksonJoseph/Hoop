@@ -89,18 +89,24 @@ async def get_messages(
     encrypted_key: str,
     *,
     limit: int = 50,
-    sort: str = "asc",
+    sort: str = "desc",
     cursor: Optional[str] = None,
 ) -> dict:
     """Fetch messages for a conversation from Zernio."""
     raw_key = decrypt_api_key(encrypted_key)
-    params = {"accountId": account_id, "limit": limit, "sortOrder": sort}
+    params = {
+        "accountId": account_id,
+        "limit": limit,
+        "sort": sort,
+        "sortOrder": sort,
+    }
     if cursor:
         params["cursor"] = cursor
     try:
         return await client.get(f"/inbox/conversations/{conv_id}/messages", params, raw_key)
     finally:
         raw_key = ""
+
 
 
 async def send_message(
