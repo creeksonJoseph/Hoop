@@ -98,11 +98,18 @@ export function useMessages(igUsername) {
       const pag = data.pagination || {}
       const cur = pag.nextCursor || null
       setNextCursor(cur)
-      setHasMore(Boolean(pag.hasMore || cur))
+      setHasMore(Boolean(pag.hasMore && cur))
 
+      // Only prepend messages we haven't seen yet (older ones arrive first)
       const fetchedMsgs = data.messages || []
-      fetchedMsgs.forEach((m) => seenIds.current.add(m.id))
-      setMessages(fetchedMsgs)
+      const newOlderMsgs = fetchedMsgs.filter((m) => !seenIds.current.has(m.id))
+      newOlderMsgs.forEach((m) => seenIds.current.add(m.id))
+
+      if (newOlderMsgs.length > 0) {
+        setMessages((prev) => [...newOlderMsgs, ...prev])
+      }
+
+      console.log('[useMessages] loadMore done — fetched:', fetchedMsgs.length, 'new:', newOlderMsgs.length, 'hasMore:', Boolean(pag.hasMore && cur))
     } catch (err) {
       console.error('[useMessages] loadMore error:', err)
     } finally {
