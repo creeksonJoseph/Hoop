@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Plus,
+  Search,
   MessageCircle,
   CircleAlert as AlertCircle,
   ArrowRight,
@@ -17,6 +18,7 @@ export default function HomePage() {
   const { igUsername } = useParams();
   const { dms, hasRealAccount, loading, addDM, deleteDM } = useDMs();
   const [showModal, setShowModal] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const navigate = useNavigate();
 
   // Auto-clear active chat pane if the selected DM is deleted or removed
@@ -44,17 +46,28 @@ export default function HomePage() {
             <h1 className="font-semibold text-[15px] text-[#191918] tracking-tight">
               Conversations
             </h1>
-            <button
-              onClick={() =>
-                hasRealAccount
-                  ? setShowModal(true)
-                  : (window.location.href = "/settings")
-              }
-              className="flex items-center gap-1.5 bg-[#0075de] hover:bg-[#005bab] text-white px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors shadow-sm cursor-pointer"
-            >
-              <Plus size={14} strokeWidth={2.5} />
-              Add DM
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowMobileSearch((visible) => !visible)}
+                className="flex md:hidden size-8 items-center justify-center rounded-[8px] border border-[#dfdcd9] bg-white text-[#615d59] hover:bg-[#f6f5f4] hover:text-[#191918] transition-colors cursor-pointer"
+                title="Search conversations"
+                aria-label="Search conversations"
+              >
+                <Search size={15} strokeWidth={2} />
+              </button>
+              <button
+                onClick={() =>
+                  hasRealAccount
+                    ? setShowModal(true)
+                    : (window.location.href = "/settings")
+                }
+                className="flex shrink-0 items-center justify-center gap-1.5 rounded-[6px] bg-[#f6f5f4] border border-[#dfdcd9] hover:bg-[#e6f3fe] text-[#000000] px-3 py-1.5 text-base font-medium transition-colors cursor-pointer"
+              >
+                <Plus size={16} strokeWidth={2.5} />
+                Add DM
+              </button>
+            </div>
           </div>
 
           {!hasRealAccount && !loading && (
@@ -79,7 +92,12 @@ export default function HomePage() {
           {loading ? (
             <DMListSkeleton />
           ) : (
-            <DMList dms={dms} onDelete={deleteDM} activeUsername={igUsername} />
+            <DMList
+              dms={dms}
+              onDelete={deleteDM}
+              activeUsername={igUsername}
+              mobileSearchOpen={showMobileSearch}
+            />
           )}
         </div>
 

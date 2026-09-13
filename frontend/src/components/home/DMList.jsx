@@ -1,41 +1,61 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, Trash as Trash2, MessageCircle, User } from 'lucide-react'
-import ConfirmModal from '../common/ConfirmModal'
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Trash as Trash2, MessageCircle, User } from "lucide-react";
+import ConfirmModal from "../common/ConfirmModal";
 
-export default function DMList({ dms, onDelete, activeUsername }) {
-  const [query, setQuery] = useState('')
-  const [deletingDM, setDeletingDM] = useState(null)
-  const [loadingDelete, setLoadingDelete] = useState(false)
-  const navigate = useNavigate()
+export default function DMList({
+  dms,
+  onDelete,
+  activeUsername,
+  mobileSearchOpen = false,
+}) {
+  const [query, setQuery] = useState("");
+  const [deletingDM, setDeletingDM] = useState(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+  const searchInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (mobileSearchOpen) searchInputRef.current?.focus();
+  }, [mobileSearchOpen]);
 
   const filtered = dms.filter((d) =>
-    (d.ig_username || '').toLowerCase().includes(query.toLowerCase())
-  )
+    (d.ig_username || "").toLowerCase().includes(query.toLowerCase()),
+  );
 
   const handleConfirmDelete = async () => {
-    if (!deletingDM) return
-    setLoadingDelete(true)
+    if (!deletingDM) return;
+    setLoadingDelete(true);
     try {
-      const target = deletingDM
-      await onDelete(target)
-      if (activeUsername && activeUsername.toLowerCase() === target.toLowerCase()) {
-        navigate('/home')
+      const target = deletingDM;
+      await onDelete(target);
+      if (
+        activeUsername &&
+        activeUsername.toLowerCase() === target.toLowerCase()
+      ) {
+        navigate("/home");
       }
-      setDeletingDM(null)
+      setDeletingDM(null);
     } finally {
-      setLoadingDelete(false)
+      setLoadingDelete(false);
     }
-  }
-
+  };
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden font-sans">
-      <div className="p-3 shrink-0">
+      <div
+        className={`${mobileSearchOpen ? "block" : "hidden"} md:block p-3 shrink-0`}
+      >
         <div className="relative w-full">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a39e98]" strokeWidth={2} />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a39e98]"
+            strokeWidth={2}
+          />
           <input
-            value={query} onChange={(e) => setQuery(e.target.value)}
+            ref={searchInputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-[#f9f9f8] border border-[#dfdcd9] rounded-[8px] py-2 pl-9 pr-3 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
             placeholder="Search conversations..."
           />
@@ -50,14 +70,16 @@ export default function DMList({ dms, onDelete, activeUsername }) {
           </div>
         )}
         {filtered.map((dm) => {
-          const isActive = activeUsername && activeUsername.toLowerCase() === dm.ig_username.toLowerCase()
+          const isActive =
+            activeUsername &&
+            activeUsername.toLowerCase() === dm.ig_username.toLowerCase();
           return (
             <div
               key={dm.ig_username}
               className={`group flex min-h-11 items-center gap-2.5 rounded-[8px] px-2.5 py-2.5 cursor-pointer transition-colors ${
                 isActive
-                  ? 'bg-[#e6f3fe] border border-[#0075de]/20'
-                  : 'hover:bg-[#f6f5f4] border border-transparent'
+                  ? "bg-[#e6f3fe] border border-[#0075de]/20"
+                  : "hover:bg-[#f6f5f4] border border-transparent"
               }`}
               onClick={() => navigate(`/chat/${dm.ig_username}`)}
             >
@@ -65,42 +87,73 @@ export default function DMList({ dms, onDelete, activeUsername }) {
                 <img
                   src={dm.profile_pic_url}
                   alt={dm.ig_username}
-                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
                   className="w-9 h-9 rounded-[8px] object-cover shrink-0 border border-[#0075de]/20 shadow-xs"
                 />
               ) : null}
-              <div className={`w-9 h-9 rounded-[8px] flex items-center justify-center font-semibold text-[13px] shrink-0 ${dm.profile_pic_url ? 'hidden' : ''} ${
-                isActive ? 'bg-[#0075de] text-white' : 'bg-[#e6f3fe] text-[#0075de] border border-[#0075de]/20'
-              }`}>
-                {((dm.participant_name && dm.participant_name.toLowerCase() !== dm.ig_username.toLowerCase() ? dm.participant_name : dm.ig_username) || '').replace(/^@+/, '').trim()[0]?.toUpperCase() || '?'}
+              <div
+                className={`w-9 h-9 rounded-[8px] flex items-center justify-center font-semibold text-[13px] shrink-0 ${dm.profile_pic_url ? "hidden" : ""} ${
+                  isActive
+                    ? "bg-[#0075de] text-white"
+                    : "bg-[#e6f3fe] text-[#0075de] border border-[#0075de]/20"
+                }`}
+              >
+                {(
+                  (dm.participant_name &&
+                  dm.participant_name.toLowerCase() !==
+                    dm.ig_username.toLowerCase()
+                    ? dm.participant_name
+                    : dm.ig_username) || ""
+                )
+                  .replace(/^@+/, "")
+                  .trim()[0]
+                  ?.toUpperCase() || "?"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-[13px] font-medium truncate ${isActive ? 'text-[#0075de]' : 'text-[#191918]'}`}>
-                  {dm.participant_name && dm.participant_name.toLowerCase() !== dm.ig_username.toLowerCase()
+                <p
+                  className={`text-[13px] font-medium truncate ${isActive ? "text-[#0075de]" : "text-[#191918]"}`}
+                >
+                  {dm.participant_name &&
+                  dm.participant_name.toLowerCase() !==
+                    dm.ig_username.toLowerCase()
                     ? dm.participant_name
                     : `@${dm.ig_username}`}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {dm.participant_name && dm.participant_name.toLowerCase() !== dm.ig_username.toLowerCase() && (
-                    <span className="text-[11px] text-[#615d59] font-mono truncate">@{dm.ig_username}</span>
-                  )}
+                  {dm.participant_name &&
+                    dm.participant_name.toLowerCase() !==
+                      dm.ig_username.toLowerCase() && (
+                      <span className="text-[11px] text-[#615d59] font-mono truncate">
+                        @{dm.ig_username}
+                      </span>
+                    )}
                   {dm.session_count > 0 && (
                     <span className="text-[10px] text-[#615d59] flex items-center gap-0.5 shrink-0">
-                      <User size={10} className="text-[#0075de]" strokeWidth={2} />
+                      <User
+                        size={10}
+                        className="text-[#0075de]"
+                        strokeWidth={2}
+                      />
                       {dm.session_count}
                     </span>
                   )}
                 </div>
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); setDeletingDM(dm.ig_username) }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeletingDM(dm.ig_username);
+                }}
                 className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-[6px] text-[#615d59] hover:text-[#e32d14] hover:bg-[#fef3f1] transition-all cursor-pointer"
                 title="Delete Conversation"
               >
                 <Trash2 size={15} strokeWidth={2} />
               </button>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -115,6 +168,5 @@ export default function DMList({ dms, onDelete, activeUsername }) {
         onClose={() => setDeletingDM(null)}
       />
     </div>
-  )
+  );
 }
-
