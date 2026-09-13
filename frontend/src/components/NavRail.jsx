@@ -48,7 +48,13 @@ export default function NavRail({ activePage }) {
     { href: '/wingmen', icon: Users, label: 'Wingmen', key: 'sessions' },
     { href: '/settings', icon: Settings, label: 'Settings', key: 'settings' },
   ]
-  const current = activePage || (location.pathname.startsWith('/settings') ? 'settings' : location.pathname.startsWith('/wingmen') || location.pathname.startsWith('/sessions') ? 'sessions' : 'home')
+  const current = activePage !== undefined
+    ? activePage
+    : (location.pathname.startsWith('/settings')
+        ? 'settings'
+        : (location.pathname === '/wingmen' || location.pathname === '/sessions/all' || location.pathname === '/sessions')
+          ? 'sessions'
+          : 'home')
   const handleLogout = () => { logout(); navigate('/login') }
 
   return (

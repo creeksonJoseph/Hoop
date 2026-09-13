@@ -29,12 +29,40 @@ export function MessagesSkeleton() {
 
 export function SessionsSkeleton() {
   return (
-    <div className="flex flex-col gap-3 p-4">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="animate-pulse bg-white border border-[#dfdcd9] rounded-[12px] p-4 space-y-3">
-          <div className="h-4 bg-[#f0f0f0] rounded w-1/3" />
-          <div className="h-3 bg-[#f0f0f0] rounded w-1/2" />
-          <div className="h-8 bg-[#f0f0f0] rounded-[6px] w-2/3" />
+    <div className="flex flex-col gap-4">
+      {[...Array(2)].map((_, i) => (
+        <div key={i} className="animate-pulse bg-white border border-[#dfdcd9] rounded-[12px] overflow-hidden shadow-xs">
+          {/* Wingman Group Header Skeleton */}
+          <div className="flex items-center justify-between border-b border-[#dfdcd9] px-5 py-3.5 bg-[#f9f9f8]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-[8px] bg-[#e8e6e3] shrink-0" />
+              <div className="space-y-1.5">
+                <div className="h-3.5 bg-[#e8e6e3] rounded w-28" />
+                <div className="h-2.5 bg-[#e8e6e3] rounded w-16" />
+              </div>
+            </div>
+            <div className="h-6 w-20 bg-[#e8e6e3] rounded-[6px]" />
+          </div>
+
+          {/* Session Cards Skeleton inside Group */}
+          <div className="p-4 space-y-3 bg-white">
+            {[...Array(2)].map((_, j) => (
+              <div key={j} className="border border-[#dfdcd9] rounded-[10px] p-3.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-[6px] bg-[#e8e6e3] shrink-0" />
+                  <div className="space-y-1.5">
+                    <div className="h-3 bg-[#e8e6e3] rounded w-32" />
+                    <div className="h-2.5 bg-[#e8e6e3] rounded w-20" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-[6px] bg-[#e8e6e3]" />
+                  <div className="w-7 h-7 rounded-[6px] bg-[#e8e6e3]" />
+                  <div className="w-7 h-7 rounded-[6px] bg-[#e8e6e3]" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
