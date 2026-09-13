@@ -50,8 +50,8 @@ async def get_messages(
         existing_msgs = await message_repo.get_messages_for_participant(conn, target_user)
         existing_conv = await message_repo.get_conversation_by_participant(conn, target_user)
 
-    # 2. Return from DB if available and not a force-sync
-    if existing_msgs and not force_sync:
+    # 2. Return from DB if available, not a force-sync, and not requesting a specific cursor page
+    if existing_msgs and not force_sync and not cursor:
         conv_id = existing_conv["conversation_id"] if existing_conv else (existing_msgs[0].get("conversation_id") or "db_conv")
         p_name = existing_conv["participant_name"] if existing_conv else target_user
         pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
@@ -64,6 +64,7 @@ async def get_messages(
             "pagination": None,
             "messages": format_db_messages(existing_msgs, target_user),
         }
+
 
     # 3. Fetch conversation from Zernio (first open or force_sync)
     try:

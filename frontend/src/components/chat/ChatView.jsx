@@ -1,25 +1,55 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Send, Zap, Trash as Trash2, BadgeCheck } from 'lucide-react'
+import { ArrowLeft, Send, Zap, Trash as Trash2, BadgeCheck, Loader as Loader2 } from 'lucide-react'
 import { useChat } from '../../hooks/useChat'
 import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
 
 export default function ChatView({ igUsername }) {
-  const { messages, participantName, profilePicUrl, loading, sendMessage, deleteMessage } = useChat(igUsername)
+  const { messages, participantName, profilePicUrl, loading, sendMessage, deleteMessage, hasMore, loadingMore, loadMore } = useChat(igUsername)
   const [input, setInput] = useState('')
   const [headerImgError, setHeaderImgError] = useState(false)
   const [ctxMenu, setCtxMenu] = useState(null)
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
+  const mainRef = useRef(null)
+  const isInitialLoad = useRef(true)
 
   const displayName = participantName && participantName.toLowerCase() !== igUsername.toLowerCase()
     ? participantName
     : null
 
+  // Scroll to bottom on initial message load
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!loading && messages.length > 0 && isInitialLoad.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+      isInitialLoad.current = false
+    }
+  }, [loading, messages])
+
+  // Reset initial load flag when username changes
+  useEffect(() => {
+    isInitialLoad.current = true
+  }, [igUsername])
+
+  const handleScroll = () => {
+    const container = mainRef.current
+    if (!container || loading || loadingMore || !hasMore || !loadMore) return
+
+    // Trigger loading older messages when near top (< 120px)
+    if (container.scrollTop < 120) {
+      const prevScrollHeight = container.scrollHeight
+      const prevScrollTop = container.scrollTop
+
+      loadMore().then(() => {
+        requestAnimationFrame(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - prevScrollHeight + prevScrollTop
+          }
+        })
+      })
+    }
+  }
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -86,7 +116,18 @@ export default function ChatView({ igUsername }) {
       </header>
 
       {/* Messages */}
-      <main className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]" onClick={() => setCtxMenu(null)}>
+      <main
+        ref={mainRef}
+        onScroll={handleScroll}
+        className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]"
+        onClick={() => setCtxMenu(null)}
+      >
+        {loadingMore && (
+          <div className="flex items-center justify-center py-2 text-[12px] text-[#615d59] gap-2 shrink-0">
+            <Loader2 size={14} className="animate-spin text-[#0075de]" />
+            <span>Loading older messages…</span>
+          </div>
+        )}
         {loading
           ? <MessagesSkeleton />
           : messages.map((msg) => (
@@ -95,6 +136,7 @@ export default function ChatView({ igUsername }) {
         }
         <div ref={messagesEndRef} />
       </main>
+
 
       {/* Input bar */}
       <div className="px-[clamp(.75rem,3vw,1rem)] pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">

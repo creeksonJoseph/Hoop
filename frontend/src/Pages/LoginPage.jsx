@@ -21,7 +21,7 @@ export default function LoginPage() {
             <Calendar size={22} className="text-[#191918]" strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-[20px] font-semibold text-[#191918] tracking-tight">Sign in to Hoop</h1>
+            <h1 className="text-[20px] font-semibold text-[#191918] tracking-tight">Sign in to Hooop</h1>
             <p className="text-[13px] text-[#615d59] mt-1">High-density Instagram DM management</p>
           </div>
         </div>

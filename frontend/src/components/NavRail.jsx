@@ -1,6 +1,43 @@
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Settings, LogOut, Users, Home } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+
+function TypewriterText({ text = "When you are out of words, let your wingman handle it.", typingSpeed = 55, deletingSpeed = 35, pauseDuration = 2400 }) {
+  const [displayedText, setDisplayedText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  useEffect(() => {
+    let timer
+
+    if (!isDeleting && displayedText.length < text.length) {
+      timer = setTimeout(() => {
+        setDisplayedText(text.slice(0, displayedText.length + 1))
+      }, typingSpeed)
+    } else if (!isDeleting && displayedText.length === text.length) {
+      timer = setTimeout(() => {
+        setIsDeleting(true)
+      }, pauseDuration)
+    } else if (isDeleting && displayedText.length > 0) {
+      timer = setTimeout(() => {
+        setDisplayedText(text.slice(0, displayedText.length - 1))
+      }, deletingSpeed)
+    } else if (isDeleting && displayedText.length === 0) {
+      timer = setTimeout(() => {
+        setIsDeleting(false)
+      }, 500)
+    }
+
+    return () => clearTimeout(timer)
+  }, [displayedText, isDeleting, text, typingSpeed, deletingSpeed, pauseDuration])
+
+  return (
+    <span className="inline-flex items-center text-[11px] leading-snug text-[#736f6b] font-medium min-h-[2.4rem]">
+      {displayedText}
+    </span>
+  )
+
+}
 
 export default function NavRail({ activePage }) {
   const { logout } = useAuth()
@@ -17,11 +54,16 @@ export default function NavRail({ activePage }) {
   return (
     <>
       <aside className="hidden md:flex w-[clamp(13rem,22vw,16rem)] shrink-0 flex-col border-r border-border bg-white px-[clamp(.75rem,2vw,1rem)] py-5">
-        <Link to="/home" className="flex items-center gap-3 px-2 mb-8">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-foreground text-sm font-bold text-background shadow-sm">H</span>
-          <span className="font-semibold tracking-tight">Hoop</span>
-        </Link>
-        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workspace</p>
+        <div className="px-2 mb-6">
+          <Link to="/home" className="flex items-center gap-2.5 mb-1.5">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-[#191918] text-xs font-bold text-white shadow-xs">H</span>
+            <span className="font-semibold text-base tracking-tight text-[#191918]">Hooop</span>
+          </Link>
+          <div className="min-h-[2.4rem] flex items-center">
+            <TypewriterText text="When you are out of words, let your wingman handle it." />
+          </div>
+        </div>
+
         <nav className="flex flex-col gap-1">
           {navItems.map(({ href, icon: Icon, label, key }) => {
             const active = current === key
@@ -43,3 +85,4 @@ export default function NavRail({ activePage }) {
     </>
   )
 }
+
