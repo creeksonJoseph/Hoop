@@ -4,9 +4,12 @@ api/routers/chat/messages.py
 LAYER: Router — GET /messages endpoint.
 
 Strategy:
-  1. Return from local DB if messages exist (avoids Zernio API calls).
-  2. On first open or force_sync=True: fetch from Zernio, persist, return.
-  3. On Zernio errors: gracefully fall back to DB data if available.
+  1. Return from local DB if messages exist (avoids Zernio API calls on repeat opens).
+     Also fetches from Zernio in the background to get a real cursor for pagination.
+  2. On first open or force_sync=True: fetch from Zernio, persist, return full DB history.
+  3. Cursor requests: fetch older batch from Zernio, upsert, return ONLY the new batch.
+     The frontend prepends these to the existing list.
+  4. On Zernio errors: gracefully fall back to DB data if available.
 """
 from typing import Optional
 
@@ -50,13 +53,45 @@ async def get_messages(
         existing_msgs = await message_repo.get_messages_for_participant(conn, target_user)
         existing_conv = await message_repo.get_conversation_by_participant(conn, target_user)
 
-    # 2. Return from DB if available, not a force-sync, and not requesting a specific cursor page
+    # 2. Return from DB if available, not a force-sync, and not requesting a cursor page.
+    #    cursor here is Zernio's own cursor string — not a DB message ID.
     if existing_msgs and not force_sync and not cursor:
         conv_id = existing_conv["conversation_id"] if existing_conv else (existing_msgs[0].get("conversation_id") or "db_conv")
         p_name = existing_conv["participant_name"] if existing_conv else target_user
         pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
-        earliest_id = str(existing_msgs[0]["id"]) if existing_msgs else None
-        pagination_info = {"hasMore": True, "nextCursor": earliest_id} if earliest_id else {"hasMore": False, "nextCursor": None}
+
+        # Fetch from Zernio to get a real pagination cursor and sync latest messages
+        try:
+            conv = await zernio_service.find_conversation(
+                target_user, acc["zernio_account_id"], acc["zernio_api_key_enc"]
+            )
+            if conv:
+                zernio_data = await zernio_service.get_messages(
+                    conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"],
+                    limit=limit, sort="desc", cursor=None,
+                )
+                zernio_pag = zernio_data.get("pagination") or {}
+                zernio_next = zernio_pag.get("nextCursor") or zernio_pag.get("cursor")
+                zernio_has_more = zernio_pag.get("hasMore")
+                if zernio_has_more is None:
+                    zernio_has_more = bool(zernio_next)
+
+                # Upsert latest messages
+                raw = zernio_data.get("messages") or zernio_data.get("data") or []
+                if raw:
+                    async with pool.acquire() as conn:
+                        await message_repo.upsert_messages_batch(conn, raw, conv["id"])
+                        existing_msgs = await message_repo.get_messages_by_conversation_id(conn, conv["id"])
+
+                pagination_info = {
+                    "hasMore": bool(zernio_has_more),
+                    "nextCursor": zernio_next if zernio_has_more else None,
+                }
+            else:
+                pagination_info = {"hasMore": False, "nextCursor": None}
+        except Exception:
+            pagination_info = {"hasMore": False, "nextCursor": None}
+
         return {
             "conversation_id": conv_id,
             "participant_name": p_name,
@@ -67,8 +102,7 @@ async def get_messages(
             "messages": format_db_messages(existing_msgs, target_user),
         }
 
-
-    # 3. Fetch conversation from Zernio (first open or force_sync)
+    # 3. Fetch conversation from Zernio (force_sync or cursor-paginated request)
     try:
         conv = await zernio_service.find_conversation(
             target_user,
@@ -109,7 +143,7 @@ async def get_messages(
     async with pool.acquire() as conn:
         await message_repo.upsert_conversation(conn, conv["id"], target_user, display_name, avatar_url)
 
-    # 5. Fetch messages from Zernio and bulk upsert
+    # 5. Fetch messages from Zernio (passing the Zernio cursor for older pages)
     sort_order = sort if sort in ("asc", "desc") else "desc"
     try:
         data = await zernio_service.get_messages(
@@ -118,7 +152,7 @@ async def get_messages(
             acc["zernio_api_key_enc"],
             limit=limit,
             sort=sort_order,
-            cursor=cursor,
+            cursor=cursor,  # Zernio's own cursor string for pagination
         )
     except Exception as e:
         if existing_msgs:
@@ -137,11 +171,9 @@ async def get_messages(
     if sort_order == "desc":
         raw = list(reversed(raw))
 
+    # Upsert this batch into DB
     async with pool.acquire() as conn:
         await message_repo.upsert_messages_batch(conn, raw, conv["id"])
-        db_msgs = await message_repo.get_messages_by_conversation_id(conn, conv["id"])
-
-    final_msgs = db_msgs or raw
 
     pag = data.get("pagination") if isinstance(data.get("pagination"), dict) else {}
     next_cur = pag.get("nextCursor") or pag.get("cursor")
@@ -150,20 +182,33 @@ async def get_messages(
     if has_more is None:
         has_more = bool(raw and len(raw) >= limit)
 
-    if has_more and not next_cur and db_msgs:
-        next_cur = str(db_msgs[0]["id"])
-
     pagination_info = {
         "hasMore": bool(has_more),
         "nextCursor": next_cur if has_more else None,
     }
+
+    # For cursor requests: return ONLY the new batch so the frontend can prepend them.
+    # For initial/force_sync: return the full DB history.
+    if cursor:
+        return {
+            "conversation_id": conv["id"],
+            "participant_name": display_name,
+            "instagram_username": target_user,
+            "profile_pic_url": avatar_url,
+            "total_returned": len(raw),
+            "pagination": pagination_info,
+            "messages": format_zernio_messages(raw, target_user),
+        }
+
+    async with pool.acquire() as conn:
+        db_msgs = await message_repo.get_messages_by_conversation_id(conn, conv["id"])
 
     return {
         "conversation_id": conv["id"],
         "participant_name": display_name,
         "instagram_username": target_user,
         "profile_pic_url": avatar_url,
-        "total_returned": len(final_msgs),
+        "total_returned": len(db_msgs or raw),
         "pagination": pagination_info,
         "messages": format_db_messages(db_msgs, target_user) if db_msgs else format_zernio_messages(raw, target_user),
     }

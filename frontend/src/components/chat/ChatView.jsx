@@ -10,10 +10,18 @@ export default function ChatView({ igUsername }) {
   const [input, setInput] = useState('')
   const [headerImgError, setHeaderImgError] = useState(false)
   const [ctxMenu, setCtxMenu] = useState(null)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false)
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
   const mainRef = useRef(null)
   const isInitialLoad = useRef(true)
+  const prevScrollHeightRef = useRef(null)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const displayName = participantName && participantName.toLowerCase() !== igUsername.toLowerCase()
     ? participantName
@@ -32,22 +40,30 @@ export default function ChatView({ igUsername }) {
     isInitialLoad.current = true
   }, [igUsername])
 
+  // Restore scroll position after older messages are prepended
+  const prevMsgCountRef = useRef(0)
+  useEffect(() => {
+    const container = mainRef.current
+    if (!container || prevScrollHeightRef.current === null) return
+    if (messages.length > prevMsgCountRef.current) {
+      // New messages were prepended — restore position
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight - prevScrollHeightRef.current
+      })
+      prevScrollHeightRef.current = null
+    }
+    prevMsgCountRef.current = messages.length
+  }, [messages])
+
   const handleScroll = () => {
     const container = mainRef.current
     if (!container || loading || loadingMore || !hasMore || !loadMore) return
+    if (prevScrollHeightRef.current !== null) return // already loading, don't double-fire
 
     // Trigger loading older messages when near top (< 120px)
     if (container.scrollTop < 120) {
-      const prevScrollHeight = container.scrollHeight
-      const prevScrollTop = container.scrollTop
-
-      loadMore().then(() => {
-        requestAnimationFrame(() => {
-          if (container) {
-            container.scrollTop = container.scrollHeight - prevScrollHeight + prevScrollTop
-          }
-        })
-      })
+      prevScrollHeightRef.current = container.scrollHeight
+      loadMore()
     }
   }
 
@@ -146,7 +162,7 @@ export default function ChatView({ igUsername }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a reply… (Enter to send, Shift+Enter for newline)"
+            placeholder={isMobile ? 'Type a reply…' : 'Type a reply… (Enter to send, Shift+Enter for newline)'}
             rows={1}
             className="w-full bg-transparent border-none focus:ring-0 text-[#191918] py-2.5 px-3.5 resize-none custom-scrollbar max-h-28 text-[13px] placeholder:text-[#a39e98] outline-none"
             style={{ minHeight: '40px' }}
