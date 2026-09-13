@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+
 import { ArrowLeft, Send, Trash as Trash2, Loader as Loader2 } from 'lucide-react'
+
 import { useChat } from '../../hooks/useChat'
 import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
