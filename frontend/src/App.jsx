@@ -12,9 +12,15 @@ import WingmanPage from './Pages/WingmanPage'
 
 function Protected({ children }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="size-8 rounded-full border-2 border-border border-t-primary animate-spin" /></div>
+  const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('hoop_token'))
+
+  if (loading) {
+    if (hasToken) return children
+    return null
+  }
   return user ? children : <Navigate to="/login" replace />
 }
+
 
 export default function App() {
   return <Routes>

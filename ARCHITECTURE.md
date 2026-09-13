@@ -1,12 +1,12 @@
-# Hoop — Architecture & AI Guidance Document
+# Hooop — Architecture & AI Guidance Document
 
-> **Notice for Future LLMs & Developers**: This document details the core architectural principles, layer boundaries, and key design decisions of **Hoop**. **You MUST adhere strictly to these patterns when modifying or adding features.**
+> **Notice for Future LLMs & Developers**: This document details the core architectural principles, layer boundaries, performance standards, and key design decisions of **Hooop**. **You MUST adhere strictly to these patterns when modifying or adding features.**
 
 ---
 
 ## 1. Core Architectural Philosophy
 
-Hoop follows a strict separation of concerns across both backend and frontend:
+Hooop follows a strict separation of concerns across both backend and frontend:
 
 1. **Backend**: **Layered Architecture (Router → Service → Repository → Model)**. Each layer has a single responsibility. Routers return **JSON only** — no HTML, no redirects (except OAuth flows). The API is consumed exclusively by the React frontend.
 2. **Frontend**: **Custom Hook Abstraction Pattern (Page/Component UI ↔ Custom Hook State)**. Pages and components are pure, presentational UI layers. All state, data fetching, business logic, and side-effects MUST be encapsulated inside dedicated custom hooks.
@@ -15,7 +15,20 @@ Hoop follows a strict separation of concerns across both backend and frontend:
 
 ---
 
-## 2. Backend Architecture (Layered Approach)
+## 2. Frontend UI Performance & Independent Component Rendering Rules
+
+1. **Independent Component Rendering & Perceived Speed**:
+   - Components that do not depend on external API data or sibling components (e.g., sidebars, navigation rails, static headers, empty state canvases) MUST render immediately on page mount without waiting for network requests or blocking route guards.
+   - Never use global page-level full-screen loading spinners or block the entire UI tree for localized data fetching.
+
+2. **Decentralized Data Fetching & Isolated Skeleton Loaders**:
+   - Components requiring backend data (e.g., thread lists, message histories, session statistics) MUST encapsulate their own fetching logic and manage their loading state independently.
+   - Components fetching data MUST execute their requests separately so each component renders immediately when its own data arrives, rather than waiting on sibling requests.
+   - Display localized, component-specific Skeleton loaders (e.g., `DMListSkeleton`, `MessagesSkeleton`) only over the specific region that is loading data.
+
+---
+
+## 3. Backend Architecture (Layered Approach)
 
 ```
 [ HTTP Request ]
@@ -90,7 +103,7 @@ Hoop follows a strict separation of concerns across both backend and frontend:
 
 ---
 
-## 3. Frontend Architecture (Hook-Driven UI)
+## 4. Frontend Architecture (Hook-Driven UI)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -170,7 +183,7 @@ frontend/src/
 
 ---
 
-## 4. API Key Security (BYOK — Bring Your Own Key)
+## 5. API Key Security (BYOK — Bring Your Own Key)
 
 ### Storage Rule (MUST be followed)
 - Zernio API keys are **NEVER** stored in plaintext in the database.
@@ -193,7 +206,7 @@ FRONTEND_URL=     # e.g. https://frontend-eight-inky-38.vercel.app
 
 ---
 
-## 5. Key Architectural Decisions & Design Patterns
+## 6. Key Architectural Decisions & Design Patterns
 
 ### 1. JWT Bearer Auth (Stateless)
 - No cookies, no server-side sessions.
@@ -229,7 +242,7 @@ FRONTEND_URL=     # e.g. https://frontend-eight-inky-38.vercel.app
 
 ---
 
-## 6. Guidelines for Future LLMs & Developers
+## 7. Guidelines for Future LLMs & Developers
 
 1. **No API Calls in JSX Files**: NEVER use `axios`, `fetch()`, or `useEffect` API calls directly inside any `.jsx` file. ALWAYS create or consume a dedicated custom hook in `frontend/src/hooks/`.
 2. **Always Use the Shared Axios Instance**: Import `api` from `frontend/src/lib/api.js`. Never create a new `axios.create()` in a hook or component (exception: `useWingman.js` uses a separate public instance with no auth header).
@@ -237,5 +250,6 @@ FRONTEND_URL=     # e.g. https://frontend-eight-inky-38.vercel.app
 4. **Routers Return JSON Only**: Never return HTML, templates, or non-OAuth redirects from any router.
 5. **No Blocking Operations**: All database and socket handling on the backend remains async/non-blocking.
 6. **Mandatory Skeleton UI**: Every new page MUST have a corresponding skeleton in `Skeletons.jsx` displayed during data fetching.
-7. **Preserve Auth Contract**: The JWT payload contains `sub` (user_id) and `email`. Do not change this without updating `dependencies.py` and `AuthContext.jsx`.
-8. **Abstract Complex Views**: Avoid writing long inline code in page files. Extract tabs, forms, headers, and list views into dedicated components in `frontend/src/components/<feature>/`.
+7. **Independent Component Rendering & Perceived Speed**: Render static/non-data components immediately without waiting for API responses or blocking route guards. Decouple data fetching per component to maximize perceived speed.
+8. **Preserve Auth Contract**: The JWT payload contains `sub` (user_id) and `email`. Do not change this without updating `dependencies.py` and `AuthContext.jsx`.
+9. **Abstract Complex Views**: Avoid writing long inline code in page files. Extract tabs, forms, headers, and list views into dedicated components in `frontend/src/components/<feature>/`.
