@@ -76,10 +76,12 @@ function CompactSessionItem({ session, onUpdate, onDelete }) {
 
   const promptDelete = () => {
     setMenuOpen(false)
+    const wingmanLabel = session.wingman_name || 'This wingman'
+    const dmLabel = session.ig_username ? `@${session.ig_username}` : 'this conversation'
     setConfirmModal({
       action: 'delete',
       title: 'Remove session?',
-      description: `This will remove ${igHandle}'s access from this conversation. The wingman will no longer be able to view or reply to this DM.`,
+      description: `${wingmanLabel} will no longer have access to the ${dmLabel} conversation.`,
       confirmText: 'Remove session',
       isDestructive: true,
     })
