@@ -4,10 +4,14 @@ import { Send, Ban, Eye, Loader as Loader2 } from 'lucide-react'
 import { useWingman } from '../hooks/useWingman'
 import MessageBubble from '../components/chat/MessageBubble'
 import { MessagesSkeleton } from '../components/skeletons/Skeletons'
+import Instagram24hNotice from '../components/chat/Instagram24hNotice'
+import { get24hWindowStatus } from '../utils/instagramWindow'
+import { useToast } from '../context/ToastContext'
 
 export default function WingmanPage() {
   const { token } = useParams()
   const { session, messages, participantName, profilePicUrl, loading, sendMessage } = useWingman(token)
+  const { toast } = useToast()
   const [input, setInput] = useState('')
   const [headerImgError, setHeaderImgError] = useState(false)
   const messagesEndRef = useRef(null)
@@ -20,7 +24,10 @@ export default function WingmanPage() {
     if (!input.trim()) return
     const text = input
     setInput('')
-    await sendMessage(text)
+    const res = await sendMessage(text)
+    if (res && res.success === false && res.error) {
+      toast(res.error, 'error')
+    }
   }
 
   if (!loading && !session) {
@@ -34,6 +41,7 @@ export default function WingmanPage() {
 
   const isRevoked = session?.access_level === 'revoked'
   const canSend = session?.access_level === 'send'
+  const windowStatus = get24hWindowStatus(messages, participantName || session?.ig_username)
 
   return (
     <div className="fluid-page h-[100dvh] flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
@@ -72,6 +80,12 @@ export default function WingmanPage() {
         }
         <div ref={messagesEndRef} />
       </main>
+
+      <Instagram24hNotice
+        warningText={windowStatus.warningText}
+        isExpired={windowStatus.isExpired}
+        isExpiringSoon={windowStatus.isExpiringSoon}
+      />
 
       {canSend && !isRevoked && (
         <div className="p-3 border-t border-[#dfdcd9] bg-white flex gap-2 items-end">

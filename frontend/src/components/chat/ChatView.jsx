@@ -7,6 +7,8 @@ import { useChat } from '../../hooks/useChat'
 import MessageBubble from './MessageBubble'
 import { MessagesSkeleton } from '../skeletons/Skeletons'
 import ChatWingmenView from './ChatWingmenView'
+import Instagram24hNotice from './Instagram24hNotice'
+import { get24hWindowStatus } from '../../utils/instagramWindow'
 
 export default function ChatView({ igUsername }) {
   const { messages, participantName, profilePicUrl, loading, sendMessage, deleteMessage, hasMore, loadingMore, loadMore } = useChat(igUsername)
@@ -30,6 +32,8 @@ export default function ChatView({ igUsername }) {
   const displayName = participantName && participantName.toLowerCase() !== igUsername.toLowerCase()
     ? participantName
     : null
+
+  const windowStatus = get24hWindowStatus(messages, participantName || igUsername)
 
   // Scroll to bottom on initial message load
   useEffect(() => {
@@ -167,6 +171,13 @@ export default function ChatView({ igUsername }) {
             }
             <div ref={messagesEndRef} />
           </main>
+
+          {/* Instagram 24-hour Messaging Policy Warning */}
+          <Instagram24hNotice
+            warningText={windowStatus.warningText}
+            isExpired={windowStatus.isExpired}
+            isExpiringSoon={windowStatus.isExpiringSoon}
+          />
 
           {/* Input bar */}
           <div className="px-[clamp(.75rem,3vw,1rem)] pb-4 pt-3 border-t border-[#dfdcd9] bg-white z-40">

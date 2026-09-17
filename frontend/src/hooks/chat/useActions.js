@@ -36,7 +36,20 @@ export function useActions(igUsername, addMessage, seenIds, setMessages) {
       // Realtime will deliver the confirmed message and replace the optimistic one.
       return true
     } catch (err) {
-      toastRef.current(err.response?.data?.detail || 'Send failed', 'error')
+      const errCode = err.response?.data?.code
+      const errDetail = err.response?.data?.detail || err.response?.data?.message
+      let errMsg = errDetail || 'Send failed'
+
+      if (
+        errCode === 'INSTAGRAM_24H_WINDOW_EXPIRED' ||
+        errCode === 'MESSAGING_WINDOW_EXPIRED' ||
+        (errMsg && (errMsg.includes('24 hours') || errMsg.includes('24-hour') || errMsg.includes('allowed window')))
+      ) {
+        errMsg =
+          "This message couldn't be sent. Instagram only allows messages within 24 hours of the person's last interaction with you, and that window has closed for now. It'll reopen as soon as they message, comment, or reply to your story."
+      }
+
+      toastRef.current(errMsg, 'error')
       seenIds.current.delete(optimistic.id)
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id))
       return false

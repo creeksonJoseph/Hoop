@@ -14,7 +14,14 @@ from repositories import account_repo, message_repo, session_repo
 from services import zernio_service
 
 import logging
-from api.errors import NotFoundError, ForbiddenError, ValidationError, ZernioAPIError
+from api.errors import (
+    NotFoundError,
+    ForbiddenError,
+    ValidationError,
+    ZernioAPIError,
+    is_24h_window_error,
+    INSTAGRAM_24H_WINDOW_ERROR_MESSAGE,
+)
 
 router = APIRouter()
 
@@ -61,7 +68,13 @@ async def wingman_reply(token: str, body: ReplyBody):
             conv_id, acc["zernio_account_id"], acc["zernio_api_key_enc"], body.message
         )
     except Exception as e:
-        logging.error(f"[wingman_reply] Zernio send message error for @{ig_username}: {e}")
+        err_msg = str(e)
+        logging.error(f"[wingman_reply] Zernio send message error for @{ig_username}: {err_msg}")
+        if is_24h_window_error(err_msg):
+            raise ValidationError(
+                INSTAGRAM_24H_WINDOW_ERROR_MESSAGE,
+                code="INSTAGRAM_24H_WINDOW_EXPIRED"
+            )
         raise ZernioAPIError("Failed to send message as wingman. Please try again.", status_code=502, code="REPLY_FAILED")
 
     # Immediately write sent message to DB

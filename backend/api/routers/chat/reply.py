@@ -20,7 +20,14 @@ from dependencies import require_user
 from repositories import account_repo, message_repo
 from services import zernio_service
 
-from api.errors import ValidationError, NotFoundError, AuthenticationError, ZernioAPIError
+from api.errors import (
+    ValidationError,
+    NotFoundError,
+    AuthenticationError,
+    ZernioAPIError,
+    is_24h_window_error,
+    INSTAGRAM_24H_WINDOW_ERROR_MESSAGE,
+)
 
 router = APIRouter()
 
@@ -96,11 +103,10 @@ async def reply(
         logging.error(f"[reply] Send message error for @{target_user}: {err_msg}")
         if "401" in err_msg or "Unauthorized" in err_msg:
             raise AuthenticationError("Zernio API key is invalid or revoked.", code="INVALID_ZERNIO_KEY")
-        if "outside of allowed window" in err_msg.lower() or "allowed window" in err_msg.lower():
+        if is_24h_window_error(err_msg):
             raise ValidationError(
-                f"Meta's 24-hour messaging window has expired for @{target_user}. "
-                "Per Meta/Instagram rules, the recipient must send a new DM to your Instagram account first before you can reply via API.",
-                code="MESSAGING_WINDOW_EXPIRED"
+                INSTAGRAM_24H_WINDOW_ERROR_MESSAGE,
+                code="INSTAGRAM_24H_WINDOW_EXPIRED"
             )
         raise ZernioAPIError("Failed to send message to Instagram. Please try again.", status_code=502, code="REPLY_FAILED")
 

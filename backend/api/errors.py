@@ -20,6 +20,33 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+INSTAGRAM_24H_WINDOW_ERROR_MESSAGE = (
+    "This message couldn't be sent. Instagram only allows messages within 24 hours of "
+    "the person's last interaction with you, and that window has closed for now. "
+    "It'll reopen as soon as they message, comment, or reply to your story."
+)
+
+
+def is_24h_window_error(err_msg: str) -> bool:
+    """Check if an error string from Zernio/Meta represents Instagram's 24-hour messaging window expiration."""
+    if not err_msg:
+        return False
+    msg_lower = str(err_msg).lower()
+    keywords = [
+        "outside of allowed window",
+        "outside allowed window",
+        "allowed window",
+        "messaging window",
+        "24 hour",
+        "24-hour",
+        "24h",
+        "window has closed",
+        "window expired",
+        "2534022",
+        "recipient must send",
+    ]
+    return any(k in msg_lower for k in keywords)
+
 
 # ── Custom Application Base Exception ─────────────────────────────────────────
 

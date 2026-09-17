@@ -97,12 +97,24 @@ export function useWingman(token) {
   }, [convId, addMessage]);
 
   const sendMessage = async (text) => {
-    if (!text.trim()) return false;
+    if (!text.trim()) return { success: false, error: 'Message cannot be empty' };
     try {
       await publicApi.post(`/wingman/${token}/reply`, { message: text });
-      return true;
-    } catch {
-      return false;
+      return { success: true };
+    } catch (err) {
+      const errCode = err.response?.data?.code;
+      const errDetail = err.response?.data?.detail || err.response?.data?.message;
+      let errMsg = errDetail || 'Send failed';
+
+      if (
+        errCode === 'INSTAGRAM_24H_WINDOW_EXPIRED' ||
+        errCode === 'MESSAGING_WINDOW_EXPIRED' ||
+        (errMsg && (errMsg.includes('24 hours') || errMsg.includes('24-hour') || errMsg.includes('allowed window')))
+      ) {
+        errMsg =
+          "This message couldn't be sent. Instagram only allows messages within 24 hours of the person's last interaction with you, and that window has closed for now. It'll reopen as soon as they message, comment, or reply to your story.";
+      }
+      return { success: false, error: errMsg };
     }
   };
 
