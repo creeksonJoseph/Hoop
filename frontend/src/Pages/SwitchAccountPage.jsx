@@ -10,16 +10,13 @@ export default function SwitchAccountPage() {
   const { user, setActiveAccount } = useAuth()
   const { settings, loading } = useSettings()
   const [connecting, setConnecting] = useState(false)
-  const accounts = (settings?.accounts || []).filter((account) => account.ig_username !== '__pending__')
+  const accounts = (settings?.accounts || []).filter((a) => a.ig_username !== '__pending__')
   const activeUsername = user?.active_ig_username
 
   useEffect(() => {
     if (loading) return
-    const available = (settings?.accounts || []).filter((account) => account.ig_username !== '__pending__')
-    if (!available.length) {
-      navigate('/onboarding', { replace: true })
-      return
-    }
+    const available = (settings?.accounts || []).filter((a) => a.ig_username !== '__pending__')
+    if (!available.length) { navigate('/onboarding', { replace: true }); return }
     if (!activeUsername) setActiveAccount(available[0].ig_username)
   }, [loading, settings, navigate, activeUsername, setActiveAccount])
 
@@ -29,47 +26,74 @@ export default function SwitchAccountPage() {
   }
 
   const connectAnother = () => {
-    if (settings?.oauth_url) {
-      setConnecting(true)
-      window.location.assign(settings.oauth_url)
-    }
+    if (settings?.oauth_url) { setConnecting(true); window.location.assign(settings.oauth_url) }
   }
 
   return (
     <div className="min-h-screen w-full flex bg-[#f9f9f8] text-[#191918] font-sans">
       <NavRail activePage="settings" />
-      <main className="min-w-0 flex-1 pb-24 md:pb-0">
-        <div className="mx-auto w-full max-w-2xl px-[clamp(1rem,4vw,2.5rem)] py-[clamp(1.5rem,6vw,3rem)]">
-          <button onClick={() => navigate('/settings')} className="mb-8 inline-flex items-center gap-2 text-[12px] font-medium text-[#615d59] hover:text-[#191918]">
-            <ArrowLeft size={15} /> Back to settings
+      <main className="min-w-0 flex-1 pt-14 pb-24 md:pt-0 md:pb-0 px-4 sm:px-6 py-5">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6 pt-3 md:pt-5">
+          <button
+            onClick={() => navigate('/settings')}
+            className="flex size-8 items-center justify-center rounded-[8px] border border-[#dfdcd9] bg-white text-[#494744] hover:bg-[#f0eeec] hover:text-[#191918] transition-colors shadow-xs cursor-pointer"
+          >
+            <ArrowLeft size={15} strokeWidth={2} />
           </button>
-          <div className="mb-8">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0075de]">Workspace</p>
-            <h1 className="text-[clamp(1.65rem,5vw,2.25rem)] font-semibold tracking-tight">Switch Instagram account</h1>
-            <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#615d59]">Choose one profile to work with. Hoop keeps messages, DMs, and wingmen scoped to the selected account.</p>
+          <div>
+            <h1 className="text-[17px] font-semibold tracking-tight text-[#191918]">Switch account</h1>
+            <p className="text-[12px] text-[#615d59]">One profile is active at a time</p>
           </div>
-          <section className="overflow-hidden rounded-2xl border border-[#dfdcd9] bg-white shadow-sm">
-            <div className="border-b border-[#f0eeec] px-5 py-4 sm:px-6">
-              <h2 className="text-[14px] font-semibold">Your connected accounts</h2>
-              <p className="mt-1 text-[12px] text-[#77716b]">Only one account is active at a time.</p>
-            </div>
-            <div className="flex flex-col gap-2 p-3 sm:p-4">
-              {loading ? <div className="flex items-center gap-2 p-4 text-[12px] text-[#77716b]"><Loader2 className="animate-spin" size={15} /> Loading accounts…</div> : accounts.map((account) => {
-                const isActive = account.ig_username === activeUsername
-                return <button key={account.ig_username} onClick={() => chooseAccount(account.ig_username)} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ${isActive ? 'border-[#0075de] bg-[#f2f8ff]' : 'border-transparent bg-[#f9f9f8] hover:border-[#dfdcd9] hover:bg-white'}`}>
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#191918] text-white"><Instagram size={18} /></span>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">@{account.ig_username}</span><span className="mt-0.5 block text-[11px] text-[#77716b]">Instagram profile</span></span>
-                  {isActive ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0075de]"><Check size={14} /> Active</span> : <span className="text-[11px] font-medium text-[#77716b]">Switch</span>}
-                </button>
-              })}
-              <button onClick={connectAnother} disabled={connecting || !settings?.oauth_url} className="flex w-full items-center gap-3 rounded-xl border border-dashed border-[#c9c4bf] p-4 text-left text-[#0075de] transition-colors hover:border-[#0075de] hover:bg-[#f2f8ff] disabled:cursor-not-allowed disabled:opacity-60">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e8f3ff]"><Plus size={18} /></span>
-                <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Connect another account</span><span className="mt-0.5 block text-[11px] text-[#615d59]">Use your existing API key to reconnect Instagram</span></span>
-                {connecting ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
-              </button>
-            </div>
-          </section>
         </div>
+
+        {/* Account list */}
+        {loading ? (
+          <div className="flex items-center gap-2 py-4 text-[12px] text-[#a39e98]">
+            <Loader2 className="animate-spin" size={14} /> Loading accounts…
+          </div>
+        ) : (
+          <div className="divide-y divide-[#ebebea]">
+            {accounts.map((account) => {
+              const isActive = account.ig_username === activeUsername
+              return (
+                <button
+                  key={account.ig_username}
+                  onClick={() => chooseAccount(account.ig_username)}
+                  className={`w-full flex items-center gap-3 py-3.5 text-left transition-colors hover:text-[#191918] ${isActive ? 'text-[#191918]' : 'text-[#494744]'}`}
+                >
+                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${isActive ? 'bg-[#191918]' : 'bg-[#f0eeec]'} transition-colors`}>
+                    <Instagram size={16} className={isActive ? 'text-white' : 'text-[#615d59]'} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-semibold truncate">@{account.ig_username}</span>
+                    <span className="mt-0.5 block text-[11px] text-[#a39e98]">Instagram profile</span>
+                  </span>
+                  {isActive
+                    ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0075de]"><Check size={13} /> Active</span>
+                    : <span className="text-[11px] font-medium text-[#a39e98]">Switch</span>}
+                </button>
+              )
+            })}
+
+            {/* Connect another */}
+            <button
+              onClick={connectAnother}
+              disabled={connecting || !settings?.oauth_url}
+              className="w-full flex items-center gap-3 py-3.5 text-left text-[#0075de] hover:text-[#005bab] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e8f3ff]">
+                <Plus size={16} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-semibold">Connect another account</span>
+                <span className="mt-0.5 block text-[11px] text-[#615d59]">Reconnect via your API key</span>
+              </span>
+              {connecting ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} className="text-[#a39e98]" />}
+            </button>
+          </div>
+        )}
       </main>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, Lock, Loader as Loader2, Calendar } from 'lucide-react'
+import { Mail, Lock, Loader as Loader2 } from 'lucide-react'
 import { useSignup } from '../hooks/useAuthForms'
 
 export default function SignupPage() {
@@ -18,9 +18,9 @@ export default function SignupPage() {
     <div className="min-h-screen bg-[#f9f9f8] text-[#191918] flex items-center justify-center p-4 selection:bg-[#e6f3fe] selection:text-[#0075de] font-sans">
       <div className="w-full max-w-[380px] space-y-6 fade-up">
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-11 h-11 rounded-[10px] bg-white border border-[#dfdcd9] flex items-center justify-center shadow-sm">
-            <Calendar size={22} className="text-[#191918]" strokeWidth={2} />
-          </div>
+          <span className="flex size-11 items-center justify-center rounded-[10px] bg-[#191918] text-lg font-bold text-white shadow-sm">
+            H
+          </span>
           <div>
             <h1 className="text-[20px] font-semibold text-[#191918] tracking-tight">Create your Hooop account</h1>
             <p className="text-[13px] text-[#615d59] mt-1">High-density Instagram DM management</p>
