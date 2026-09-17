@@ -6,75 +6,48 @@
  *
  * Returns nothing - drives state via the `addMessage` callback passed in.
  */
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export function useRealtime(convId, addMessage) {
+  const addMessageRef = useRef(addMessage)
+  addMessageRef.current = addMessage
+
   useEffect(() => {
     if (!convId) return
 
-    let retryTimer = null
-    let active = true
-    const channelRef = { current: null }
+    const channelName = `messages_realtime_${convId}`
+    const filterStr = `conversation_id=eq.${convId}`
 
-    const subscribe = () => {
-      if (!active) return
-
-      const channelName = `messages_realtime_${convId}_${Date.now()}`
-      const filterStr = `conversation_id=eq.${convId}`
-      console.log('[Supabase Realtime] subscribing - channel:', channelName, '| filter:', filterStr)
-
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: filterStr,
-          },
-          (payload) => {
-            console.log('[Supabase Realtime] 🔔 RAW EVENT received:', JSON.stringify(payload.new))
-            const row = payload.new
-            if (!row || !row.id) {
-              console.error('[Supabase Realtime] payload.new is missing or has no id:', payload)
-              return
-            }
-            console.log('[Supabase Realtime] row.conversation_id:', row.conversation_id, '| subscribed convId:', convId)
-            addMessage({
-              id: row.id,
-              message: row.message,
-              direction: row.direction,
-              sender_name: row.sender_name,
-              created_at: row.created_at,
-              attachments: [],
-            })
-          }
-        )
-        .subscribe((status, err) => {
-          console.log('[Supabase Realtime] status:', status, '| conv_id:', convId)
-          if (err) console.error('[Supabase Realtime] subscription error:', err)
-          // Guard: removeChannel() itself fires CLOSED - use a flag to prevent
-          // the cascade: CHANNEL_ERROR → removeChannel → CLOSED → removeChannel → ...
-          if ((status === 'CHANNEL_ERROR' || status === 'CLOSED') && active && !retryTimer) {
-            console.warn('[Supabase Realtime] channel lost - retrying in 2s')
-            retryTimer = setTimeout(() => {
-              retryTimer = null
-              subscribe()
-            }, 2000)
-          }
-        })
-
-      channelRef.current = channel
-    }
-
-    subscribe()
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: filterStr,
+        },
+        (payload) => {
+          const row = payload.new
+          if (!row || !row.id) return
+          addMessageRef.current({
+            id: row.id,
+            message: row.message,
+            direction: row.direction,
+            sender_name: row.sender_name,
+            created_at: row.created_at,
+            attachments: [],
+          })
+        }
+      )
+      .subscribe((status, err) => {
+        if (err) console.error('[Supabase Realtime] subscription error:', err)
+      })
 
     return () => {
-      active = false
-      clearTimeout(retryTimer)
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
+      supabase.removeChannel(channel)
     }
-  }, [convId, addMessage])
+  }, [convId])
 }

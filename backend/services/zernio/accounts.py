@@ -93,8 +93,6 @@ async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 
             except Exception:
                 data = {}
 
-            logging.warning(f"[Zernio GET /connect/instagram] status={r.status_code} body={data}")
-
             if r.status_code < 400:
                 url = (
                     data.get("authUrl")

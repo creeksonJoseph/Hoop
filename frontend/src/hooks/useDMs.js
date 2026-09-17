@@ -39,22 +39,26 @@ export function useDMs() {
       setDMs(data.dms);
       setHasRealAccount(data.has_real_account);
     } catch (err) {
-      toastRef.current(
-        err.response?.data?.detail ||
-          `Failed to load conversations (${err.response?.status})`,
-        "error",
-      );
+      // Avoid spamming toasts if offline or unauthenticated
+      if (err.response?.status && err.response.status !== 401) {
+        toastRef.current(
+          err.response?.data?.detail || err.response?.data?.message || `Failed to load conversations (${err.response?.status})`,
+          "error",
+        );
+      }
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const fetchDMsRef = useRef(fetchDMs);
+  fetchDMsRef.current = fetchDMs;
 
   // Re-fetch whenever the active account changes (accountVersion bump from AuthContext)
   useEffect(() => {
     const key = localStorage.getItem("hoop_active_ig") || "__none__";
     const hit = dmsCacheByAccount[key];
     if (hit) {
-      // Serve cache immediately, then still re-fetch in background for freshness
       setDMs(hit.dms);
       setHasRealAccount(hit.hasRealAccount);
       setLoading(false);
@@ -64,58 +68,27 @@ export function useDMs() {
       setLoading(true);
     }
     fetchDMs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountVersion, fetchDMs]);
 
   // Supabase Realtime - refresh list silently when new message is inserted
   useEffect(() => {
-    let retryTimer = null;
-    let active = true;
-    const channelRef = { current: null };
-
-    const subscribe = () => {
-      if (!active) return;
-
-      const channelName = `dms_list_realtime_${Date.now()}_${++realtimeSubscriptionId}`;
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "messages" },
-          () => {
-            fetchDMs();
-          },
-        )
-        .subscribe((status, err) => {
-          if (err) console.error("[Supabase DMs Realtime] error:", err);
-          if (
-            (status === "CHANNEL_ERROR" || status === "CLOSED") &&
-            active &&
-            !retryTimer
-          ) {
-            console.warn(
-              "[Supabase DMs Realtime] channel lost - retrying in 2s",
-            );
-            retryTimer = setTimeout(() => {
-              retryTimer = null;
-              subscribe();
-            }, 2000);
-          }
-        });
-
-      channelRef.current = channel;
-    };
-
-    subscribe();
+    const channel = supabase
+      .channel("dms_list_realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        () => {
+          fetchDMsRef.current();
+        },
+      )
+      .subscribe((status, err) => {
+        if (err) console.error("[Supabase DMs Realtime] error:", err);
+      });
 
     return () => {
-      active = false;
-      clearTimeout(retryTimer);
-      const channel = channelRef.current;
-      channelRef.current = null;
-      if (channel) supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
-  }, [fetchDMs]);
+  }, []);
 
   const addDM = async (igUsername) => {
     try {

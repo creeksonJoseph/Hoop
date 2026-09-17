@@ -6,7 +6,6 @@ import OnboardingPage from './Pages/OnboardingPage'
 import HomePage from './Pages/HomePage'
 import ChatPage from './Pages/ChatPage'
 import SessionsPage from './Pages/SessionsPage'
-import AddSessionPage from './Pages/AddSessionPage'
 import SettingsPage from './Pages/SettingsPage'
 import SwitchAccountPage from './Pages/SwitchAccountPage'
 import WingmanPage from './Pages/WingmanPage'
@@ -33,7 +32,6 @@ export default function App() {
     <Route path="/chat/:igUsername" element={<Protected><ChatPage /></Protected>} />
     <Route path="/wingmen" element={<Protected><SessionsPage /></Protected>} />
     <Route path="/sessions/:igUsername" element={<Protected><SessionsPage /></Protected>} />
-    <Route path="/sessions/:igUsername/new" element={<Protected><AddSessionPage /></Protected>} />
     <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
     <Route path="/settings/accounts" element={<Protected><SwitchAccountPage /></Protected>} />
     <Route path="/" element={<Navigate to="/home" replace />} />

@@ -63,9 +63,6 @@ async def find_conversation(
                 params["cursor"] = cursor
             data = await client.get("/inbox/conversations", params, raw_key)
             convs = data.get("data", [])
-            if page == 0 and convs:
-                logging.info(f"[find_conversation] sample conv keys: {list(convs[0].keys())}")
-                logging.info(f"[find_conversation] sample conv: {convs[0]}")
             for conv in convs:
                 if _conv_matches(conv, target):
                     return conv

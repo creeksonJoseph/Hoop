@@ -41,7 +41,6 @@ async def zernio_webhook(request: Request):
         raise ValidationError("Invalid JSON payload", code="INVALID_JSON_PAYLOAD")
 
     event_type = payload.get("event") or payload.get("type") or ""
-    print(f"[webhook] raw payload keys={list(payload.keys())} event={event_type}")
 
     if event_type == "account.connected":
         acc_data = payload.get("account") or payload.get("data") or {}
@@ -192,7 +191,6 @@ async def zernio_webhook(request: Request):
                 final_conv_id = conv_rec["conversation_id"]
                 webhook_account_username = conv_rec.get("account_username") or ""
 
-        print(f"[webhook] inserting msg_id={msg_id} conversation_id={final_conv_id} direction={direction} account={webhook_account_username!r} text={text[:40]!r}")
         await message_repo.upsert_message(
             conn,
             msg_id=str(msg_id),
