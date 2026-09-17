@@ -1,7 +1,7 @@
 """
 repositories/user_repo.py
 =========================
-LAYER: Repository — raw DB operations for the users table.
+LAYER: Repository - raw DB operations for the users table.
 No business logic. No Zernio calls. Only asyncpg.
 """
 from typing import Optional

@@ -67,7 +67,7 @@ export function useDMs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountVersion, fetchDMs]);
 
-  // Supabase Realtime — refresh list silently when new message is inserted
+  // Supabase Realtime - refresh list silently when new message is inserted
   useEffect(() => {
     let retryTimer = null;
     let active = true;
@@ -94,7 +94,7 @@ export function useDMs() {
             !retryTimer
           ) {
             console.warn(
-              "[Supabase DMs Realtime] channel lost — retrying in 2s",
+              "[Supabase DMs Realtime] channel lost - retrying in 2s",
             );
             retryTimer = setTimeout(() => {
               retryTimer = null;

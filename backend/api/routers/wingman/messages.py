@@ -1,7 +1,7 @@
 """
 api/routers/wingman/messages.py
 =================================
-LAYER: Router — GET /wingman/{token}/messages endpoint.
+LAYER: Router - GET /wingman/{token}/messages endpoint.
 
 Strategy:
   1. Return from local DB if messages already exist there.
@@ -43,7 +43,7 @@ def _extract_profile(conv: dict, fallback: str) -> tuple:
 
 @router.get("/{token}/messages")
 async def wingman_messages(token: str):
-    """Fetch messages for a wingman session. No authentication required — token-based."""
+    """Fetch messages for a wingman session. No authentication required - token-based."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         session = await session_repo.get_session_by_token(conn, token)

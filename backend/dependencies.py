@@ -1,7 +1,7 @@
 """
-dependencies.py — FastAPI shared dependencies
+dependencies.py - FastAPI shared dependencies
 ==============================================
-LAYER: Router support — wires JWT Bearer auth into route handlers.
+LAYER: Router support - wires JWT Bearer auth into route handlers.
 """
 from typing import Optional
 

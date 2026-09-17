@@ -1,4 +1,4 @@
-# Hooop Developer Documentation — v1.0.0 (First Version)
+# Hooop Developer Documentation - v1.0.0 (First Version)
 
 Hooop is a platform that lets your hb/hg help you out when you are out of words. It brings all your social conversations into one screen and lets your trusted wingmen step in to help you reply when you need a hand.
 
@@ -25,10 +25,10 @@ Hooop is a platform that lets your hb/hg help you out when you are out of words.
 
 ## Suggested Reading Order for New Developers
 
-1. [**Getting Started**](docs/getting-started.md) — Local prerequisites, environment variables configuration, running backend/frontend dev servers.
-2. [**Architecture & Design Patterns**](docs/architecture.md) — High-level system architecture diagram, 4-layer backend architecture, hook-driven frontend architecture, and key design decisions.
-3. [**Data & Message Flows**](docs/data-flows.md) — Sequence diagrams for initial message load, scroll-up pagination, realtime updates, message sending, and wingman sessions.
-4. [**Security Architecture**](docs/security.md) — Bring Your Own Key (BYOK) model, Fernet AES-128 encryption pipeline, and JWT authentication lifecycle.
-5. [**Frontend Guidelines**](docs/frontend-guide.md) — Custom hook abstraction pattern, independent component rendering, isolated skeleton loaders, scroll restoration, and responsive UI rules.
-6. [**API Reference**](docs/api-reference.md) — Complete list of REST API endpoints, request/response formats, and authentication rules.
-7. [**Developer & AI Agent Onboarding**](docs/contributing.md) — Codebase directory tree, step-by-step feature additions, AI agent rules, and verification checklist.
+1. [**Getting Started**](docs/getting-started.md) - Local prerequisites, environment variables configuration, running backend/frontend dev servers.
+2. [**Architecture & Design Patterns**](docs/architecture.md) - High-level system architecture diagram, 4-layer backend architecture, hook-driven frontend architecture, and key design decisions.
+3. [**Data & Message Flows**](docs/data-flows.md) - Sequence diagrams for initial message load, scroll-up pagination, realtime updates, message sending, and wingman sessions.
+4. [**Security Architecture**](docs/security.md) - Bring Your Own Key (BYOK) model, Fernet AES-128 encryption pipeline, and JWT authentication lifecycle.
+5. [**Frontend Guidelines**](docs/frontend-guide.md) - Custom hook abstraction pattern, independent component rendering, isolated skeleton loaders, scroll restoration, and responsive UI rules.
+6. [**API Reference**](docs/api-reference.md) - Complete list of REST API endpoints, request/response formats, and authentication rules.
+7. [**Developer & AI Agent Onboarding**](docs/contributing.md) - Codebase directory tree, step-by-step feature additions, AI agent rules, and verification checklist.

@@ -1,12 +1,12 @@
 """
-crypto.py — Fernet encryption/decryption for Zernio API keys
+crypto.py - Fernet encryption/decryption for Zernio API keys
 =============================================================
 LAYER: Utility (used by Service layer only)
 
 Rules (per Architecture.md):
 - encrypt_api_key()  : call before any INSERT/UPDATE into the DB
 - decrypt_api_key()  : call in-memory at Zernio call time, discard immediately
-- mask_api_key()     : use in Settings UI — never return the raw or decrypted key
+- mask_api_key()     : use in Settings UI - never return the raw or decrypted key
 """
 import warnings
 
@@ -14,7 +14,7 @@ from cryptography.fernet import Fernet
 
 from config import APP_MASTER_KEY
 
-# Build the cipher once at startup — fails fast if key is malformed
+# Build the cipher once at startup - fails fast if key is malformed
 try:
     _fernet = Fernet(APP_MASTER_KEY.encode())
 except Exception as e:

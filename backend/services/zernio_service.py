@@ -1,7 +1,7 @@
 """
 services/zernio_service.py
 ===========================
-COMPATIBILITY SHIM — do not add logic here.
+COMPATIBILITY SHIM - do not add logic here.
 
 This file exists only so that any direct import of:
     from services import zernio_service

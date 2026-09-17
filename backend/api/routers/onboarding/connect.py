@@ -1,7 +1,7 @@
 """
 api/routers/onboarding/connect.py
 ===================================
-LAYER: Router — POST /onboarding/connect and GET /onboarding/connect/instagram.
+LAYER: Router - POST /onboarding/connect and GET /onboarding/connect/instagram.
 
 Handles the first two steps of the Instagram connection flow:
   1. Validate the Zernio API key, save it, trigger OAuth.
@@ -35,7 +35,7 @@ class ConnectBody(BaseModel):
 async def onboarding_connect(request: Request, body: ConnectBody, user=Depends(require_user)):
     """
     Validates user's Zernio key, encrypts it, saves accounts.
-    Raw key is used once then discarded — only Fernet cipher is persisted.
+    Raw key is used once then discarded - only Fernet cipher is persisted.
     """
     key_str = body.zernio_api_key.strip()
     if not key_str:
@@ -97,7 +97,7 @@ async def connect_instagram(request: Request, user=Depends(require_user)):
         acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
     if not acc or not acc.get("zernio_api_key_enc"):
-        raise ValidationError("No API key found — complete step 1 first", code="NO_KEY_FOUND")
+        raise ValidationError("No API key found - complete step 1 first", code="NO_KEY_FOUND")
 
     state = auth_service.make_oauth_state(user["id"])
     backend_base = f"{request.url.scheme}://{request.url.netloc}"

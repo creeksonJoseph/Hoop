@@ -2,7 +2,7 @@ from __future__ import annotations
 """
 api/routers/chat/messages.py
 ==============================
-LAYER: Router — GET /messages endpoint.
+LAYER: Router - GET /messages endpoint.
 
 Strategy:
   1. Return from local DB if messages exist (avoids Zernio API calls on repeat opens).
@@ -56,7 +56,7 @@ async def get_messages(
     target_user = ig_target or acc["ig_username"]
     acc_username = acc["ig_username"]
 
-    # 1. Check local DB first — always scoped to this account to prevent cross-account contamination
+    # 1. Check local DB first - always scoped to this account to prevent cross-account contamination
     async with pool.acquire() as conn:
         existing_msgs = await message_repo.get_messages_for_participant(conn, target_user, account_username=acc_username)
         existing_conv = await message_repo.get_conversation_by_participant(conn, target_user, account_username=acc_username)
@@ -152,7 +152,7 @@ async def get_messages(
 
     display_name, avatar_url = extract_profile_data(conv, target_user)
 
-    # 4. Persist conversation metadata — scoped to this account
+    # 4. Persist conversation metadata - scoped to this account
     async with pool.acquire() as conn:
         await message_repo.upsert_conversation(conn, conv["id"], target_user, display_name, avatar_url, account_username=acc_username)
 
@@ -189,7 +189,7 @@ async def get_messages(
     if sort_order == "desc":
         raw = list(reversed(raw))
 
-    # Upsert this batch into DB — scoped to this account
+    # Upsert this batch into DB - scoped to this account
     async with pool.acquire() as conn:
         await message_repo.upsert_messages_batch(conn, raw, conv["id"], account_username=acc_username)
 

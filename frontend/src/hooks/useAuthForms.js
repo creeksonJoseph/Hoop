@@ -48,7 +48,7 @@ export function useSignup() {
     }
     try {
       await api.post('/auth/signup', { email, password, confirm_password: confirmPassword })
-      toast('Account created — please sign in', 'success')
+      toast('Account created - please sign in', 'success')
       navigate('/login')
     } catch (err) {
       const msg = err.response?.data?.detail || 'Signup failed'

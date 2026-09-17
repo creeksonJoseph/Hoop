@@ -1,7 +1,7 @@
 """
 api/routers/wingman/reply.py
 ==============================
-LAYER: Router — POST /wingman/{token}/reply endpoint.
+LAYER: Router - POST /wingman/{token}/reply endpoint.
 Allows a wingman with 'send' access to reply in a DM.
 """
 import datetime
@@ -33,7 +33,7 @@ async def wingman_reply(token: str, body: ReplyBody):
     if not session:
         raise NotFoundError("Link not found", code="LINK_NOT_FOUND")
     if session["access_level"] != "send":
-        raise ForbiddenError("Read-only access — cannot send messages", code="READ_ONLY_ACCESS")
+        raise ForbiddenError("Read-only access - cannot send messages", code="READ_ONLY_ACCESS")
     if not body.message.strip():
         raise ValidationError("Message cannot be empty", code="EMPTY_MESSAGE")
 

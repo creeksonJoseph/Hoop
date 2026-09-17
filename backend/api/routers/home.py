@@ -2,7 +2,7 @@ from __future__ import annotations
 """
 api/routers/home.py
 ====================
-LAYER: Router — REST endpoints for DM conversation management."""
+LAYER: Router - REST endpoints for DM conversation management."""
 import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, Header

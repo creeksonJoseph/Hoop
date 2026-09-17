@@ -1,5 +1,5 @@
 """
-config.py — Central configuration & environment variable loading
+config.py - Central configuration & environment variable loading
 ================================================================
 All env vars are read once here and imported by all other modules.
 """

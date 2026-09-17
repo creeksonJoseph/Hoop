@@ -1,7 +1,7 @@
 """
 api/routers/auth.py
 ====================
-LAYER: Router — REST endpoints for authentication.
+LAYER: Router - REST endpoints for authentication.
 All responses are JSON. No HTML, no redirects, no sessions.
 """
 import asyncpg
@@ -63,7 +63,7 @@ async def signup(body: SignupBody):
     except asyncpg.UniqueViolationError:
         raise ConflictError("An account with that email already exists", code="EMAIL_ALREADY_EXISTS")
 
-    return {"message": "Account created — please sign in"}
+    return {"message": "Account created - please sign in"}
 
 
 @router.get("/me")

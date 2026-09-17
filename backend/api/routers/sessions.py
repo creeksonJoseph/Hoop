@@ -2,7 +2,7 @@ from __future__ import annotations
 """
 api/routers/sessions.py
 ========================
-LAYER: Router — REST endpoints for wingman session management.
+LAYER: Router - REST endpoints for wingman session management.
 """
 from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException

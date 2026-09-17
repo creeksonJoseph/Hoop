@@ -1,7 +1,7 @@
 """
 api/routers/settings.py
 ========================
-LAYER: Router — REST endpoints for user settings & Zernio API key management.
+LAYER: Router - REST endpoints for user settings & Zernio API key management.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel

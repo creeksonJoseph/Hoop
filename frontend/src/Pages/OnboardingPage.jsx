@@ -126,7 +126,7 @@ export default function OnboardingPage() {
             className="md:hidden flex items-center justify-between gap-3 w-full rounded-[10px] border border-[#dfdcd9] bg-white px-4 py-3 hover:bg-[#f6f5f4] transition-colors group"
           >
             <div>
-              <p className="text-[13px] font-semibold text-[#191918]">Step 1 — Get your API key</p>
+              <p className="text-[13px] font-semibold text-[#191918]">Step 1 - Get your API key</p>
               <p className="text-[11.5px] text-[#615d59] mt-0.5">zernio.com/dashboard/api-keys</p>
             </div>
             <ExternalLink size={15} className="text-[#a39e98] group-hover:text-[#0075de] transition-colors shrink-0" />

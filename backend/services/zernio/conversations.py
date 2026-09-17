@@ -1,7 +1,7 @@
 """
 services/zernio/conversations.py
 ==================================
-LAYER: Service — Zernio inbox/conversation operations.
+LAYER: Service - Zernio inbox/conversation operations.
 Handles searching conversations, fetching messages, sending replies,
 and deleting messages.
 """
@@ -39,7 +39,7 @@ async def find_conversation(
     target = ig_username.lower().strip().lstrip("@")
 
     try:
-        # Try search param first — avoids paginating 2000+ conversations
+        # Try search param first - avoids paginating 2000+ conversations
         for search_param in ("search", "query", "username", "participantUsername"):
             try:
                 data = await client.get(

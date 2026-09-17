@@ -94,7 +94,7 @@ export default function WingmanPage() {
       {!canSend && !isRevoked && !loading && (
         <div className="p-3 border-t border-[#dfdcd9] bg-white text-center text-[12px] text-[#615d59] flex items-center justify-center gap-2">
           <Eye size={14} strokeWidth={2} className="text-[#a39e98]" />
-          Read-only access — you cannot send messages.
+          Read-only access - you cannot send messages.
         </div>
       )}
     </div>

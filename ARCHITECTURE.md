@@ -1,4 +1,4 @@
-# Hooop — Architecture & AI Guidance Document
+# Hooop - Architecture & AI Guidance Document
 
 > **Notice for Future LLMs & Developers**: This document details the core architectural principles, layer boundaries, performance standards, and key design decisions of **Hooop**. **You MUST adhere strictly to these patterns when modifying or adding features.**
 
@@ -8,7 +8,7 @@
 
 Hooop follows a strict separation of concerns across both backend and frontend:
 
-1. **Backend**: **Layered Architecture (Router → Service → Repository → Model)**. Each layer has a single responsibility. Routers return **JSON only** — no HTML, no redirects (except OAuth flows). The API is consumed exclusively by the React frontend.
+1. **Backend**: **Layered Architecture (Router → Service → Repository → Model)**. Each layer has a single responsibility. Routers return **JSON only** - no HTML, no redirects (except OAuth flows). The API is consumed exclusively by the React frontend.
 2. **Frontend**: **Custom Hook Abstraction Pattern (Page/Component UI ↔ Custom Hook State)**. Pages and components are pure, presentational UI layers. All state, data fetching, business logic, and side-effects MUST be encapsulated inside dedicated custom hooks.
 3. **API Key Security (BYOK)**: Users bring their own Zernio API keys. These are **encrypted at rest** using Fernet (AES-128-CBC + HMAC). The raw key is never stored in plaintext and is never sent back to the frontend. All Zernio calls are proxied through the backend with in-memory decryption.
 4. **Auth**: JWT Bearer tokens. The frontend stores the token in `localStorage` and sends it via `Authorization: Bearer <token>` on every request using the Axios instance in `frontend/src/lib/api.js`.
@@ -58,8 +58,8 @@ Hooop follows a strict separation of concerns across both backend and frontend:
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/auth/login` | — | Login, returns JWT |
-| POST | `/api/auth/signup` | — | Register new user |
+| POST | `/api/auth/login` | - | Login, returns JWT |
+| POST | `/api/auth/signup` | - | Register new user |
 | GET | `/api/auth/me` | Bearer | Current user info |
 | GET | `/api/dms` | Bearer | List tracked DM conversations |
 | POST | `/api/dms` | Bearer | Add a DM conversation |
@@ -76,12 +76,12 @@ Hooop follows a strict separation of concerns across both backend and frontend:
 | POST | `/api/onboarding/connect` | Bearer | Connect Zernio API key |
 | GET | `/api/onboarding/connect/instagram` | Bearer | Redirect to Meta OAuth |
 | GET | `/api/onboarding/callback` | Bearer | OAuth callback handler |
-| GET | `/api/wingman/{token}` | — | Public wingman session info |
-| GET | `/api/wingman/{token}/messages` | — | Public wingman messages |
-| POST | `/api/wingman/{token}/reply` | — | Public wingman reply |
+| GET | `/api/wingman/{token}` | - | Public wingman session info |
+| GET | `/api/wingman/{token}/messages` | - | Public wingman messages |
+| POST | `/api/wingman/{token}/reply` | - | Public wingman reply |
 | DELETE | `/api/admin/messages/{msg_id}` | Bearer | Delete a message |
-| WS | `/ws/{ig_username}` | — | Admin real-time message stream |
-| WS | `/ws/view/{token}` | — | Wingman real-time message stream |
+| WS | `/ws/{ig_username}` | - | Admin real-time message stream |
+| WS | `/ws/view/{token}` | - | Wingman real-time message stream |
 
 ### Layer Rules & Boundaries
 
@@ -135,8 +135,8 @@ Hooop follows a strict separation of concerns across both backend and frontend:
 
 #### C. Context Providers (`frontend/src/context/`)
 - **Role**: Global app state that spans across routes.
-- `AuthContext` — user session (JWT token, user object, login/logout).
-- `ToastContext` — global toast notifications.
+- `AuthContext` - user session (JWT token, user object, login/logout).
+- `ToastContext` - global toast notifications.
 
 ### Directory Structure
 
@@ -183,7 +183,7 @@ frontend/src/
 
 ---
 
-## 5. API Key Security (BYOK — Bring Your Own Key)
+## 5. API Key Security (BYOK - Bring Your Own Key)
 
 ### Storage Rule (MUST be followed)
 - Zernio API keys are **NEVER** stored in plaintext in the database.
@@ -224,10 +224,10 @@ FRONTEND_URL=     # e.g. https://frontend-eight-inky-38.vercel.app
 
 ### 4. WebSocket Real-Time Updates
 - Admin chat (`/ws/{ig_username}`) and wingman view (`/ws/view/{token}`) use WebSockets for real-time message delivery.
-- WebSocket connection logic lives entirely inside `useChat.js` and `useWingman.js` — never in JSX files.
+- WebSocket connection logic lives entirely inside `useChat.js` and `useWingman.js` - never in JSX files.
 - Auto-reconnect with 4-second backoff on disconnect.
 
-### 5. Skeleton UI Loaders (Mandatory — No Generic Spinners)
+### 5. Skeleton UI Loaders (Mandatory - No Generic Spinners)
 - Every page has a dedicated skeleton component in `frontend/src/components/skeletons/Skeletons.jsx`.
 - Generic loading spinners (`animate-spin`) are prohibited for full-page or section loading.
 - Skeletons must match the layout of the real content to prevent CLS.

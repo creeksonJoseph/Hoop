@@ -2,7 +2,7 @@ from __future__ import annotations
 """
 api/routers/chat/reply.py
 ===========================
-LAYER: Router — POST /messages/reply endpoint.
+LAYER: Router - POST /messages/reply endpoint.
 
 Sends a message via Zernio and immediately writes the sent
 message to local DB so the UI reflects it before Realtime fires.
@@ -58,7 +58,7 @@ async def reply(
     target_user = ig_target or acc["ig_username"]
     acc_username = acc["ig_username"]
 
-    # Try local DB first to find conversation_id — scoped to this account
+    # Try local DB first to find conversation_id - scoped to this account
     async with pool.acquire() as conn:
         conv_record = await message_repo.get_conversation_by_participant(conn, target_user, account_username=acc_username)
 

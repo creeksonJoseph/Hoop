@@ -1,7 +1,7 @@
 """
 repositories/session_repo.py
 ==============================
-LAYER: Repository — raw DB operations for wingman_sessions.
+LAYER: Repository - raw DB operations for wingman_sessions.
 """
 from typing import List, Optional
 

@@ -1,7 +1,7 @@
 """
 services/zernio/client.py
 ==========================
-LAYER: Service — low-level HTTP primitives for the Zernio API.
+LAYER: Service - low-level HTTP primitives for the Zernio API.
 Handles auth headers and wraps GET / POST / DELETE with unified
 error logging. No business logic lives here.
 """
@@ -14,7 +14,7 @@ from config import ZERNIO_BASE
 
 
 def _headers(api_key: str) -> Dict[str, str]:
-    """Build Zernio auth headers. api_key is a decrypted raw key — in-memory only."""
+    """Build Zernio auth headers. api_key is a decrypted raw key - in-memory only."""
     return {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",

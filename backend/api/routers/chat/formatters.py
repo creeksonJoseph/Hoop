@@ -1,7 +1,7 @@
 """
 api/routers/chat/formatters.py
 ================================
-LAYER: Router helpers — Pydantic schemas and pure helper functions for
+LAYER: Router helpers - Pydantic schemas and pure helper functions for
 extracting and formatting conversation / message data.
 """
 from typing import Any, List, Optional, Tuple

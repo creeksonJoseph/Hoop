@@ -1,7 +1,7 @@
 """
-main.py — Hoop Application Entry Point
+main.py - Hoop Application Entry Point
 ========================================
-FastAPI REST API — no WebSocket server, no poll loop.
+FastAPI REST API - no WebSocket server, no poll loop.
 Real-time is handled by Supabase Realtime on the frontend.
 
 Architecture (see Architecture.md):
@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
 # ── App creation ──────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Hoop – IG DM Manager",
+    title="Hoop - IG DM Manager",
     description="View and reply to Instagram DMs via Zernio. Multi-user, BYOK.",
     version="4.0.0",
     lifespan=lifespan,

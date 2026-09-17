@@ -1,9 +1,9 @@
 """
 repositories/account_repo.py
 =============================
-LAYER: Repository — raw DB operations for connected_ig_accounts.
+LAYER: Repository - raw DB operations for connected_ig_accounts.
 Keys stored here are ALWAYS encrypted (zernio_api_key_enc).
-No decryption happens here — that's the Service layer's job.
+No decryption happens here - that's the Service layer's job.
 """
 from typing import List, Optional
 

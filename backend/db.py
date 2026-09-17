@@ -1,5 +1,5 @@
 """
-db.py — Database pool management & schema initialization
+db.py - Database pool management & schema initialization
 =========================================================
 LAYER: Schema/DB (bottom of the stack)
 - get_pool(): returns the shared asyncpg connection pool

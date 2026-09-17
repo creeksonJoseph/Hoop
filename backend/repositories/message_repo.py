@@ -1,7 +1,7 @@
 """
 repositories/message_repo.py
 ==============================
-LAYER: Repository — raw DB operations for the messages table.
+LAYER: Repository - raw DB operations for the messages table.
 No business logic. No Zernio calls. Only asyncpg.
 
 ACCOUNT ISOLATION:
@@ -89,7 +89,7 @@ async def get_conversation_by_participant(
     """
     Fetch the conversation row for a given participant, scoped to a specific
     connected Instagram account. When account_username is provided, only
-    conversations belonging to that account are returned — preventing cross-
+    conversations belonging to that account are returned - preventing cross-
     account contamination.
     """
     clean = participant_username.lower().strip().lstrip("@")

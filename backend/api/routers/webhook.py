@@ -1,7 +1,7 @@
 """
 api/routers/webhook.py
 ======================
-LAYER: Router — Inbound Zernio Webhook endpoint.
+LAYER: Router - Inbound Zernio Webhook endpoint.
 Handles:
   1. account.connected -> link Instagram account to user
   2. message.received / inbound -> store incoming message from crush in DB
@@ -63,7 +63,7 @@ async def zernio_webhook(request: Request):
                         """
                         # Note: we compare by decrypted key if possible, otherwise fall back to recency.
                         # A fully secure fix requires passing a signed state token through Zernio's
-                        # webhook payload — which Zernio doesn't support yet. Recency + account_id
+                        # webhook payload - which Zernio doesn't support yet. Recency + account_id
                         # uniqueness provides sufficient protection for single-user tenants.
                     )
                 else:
@@ -183,7 +183,7 @@ async def zernio_webhook(request: Request):
             if conv_rec and conv_rec.get("conversation_id"):
                 final_conv_id = conv_rec["conversation_id"]
         elif not participant_username:
-            # No participant info — still try to resolve by raw conv_id
+            # No participant info - still try to resolve by raw conv_id
             conv_rec = await conn.fetchrow(
                 "SELECT conversation_id, account_username FROM conversations WHERE conversation_id = $1 LIMIT 1",
                 str(raw_conv_id),

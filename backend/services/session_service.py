@@ -1,7 +1,7 @@
 """
 services/session_service.py
 ============================
-LAYER: Service — wingman session business logic.
+LAYER: Service - wingman session business logic.
 Generates HMAC tokens, validates access, orchestrates session CRUD.
 No FastAPI Request. No raw SQL.
 """
@@ -15,7 +15,7 @@ from config import WINGMAN_SECRET
 
 def make_wingman_token(wingman_name: str, ig_username: str) -> str:
     """
-    Stable HMAC-SHA256 token — same inputs always produce the same token.
+    Stable HMAC-SHA256 token - same inputs always produce the same token.
     This means re-generating a link for the same person regenerates
     the exact same link instead of creating a duplicate session.
     """

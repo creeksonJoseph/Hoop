@@ -1,7 +1,7 @@
 """
 services/zernio/accounts.py
 =============================
-LAYER: Service — Zernio account and OAuth operations.
+LAYER: Service - Zernio account and OAuth operations.
 Handles connecting Instagram accounts, fetching account lists,
 and generating / exchanging OAuth tokens.
 """
@@ -21,7 +21,7 @@ async def get_accounts(encrypted_key: str) -> list:
     Confirmed response shape (GET /v1/accounts?platform=instagram):
       { "accounts": [{ "_id": "...", "platform": "instagram",
                        "username": "handle", "displayName": "...", ... }] }
-    Decrypts the key in-memory — never stored or returned.
+    Decrypts the key in-memory - never stored or returned.
     """
     raw_key = decrypt_api_key(encrypted_key)
     try:
@@ -64,7 +64,7 @@ async def get_connect_url(encrypted_key: str, redirect_url: str, user_id: int = 
       GET /v1/connect/instagram?profileId=<real_zernio_id>&redirect_url=...&headless=true
 
     Docs confirmed: GET initiates the flow and returns authUrl.
-                    POST finalizes it (requires the OAuth `code` — NOT what we want here).
+                    POST finalizes it (requires the OAuth `code` - NOT what we want here).
     """
     from services.zernio.client import _headers
     raw_key = decrypt_api_key(encrypted_key)

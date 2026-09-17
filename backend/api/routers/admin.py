@@ -1,7 +1,7 @@
 """
 api/routers/admin.py
 =====================
-LAYER: Router — admin-only message operations.
+LAYER: Router - admin-only message operations.
 """
 from fastapi import APIRouter, Depends, HTTPException
 

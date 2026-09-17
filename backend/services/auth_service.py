@@ -1,7 +1,7 @@
 """
 services/auth_service.py
 =========================
-LAYER: Service — authentication business logic.
+LAYER: Service - authentication business logic.
 No FastAPI Request objects. No HTTP status codes. Pure Python.
 """
 import hashlib

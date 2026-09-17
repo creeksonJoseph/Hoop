@@ -1,7 +1,7 @@
 """
 api/routers/wingman/session.py
 ================================
-LAYER: Router — GET /wingman/{token} endpoint.
+LAYER: Router - GET /wingman/{token} endpoint.
 Returns public metadata for a wingman session (no auth required).
 """
 from fastapi import APIRouter

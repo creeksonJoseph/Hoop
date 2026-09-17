@@ -1,7 +1,7 @@
 """
 api/errors.py
 =============
-LAYER: Infrastructure — Centralized error management & standard exception handlers.
+LAYER: Infrastructure - Centralized error management & standard exception handlers.
 
 Provides structured JSON error responses across all backend API endpoints.
 All API errors return a consistent payload:

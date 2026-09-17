@@ -1,11 +1,11 @@
 """
 api/routers/onboarding/callback.py
 =====================================
-LAYER: Router — GET /onboarding/callback.
+LAYER: Router - GET /onboarding/callback.
 
 Handles the OAuth return from Meta/Zernio after Instagram authorisation.
 User identity is recovered from a signed 'state' token embedded in the
-redirect URI — no JWT cookie is required for this cross-origin flow.
+redirect URI - no JWT cookie is required for this cross-origin flow.
 """
 import logging
 import os
@@ -35,9 +35,9 @@ async def onboarding_callback(
     error: Optional[str] = None,
 ):
     """
-    OAuth callback — handles return from Zernio/Meta after Instagram authorization.
+    OAuth callback - handles return from Zernio/Meta after Instagram authorization.
     User is identified via a signed 'state' token embedded in the redirect_uri.
-    No JWT/session cookie required — safe for cross-origin OAuth redirects.
+    No JWT/session cookie required - safe for cross-origin OAuth redirects.
     """
     if error:
         logging.warning(f"[onboarding/callback] OAuth error: {error}")

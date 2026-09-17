@@ -7,7 +7,7 @@ Existing callers can continue to use:
     from services import zernio_service
     await zernio_service.find_conversation(...)
 
-No behaviour changes — this is a pure structural reorganisation.
+No behaviour changes - this is a pure structural reorganisation.
 """
 from .accounts import (
     get_accounts,
