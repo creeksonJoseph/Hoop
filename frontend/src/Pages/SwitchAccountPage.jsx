@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import NavRail from '../components/NavRail'
 import { useSettings } from '../hooks/useSettings'
 import { useAuth } from '../context/AuthContext'
+import { SwitchAccountSkeleton } from '../components/skeletons/Skeletons'
 
 export default function SwitchAccountPage() {
   const navigate = useNavigate()
@@ -50,9 +51,7 @@ export default function SwitchAccountPage() {
 
         {/* Account list */}
         {loading ? (
-          <div className="flex items-center gap-2 py-4 text-[12px] text-[#a39e98]">
-            <Loader2 className="animate-spin" size={14} /> Loading accounts…
-          </div>
+          <SwitchAccountSkeleton />
         ) : (
           <div className="divide-y divide-[#ebebea]">
             {accounts.map((account) => {
