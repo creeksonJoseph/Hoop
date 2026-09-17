@@ -22,7 +22,7 @@ export default function LoginPage() {
           </span>
           <div>
             <h1 className="text-[20px] font-semibold text-[#191918] tracking-tight">Sign in to Hooop</h1>
-            <p className="text-[13px] text-[#615d59] mt-1">High-density Instagram DM management</p>
+            <p className="text-[13px] text-[#615d59] mt-1">When you're out of words, let your wingman handle it.</p>
           </div>
         </div>
 

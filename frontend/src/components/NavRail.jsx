@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import ConfirmModal from "./common/ConfirmModal";
 
 function TypewriterText({
-  text = "When you are out of words, let your wingman handle it.",
+  text = "When you're out of words, let your wingman handle it.",
   typingSpeed = 55,
   deletingSpeed = 35,
   pauseDuration = 2400,
@@ -69,8 +69,8 @@ export default function NavRail({ activePage }) {
       : location.pathname.startsWith("/settings")
         ? "settings"
         : location.pathname === "/wingmen" ||
-            location.pathname === "/sessions/all" ||
-            location.pathname === "/sessions"
+          location.pathname === "/sessions/all" ||
+          location.pathname === "/sessions"
           ? "sessions"
           : "home";
 
