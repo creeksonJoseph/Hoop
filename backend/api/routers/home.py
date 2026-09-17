@@ -1,8 +1,10 @@
+from __future__ import annotations
 """
 api/routers/home.py
 ====================
 LAYER: Router — REST endpoints for DM conversation management."""
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel
 
@@ -21,7 +23,7 @@ class AddDMBody(BaseModel):
 
 @router.get("")
 async def list_dms(
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     pool = await get_pool()
@@ -42,7 +44,7 @@ async def list_dms(
 @router.post("", status_code=201)
 async def add_dm(
     body: AddDMBody,
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     ig_username = body.ig_username.strip().lstrip("@").lower()
@@ -128,7 +130,7 @@ async def add_dm(
 @router.delete("/{ig_username}")
 async def delete_dm(
     ig_username: str,
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     ig_username = ig_username.strip().lstrip("@").lower()

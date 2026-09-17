@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 api/routers/chat/reply.py
 ===========================
@@ -32,7 +33,7 @@ class ReplyBody(BaseModel):
 async def reply(
     body: ReplyBody,
     username: Optional[str] = Query(default=None),
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     if not body.message.strip():

@@ -1,8 +1,10 @@
+from __future__ import annotations
 """
 api/routers/sessions.py
 ========================
 LAYER: Router — REST endpoints for wingman session management.
 """
+from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
@@ -34,7 +36,7 @@ class UpdateAccessBody(BaseModel):
 @router.get("/{ig_username}")
 async def list_sessions(
     ig_username: str = "all",
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     ig_username = (ig_username or "all").lower().lstrip("@")
@@ -59,7 +61,7 @@ async def list_sessions(
 async def generate_session(
     ig_username: str,
     body: GenerateBody,
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     ig_username = ig_username.lower().lstrip("@")

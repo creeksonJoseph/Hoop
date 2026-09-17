@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 api/routers/chat/messages.py
 ==============================
@@ -33,7 +34,7 @@ async def get_messages(
     sort: str = Query(default="desc"),
     cursor: Optional[str] = Query(default=None),
     force_sync: bool = Query(default=False),
-    x_hoop_instagram_account: str | None = Header(default=None),
+    x_hoop_instagram_account: Optional[str] = Header(default=None),
     user=Depends(require_user),
 ):
     ig_target = (username or "").strip().lstrip("@").lower() or None
