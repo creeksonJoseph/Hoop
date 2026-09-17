@@ -13,6 +13,8 @@ from dependencies import require_user
 from repositories import user_repo, account_repo
 from services.auth_service import create_jwt, hash_password, verify_password
 
+from api.errors import AuthenticationError, ValidationError, ConflictError
+
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
@@ -34,8 +36,11 @@ async def login(body: LoginBody):
         user = await user_repo.get_user_by_email(conn, body.email)
         cnt = await account_repo.count_accounts_for_user(conn, user["id"]) if user else 0
 
-    if not user or not verify_password(body.password, user["password_hash"]):
-        raise HTTPException(401, "Invalid email or password")
+    if not user:
+        raise AuthenticationError("User does not exist. Please check your email or sign up.", code="USER_NOT_FOUND")
+
+    if not verify_password(body.password, user["password_hash"]):
+        raise AuthenticationError("Incorrect password. Please try again.", code="INVALID_PASSWORD")
 
     token = create_jwt(user["id"], user["email"])
     return {
@@ -49,14 +54,14 @@ async def login(body: LoginBody):
 @router.post("/signup", status_code=201)
 async def signup(body: SignupBody):
     if body.password != body.confirm_password:
-        raise HTTPException(400, "Passwords do not match")
+        raise ValidationError("Passwords do not match", code="PASSWORD_MISMATCH")
 
     pool = await get_pool()
     try:
         async with pool.acquire() as conn:
             await user_repo.create_user(conn, body.email, hash_password(body.password))
     except asyncpg.UniqueViolationError:
-        raise HTTPException(409, "An account with that email already exists")
+        raise ConflictError("An account with that email already exists", code="EMAIL_ALREADY_EXISTS")
 
     return {"message": "Account created — please sign in"}
 

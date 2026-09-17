@@ -64,25 +64,9 @@ app.add_middleware(
 )
 
 
-# ── Global exception handler (ensures CORS headers survive a 500) ─────────────
+from api.errors import register_exception_handlers
 
-@app.exception_handler(Exception)
-async def _unhandled_exception_handler(request: Request, exc: Exception):
-    """Catch-all so unhandled errors still return JSON with CORS headers."""
-    import traceback, logging
-    err_str = str(exc)
-    logging.error("Unhandled exception: %s", traceback.format_exc())
-    origin = request.headers.get("origin") or "*"
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"Internal error: {err_str}" if err_str else "Internal server error"},
-        headers={
-            "Access-Control-Allow-Origin": origin if origin != "*" else "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-        },
-    )
+register_exception_handlers(app)
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router,       prefix="/api")

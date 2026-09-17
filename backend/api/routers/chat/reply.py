@@ -19,6 +19,8 @@ from dependencies import require_user
 from repositories import account_repo, message_repo
 from services import zernio_service
 
+from api.errors import ValidationError, NotFoundError, AuthenticationError, ZernioAPIError
+
 router = APIRouter()
 
 
@@ -34,7 +36,7 @@ async def reply(
     user=Depends(require_user),
 ):
     if not body.message.strip():
-        raise HTTPException(400, "Message cannot be empty")
+        raise ValidationError("Message cannot be empty", code="EMPTY_MESSAGE")
 
     ig_target = (username or "").strip().lstrip("@").lower() or None
     pool = await get_pool()
@@ -47,7 +49,10 @@ async def reply(
         or acc.get("ig_username") == "__pending__"
         or acc.get("zernio_account_id") == "pending"
     ):
-        raise HTTPException(400, "No connected Instagram account found. Please connect your Instagram account in Settings.")
+        raise ValidationError(
+            "No connected Instagram account found. Please connect your Instagram account in Settings.",
+            code="NO_CONNECTED_ACCOUNT"
+        )
 
     target_user = ig_target or acc["ig_username"]
     acc_username = acc["ig_username"]
@@ -76,7 +81,10 @@ async def reply(
             logging.warning(f"[reply] conversation lookup error: {e}")
 
     if not conv_id:
-        raise HTTPException(404, f"No active conversation found on Instagram for handle: @{target_user}")
+        raise NotFoundError(
+            f"No active conversation found on Instagram for handle: @{target_user}",
+            code="CONVERSATION_NOT_FOUND"
+        )
 
     try:
         result = await zernio_service.send_message(
@@ -84,15 +92,16 @@ async def reply(
         )
     except Exception as e:
         err_msg = str(e)
+        logging.error(f"[reply] Send message error for @{target_user}: {err_msg}")
         if "401" in err_msg or "Unauthorized" in err_msg:
-            raise HTTPException(401, "Zernio API key is invalid or revoked.")
+            raise AuthenticationError("Zernio API key is invalid or revoked.", code="INVALID_ZERNIO_KEY")
         if "outside of allowed window" in err_msg.lower() or "allowed window" in err_msg.lower():
-            raise HTTPException(
-                400,
+            raise ValidationError(
                 f"Meta's 24-hour messaging window has expired for @{target_user}. "
                 "Per Meta/Instagram rules, the recipient must send a new DM to your Instagram account first before you can reply via API.",
+                code="MESSAGING_WINDOW_EXPIRED"
             )
-        raise HTTPException(400, f"Zernio message send failed: {err_msg}")
+        raise ZernioAPIError("Failed to send message to Instagram. Please try again.", status_code=502, code="REPLY_FAILED")
 
     # Immediately persist the sent message so the UI is snappy
     sent_msg_id = (

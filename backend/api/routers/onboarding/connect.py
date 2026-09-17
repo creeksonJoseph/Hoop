@@ -20,6 +20,8 @@ from repositories import account_repo
 from services import zernio_service, auth_service
 from crypto import encrypt_api_key
 
+from api.errors import ValidationError, AuthenticationError, ConflictError, ZernioAPIError
+
 router = APIRouter()
 
 FRONTEND_BASE = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
@@ -37,20 +39,22 @@ async def onboarding_connect(request: Request, body: ConnectBody, user=Depends(r
     """
     key_str = body.zernio_api_key.strip()
     if not key_str:
-        raise HTTPException(400, "API Key is required")
+        raise ValidationError("API Key is required", code="API_KEY_REQUIRED")
 
     try:
         enc_key = encrypt_api_key(key_str)
     except Exception as e:
-        raise HTTPException(400, f"Encryption error: {e}")
+        logging.error(f"[onboarding_connect] Encryption error: {e}")
+        raise ValidationError("Invalid API Key format", code="ENCRYPTION_ERROR")
 
     try:
         accounts = await zernio_service.get_accounts(enc_key)
     except Exception as e:
         err_msg = str(e)
+        logging.error(f"[onboarding_connect] Zernio get_accounts error: {err_msg}")
         if "401" in err_msg or "Unauthorized" in err_msg:
-            raise HTTPException(401, "Invalid Zernio API key")
-        raise HTTPException(400, f"Zernio API error: {err_msg}")
+            raise AuthenticationError("Invalid Zernio API key", code="INVALID_ZERNIO_KEY")
+        raise ZernioAPIError("Failed to verify Zernio API key. Please check your key and try again.", status_code=502, code="ZERNIO_VERIFICATION_FAILED")
 
     if not accounts:
         pool = await get_pool()
@@ -80,7 +84,7 @@ async def onboarding_connect(request: Request, body: ConnectBody, user=Depends(r
             added += 1
 
     if added == 0:
-        raise HTTPException(409, "Account already connected")
+        raise ConflictError("Account already connected", code="ACCOUNT_ALREADY_CONNECTED")
 
     return {"status": "connected", "accounts_added": added}
 
@@ -93,18 +97,21 @@ async def connect_instagram(request: Request, user=Depends(require_user)):
         acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
     if not acc or not acc.get("zernio_api_key_enc"):
-        raise HTTPException(400, "No API key found — complete step 1 first")
+        raise ValidationError("No API key found — complete step 1 first", code="NO_KEY_FOUND")
 
-    # Embed signed user identity in the callback URL (no JWT cookie needed on return)
     state = auth_service.make_oauth_state(user["id"])
     backend_base = f"{request.url.scheme}://{request.url.netloc}"
     redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
 
-    auth_url = await zernio_service.get_connect_url(
-        acc["zernio_api_key_enc"], redirect_uri, user["id"]
-    )
+    try:
+        auth_url = await zernio_service.get_connect_url(
+            acc["zernio_api_key_enc"], redirect_uri, user["id"]
+        )
+    except Exception as e:
+        logging.error(f"[connect_instagram] Zernio get_connect_url error: {e}")
+        raise ZernioAPIError("Failed to generate Instagram authorization URL. Please try again.", status_code=502, code="OAUTH_URL_FAILED")
 
     if not auth_url:
-        raise HTTPException(502, "Failed to get OAuth URL from Zernio")
+        raise ZernioAPIError("Failed to get OAuth URL from Zernio. Please try again.", status_code=502, code="OAUTH_URL_EMPTY")
 
     return RedirectResponse(auth_url, status_code=307)

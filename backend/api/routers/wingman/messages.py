@@ -7,11 +7,13 @@ Strategy:
   1. Return from local DB if messages already exist there.
   2. Fallback: hit Zernio to seed the DB for the first time.
 """
-from fastapi import APIRouter, HTTPException
+import logging
+from fastapi import APIRouter
 
 from db import get_pool
 from repositories import account_repo, message_repo, session_repo
 from services import zernio_service
+from api.errors import NotFoundError, ForbiddenError, ZernioAPIError
 
 router = APIRouter()
 
@@ -47,9 +49,9 @@ async def wingman_messages(token: str):
         session = await session_repo.get_session_by_token(conn, token)
 
     if not session:
-        raise HTTPException(404, "Link not found")
+        raise NotFoundError("Link not found", code="LINK_NOT_FOUND")
     if session["access_level"] == "revoked":
-        raise HTTPException(403, "Access revoked")
+        raise ForbiddenError("Access revoked", code="ACCESS_REVOKED")
 
     ig_username = session["ig_username"]
 
@@ -84,18 +86,27 @@ async def wingman_messages(token: str):
         acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
 
     if not acc or not acc.get("zernio_api_key_enc"):
-        raise HTTPException(404, "Account not configured")
+        raise NotFoundError("Account not configured", code="ACCOUNT_NOT_CONFIGURED")
 
-    conv = await zernio_service.find_conversation(
-        ig_username, acc["zernio_account_id"], acc["zernio_api_key_enc"]
-    )
+    try:
+        conv = await zernio_service.find_conversation(
+            ig_username, acc["zernio_account_id"], acc["zernio_api_key_enc"]
+        )
+    except Exception as e:
+        logging.error(f"[wingman_messages] Zernio conversation lookup error for @{ig_username}: {e}")
+        raise ZernioAPIError("Failed to look up conversation. Please try again.", status_code=502, code="LOOKUP_FAILED")
+
     if not conv:
-        raise HTTPException(404, f"No conversation found for: {ig_username}")
+        raise NotFoundError(f"No conversation found for: {ig_username}", code="CONVERSATION_NOT_FOUND")
 
-    data = await zernio_service.get_messages(
-        conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"],
-        limit=50, sort="desc",
-    )
+    try:
+        data = await zernio_service.get_messages(
+            conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"],
+            limit=50, sort="desc",
+        )
+    except Exception as e:
+        logging.error(f"[wingman_messages] Zernio fetch messages error for @{ig_username}: {e}")
+        raise ZernioAPIError("Failed to fetch messages. Please try again.", status_code=502, code="FETCH_FAILED")
     raw_list = data.get("messages") or data.get("data") or []
     raw_messages = list(reversed(raw_list))
 

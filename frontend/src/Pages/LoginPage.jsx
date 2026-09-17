@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, Lock, Loader as Loader2 } from 'lucide-react'
+import { Mail, Lock, Loader as Loader2, CircleAlert as AlertCircle } from 'lucide-react'
 import { useLogin } from '../hooks/useAuthForms'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { submit, loading } = useLogin()
+  const { submit, loading, error } = useLogin()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -27,6 +27,13 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-6 shadow-[0px_1px_3px_rgba(0,0,0,0.06)] space-y-5">
+          {error && (
+            <div className="p-3 bg-[#fff0f0] border border-[#ffcdd2] text-[#d32f2f] text-[13px] rounded-[8px] flex items-start gap-2.5">
+              <AlertCircle size={16} className="shrink-0 text-[#d32f2f] mt-0.5" />
+              <span className="leading-snug">{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[12px] font-medium text-[#494744] mb-1.5">Email address</label>

@@ -15,6 +15,8 @@ from config import ZERNIO_WEBHOOK_SECRET
 from db import get_pool
 from repositories import account_repo, message_repo
 
+from api.errors import AuthenticationError, ValidationError
+
 router = APIRouter(tags=["Webhook"])
 
 
@@ -31,12 +33,12 @@ async def zernio_webhook(request: Request):
             or request.headers.get("authorization", "").removeprefix("Bearer ")
         )
         if token != ZERNIO_WEBHOOK_SECRET:
-            raise HTTPException(401, "Invalid webhook secret")
+            raise AuthenticationError("Invalid webhook secret", code="INVALID_WEBHOOK_SECRET")
 
     try:
         payload = await request.json()
     except Exception:
-        raise HTTPException(400, "Invalid JSON payload")
+        raise ValidationError("Invalid JSON payload", code="INVALID_JSON_PAYLOAD")
 
     event_type = payload.get("event") or payload.get("type") or ""
     print(f"[webhook] raw payload keys={list(payload.keys())} event={event_type}")

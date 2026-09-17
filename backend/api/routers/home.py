@@ -1,15 +1,16 @@
 """
 api/routers/home.py
 ====================
-LAYER: Router — REST endpoints for DM conversation management.
-"""
-from fastapi import APIRouter, Depends, Header, HTTPException
+LAYER: Router — REST endpoints for DM conversation management."""
+import logging
+from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel
 
 from db import get_pool
 from dependencies import require_user
 from repositories import account_repo, message_repo, session_repo
 from services import zernio_service
+from api.errors import ValidationError, NotFoundError, ZernioAPIError
 
 router = APIRouter(prefix="/dms", tags=["DMs"])
 
@@ -27,7 +28,7 @@ async def list_dms(
     async with pool.acquire() as conn:
         account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
         if x_hoop_instagram_account and not account:
-            raise HTTPException(400, "Selected Instagram account is not connected")
+            raise ValidationError("Selected Instagram account is not connected", code="ACCOUNT_NOT_CONNECTED")
         rows = await account_repo.list_dm_usernames_with_session_counts(
             conn, user["id"], account["ig_username"] if account else None
         )
@@ -46,22 +47,22 @@ async def add_dm(
 ):
     ig_username = body.ig_username.strip().lstrip("@").lower()
     if not ig_username:
-        raise HTTPException(400, "Username cannot be empty")
+        raise ValidationError("Username cannot be empty", code="EMPTY_USERNAME")
 
     pool = await get_pool()
     async with pool.acquire() as conn:
         accounts = await account_repo.get_accounts_for_user(conn, user["id"])
         acc = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
         if x_hoop_instagram_account and not acc:
-            raise HTTPException(400, "Selected Instagram account is not connected")
+            raise ValidationError("Selected Instagram account is not connected", code="ACCOUNT_NOT_CONNECTED")
         has_real_account = any(
             a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts
         )
         if not has_real_account or not acc or not acc.get("zernio_api_key_enc"):
-            raise HTTPException(400, "Connect an Instagram account first in Settings")
+            raise ValidationError("Connect an Instagram account first in Settings", code="NO_CONNECTED_ACCOUNT")
 
         if await account_repo.is_own_connected_account(conn, user["id"], ig_username):
-            raise HTTPException(400, "That is your own connected Instagram account")
+            raise ValidationError("That is your own connected Instagram account", code="CANNOT_ADD_SELF")
 
         # 1. Check if DM already exists in DB
         db_messages = await message_repo.get_messages_for_participant(conn, ig_username)
@@ -75,12 +76,17 @@ async def add_dm(
                     acc["zernio_api_key_enc"],
                 )
             except Exception as e:
-                raise HTTPException(502, f"Failed to check Instagram conversation for @{ig_username}: {e}")
+                logging.error(f"[add_dm] Failed to check Instagram conversation for @{ig_username}: {e}")
+                raise ZernioAPIError(
+                    f"Failed to check Instagram conversation for @{ig_username}. Please try again in a moment.",
+                    status_code=502,
+                    code="INSTAGRAM_CONVERSATION_CHECK_FAILED"
+                )
 
             if not conv:
-                raise HTTPException(
-                    404,
-                    f"Username @{ig_username} not found. Please add a username of someone you already have a current DM with on Instagram."
+                raise NotFoundError(
+                    f"Username @{ig_username} not found. Please add a username of someone you already have a current DM with on Instagram.",
+                    code="CONVERSATION_NOT_FOUND"
                 )
 
             # Pre-seed DB with conversation metadata & initial messages
@@ -111,9 +117,7 @@ async def add_dm(
                 if raw_msgs:
                     await message_repo.upsert_messages_batch(conn, list(reversed(raw_msgs)), conv["id"], account_username=acc["ig_username"])
             except Exception as e:
-                import logging
                 logging.warning(f"[add_dm] pre-seed messages fetch failed: {e}")
-
 
         await account_repo.add_tracked_dm(conn, user["id"], ig_username, acc["ig_username"])
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"], acc["ig_username"])
@@ -130,23 +134,19 @@ async def delete_dm(
     ig_username = ig_username.strip().lstrip("@").lower()
     pool = await get_pool()
     async with pool.acquire() as conn:
-        # 1. Delete all wingman sessions associated with this thread
         acc = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
         if x_hoop_instagram_account and not acc:
-            raise HTTPException(400, "Selected Instagram account is not connected")
+            raise ValidationError("Selected Instagram account is not connected", code="ACCOUNT_NOT_CONNECTED")
         account_username = acc["ig_username"] if acc else ""
         revoked_tokens = await session_repo.delete_all_sessions_for_ig(
             conn, user["id"], ig_username
         )
-        # 2. Delete all messages & conversation records for this participant from local DB
         await message_repo.delete_messages_and_conversation(conn, ig_username, account_username=account_username)
-        # 3. Delete tracked DM record for this user
         await account_repo.delete_tracked_dm(conn, user["id"], ig_username, account_username)
-        # 4. Return updated DM list
         rows = await account_repo.list_dm_usernames_with_session_counts(conn, user["id"], account_username)
 
     for token in revoked_tokens:
-        pass  # Supabase Realtime notifies clients
+        pass
 
     return {"dms": [dict(r) for r in rows]}
 

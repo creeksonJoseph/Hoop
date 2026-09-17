@@ -11,14 +11,16 @@ Strategy:
      The frontend prepends these to the existing list.
   4. On Zernio errors: gracefully fall back to DB data if available.
 """
+import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, Query
 
 from db import get_pool
 from dependencies import require_user
 from repositories import account_repo, message_repo
 from services import zernio_service
+from api.errors import ValidationError, NotFoundError, ZernioAPIError
 from .formatters import extract_profile_data, format_db_messages, format_zernio_messages
 
 router = APIRouter()
@@ -45,7 +47,10 @@ async def get_messages(
         or acc.get("ig_username") == "__pending__"
         or acc.get("zernio_account_id") == "pending"
     ):
-        raise HTTPException(400, "No connected Instagram account found. Please connect your Instagram account in Settings.")
+        raise ValidationError(
+            "No connected Instagram account found. Please connect your Instagram account in Settings.",
+            code="NO_CONNECTED_ACCOUNT"
+        )
 
     target_user = ig_target or acc["ig_username"]
     acc_username = acc["ig_username"]
@@ -56,7 +61,6 @@ async def get_messages(
         existing_conv = await message_repo.get_conversation_by_participant(conn, target_user, account_username=acc_username)
 
     # 2. Return from DB if available, not a force-sync, and not requesting a cursor page.
-    #    cursor here is Zernio's own cursor string — not a DB message ID.
     if existing_msgs and not force_sync and not cursor:
         conv_id = existing_conv["conversation_id"] if existing_conv else (existing_msgs[0].get("conversation_id") or "db_conv")
         p_name = existing_conv["participant_name"] if existing_conv else target_user
@@ -91,7 +95,8 @@ async def get_messages(
                 }
             else:
                 pagination_info = {"hasMore": False, "nextCursor": None}
-        except Exception:
+        except Exception as e:
+            logging.warning(f"[get_messages] background Zernio sync failed: {e}")
             pagination_info = {"hasMore": False, "nextCursor": None}
 
         return {
@@ -112,6 +117,7 @@ async def get_messages(
             acc["zernio_api_key_enc"],
         )
     except Exception as e:
+        logging.error(f"[get_messages] Failed to look up conversation on Zernio for @{target_user}: {e}")
         if existing_msgs:
             pic_url = existing_conv.get("profile_pic_url") if existing_conv else None
             return {
@@ -123,7 +129,11 @@ async def get_messages(
                 "pagination": {"hasMore": False, "nextCursor": None},
                 "messages": format_db_messages(existing_msgs, target_user),
             }
-        raise HTTPException(502, f"Failed to look up conversation on Zernio: {e}")
+        raise ZernioAPIError(
+            f"Failed to look up conversation on Instagram for @{target_user}. Please try again.",
+            status_code=502,
+            code="CONVERSATION_LOOKUP_FAILED"
+        )
 
     if not conv:
         if existing_msgs:
@@ -137,7 +147,7 @@ async def get_messages(
                 "pagination": {"hasMore": False, "nextCursor": None},
                 "messages": format_db_messages(existing_msgs, target_user),
             }
-        raise HTTPException(404, f"No conversation found for: @{target_user}")
+        raise NotFoundError(f"No conversation found for: @{target_user}", code="CONVERSATION_NOT_FOUND")
 
     display_name, avatar_url = extract_profile_data(conv, target_user)
 
@@ -154,9 +164,10 @@ async def get_messages(
             acc["zernio_api_key_enc"],
             limit=limit,
             sort=sort_order,
-            cursor=cursor,  # Zernio's own cursor string for pagination
+            cursor=cursor,
         )
     except Exception as e:
+        logging.error(f"[get_messages] Failed to fetch messages from Zernio for conv_id={conv['id']}: {e}")
         if existing_msgs:
             return {
                 "conversation_id": conv["id"],
@@ -167,7 +178,11 @@ async def get_messages(
                 "pagination": {"hasMore": False, "nextCursor": None},
                 "messages": format_db_messages(existing_msgs, target_user),
             }
-        raise HTTPException(502, f"Failed to fetch messages from Zernio: {e}")
+        raise ZernioAPIError(
+            "Failed to fetch messages from Instagram. Please try again.",
+            status_code=502,
+            code="MESSAGES_FETCH_FAILED"
+        )
 
     raw = data.get("messages") or data.get("data") or []
     if sort_order == "desc":

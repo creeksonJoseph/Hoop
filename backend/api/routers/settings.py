@@ -11,9 +11,10 @@ from dependencies import require_user
 from repositories import account_repo, session_repo
 from services import zernio_service, auth_service
 from crypto import encrypt_api_key, mask_api_key
+import logging
+from api.errors import ValidationError, AuthenticationError, ZernioAPIError
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
-
 
 
 class ApiKeyBody(BaseModel):
@@ -46,10 +47,7 @@ async def get_settings(request: Request, user=Depends(require_user)):
     enc_key = first_keyed_acc["zernio_api_key_enc"]
     masked_key = mask_api_key(enc_key)
 
-    # ── Flaw 5 fix: Always reconcile against live Zernio account list ──────────
-    # This ensures accounts disconnected on Zernio's side disappear from the
-    # Switch Account list immediately on the next Settings load, instead of
-    # persisting indefinitely in the DB.
+    # Reconcile against live Zernio account list
     try:
         remote_accounts = await zernio_service.get_accounts(enc_key)
         remote_ids = {
@@ -72,15 +70,12 @@ async def get_settings(request: Request, user=Depends(require_user)):
                     await account_repo.upsert_account(conn, user["id"], r_user, r_id, enc_key)
 
             # Remove DB accounts that Zernio no longer knows about
-            # (i.e. disconnected on Zernio's side)
             for acc in accounts:
                 ign = acc["ig_username"]
                 if ign in ("__pending__", ""):
                     continue
                 acc_id = acc.get("zernio_account_id", "")
-                # Remove if neither the username nor the Zernio account_id is in the live list
                 if ign.lower() not in remote_usernames and acc_id not in remote_ids:
-                    import logging
                     logging.info(f"[settings reconcile] removing stale account @{ign} for user_id={user['id']}")
                     await account_repo.delete_account(conn, user["id"], ign)
 
@@ -88,7 +83,6 @@ async def get_settings(request: Request, user=Depends(require_user)):
             accounts = await account_repo.get_accounts_for_user(conn, user["id"])
 
     except Exception as e:
-        import logging
         logging.warning(f"[get_settings] Zernio reconciliation failed: {e}")
 
     # Determine active connected account status after reconciliation
@@ -105,7 +99,6 @@ async def get_settings(request: Request, user=Depends(require_user)):
         redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
         oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri, user["id"])
     except Exception as e:
-        import logging
         logging.warning(f"[get_settings] OAuth URL generation failed: {e}")
 
     return {
@@ -118,18 +111,18 @@ async def get_settings(request: Request, user=Depends(require_user)):
     }
 
 
-
 @router.put("/api-key")
 async def update_api_key(body: ApiKeyBody, user=Depends(require_user)):
     key_str = body.zernio_api_key.strip()
     if not key_str:
-        raise HTTPException(400, "API Key cannot be empty")
+        raise ValidationError("API Key cannot be empty", code="API_KEY_REQUIRED")
 
     try:
         enc_key = encrypt_api_key(key_str)
         accounts = await zernio_service.get_accounts(enc_key)
     except Exception as e:
-        raise HTTPException(400, f"Invalid API Key: {e}")
+        logging.error(f"[update_api_key] Zernio API key verification failed: {e}")
+        raise AuthenticationError("Invalid Zernio API Key. Please verify your key.", code="INVALID_ZERNIO_KEY")
 
     pool = await get_pool()
     if not accounts:
@@ -156,6 +149,4 @@ async def delete_api_key(user=Depends(require_user)):
             revoked_tokens = await session_repo.delete_all_sessions_for_ig(
                 conn, user["id"], acc["ig_username"]
             )
-            for token in revoked_tokens:
-                pass  # Supabase Realtime notifies clients
             await account_repo.delete_account(conn, user["id"], acc["ig_username"])

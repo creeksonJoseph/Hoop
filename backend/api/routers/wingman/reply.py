@@ -13,6 +13,9 @@ from db import get_pool
 from repositories import account_repo, message_repo, session_repo
 from services import zernio_service
 
+import logging
+from api.errors import NotFoundError, ForbiddenError, ValidationError, ZernioAPIError
+
 router = APIRouter()
 
 
@@ -28,29 +31,38 @@ async def wingman_reply(token: str, body: ReplyBody):
         session = await session_repo.get_session_by_token(conn, token)
 
     if not session:
-        raise HTTPException(404, "Link not found")
+        raise NotFoundError("Link not found", code="LINK_NOT_FOUND")
     if session["access_level"] != "send":
-        raise HTTPException(403, "Read-only access — cannot send messages")
+        raise ForbiddenError("Read-only access — cannot send messages", code="READ_ONLY_ACCESS")
     if not body.message.strip():
-        raise HTTPException(400, "Message cannot be empty")
+        raise ValidationError("Message cannot be empty", code="EMPTY_MESSAGE")
 
     ig_username = session["ig_username"]
     async with pool.acquire() as conn:
         acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
-        raise HTTPException(404, "Account not configured")
+        raise NotFoundError("Account not configured", code="ACCOUNT_NOT_CONFIGURED")
 
-    conv = await zernio_service.find_conversation(
-        ig_username, acc["zernio_account_id"], acc["zernio_api_key_enc"]
-    )
+    try:
+        conv = await zernio_service.find_conversation(
+            ig_username, acc["zernio_account_id"], acc["zernio_api_key_enc"]
+        )
+    except Exception as e:
+        logging.error(f"[wingman_reply] Zernio conversation lookup error for @{ig_username}: {e}")
+        raise ZernioAPIError("Failed to find conversation on Instagram. Please try again.", status_code=502, code="LOOKUP_FAILED")
+
     if not conv:
-        raise HTTPException(404, f"No conversation found for: {ig_username}")
+        raise NotFoundError(f"No conversation found for: {ig_username}", code="CONVERSATION_NOT_FOUND")
 
     conv_id = conv["id"]
-    result = await zernio_service.send_message(
-        conv_id, acc["zernio_account_id"], acc["zernio_api_key_enc"], body.message
-    )
+    try:
+        result = await zernio_service.send_message(
+            conv_id, acc["zernio_account_id"], acc["zernio_api_key_enc"], body.message
+        )
+    except Exception as e:
+        logging.error(f"[wingman_reply] Zernio send message error for @{ig_username}: {e}")
+        raise ZernioAPIError("Failed to send message as wingman. Please try again.", status_code=502, code="REPLY_FAILED")
 
     # Immediately write sent message to DB
     sent_msg_id = (

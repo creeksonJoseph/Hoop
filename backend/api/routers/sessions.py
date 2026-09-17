@@ -16,6 +16,8 @@ from services.session_service import (
     validate_access_level,
 )
 
+from api.errors import ValidationError, NotFoundError
+
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 
@@ -40,7 +42,7 @@ async def list_sessions(
     async with pool.acquire() as conn:
         account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
         if x_hoop_instagram_account and not account:
-            raise HTTPException(400, "Selected Instagram account is not connected")
+            raise ValidationError("Selected Instagram account is not connected", code="ACCOUNT_NOT_CONNECTED")
         if ig_username in ("all", "*", ""):
             rows = await session_repo.get_all_sessions_for_user(
                 conn, user["id"], account["ig_username"] if account else None
@@ -63,7 +65,7 @@ async def generate_session(
     ig_username = ig_username.lower().lstrip("@")
 
     if not validate_access_level(body.access_level) or body.access_level == "revoked":
-        raise HTTPException(400, "access_level must be 'read' or 'send'")
+        raise ValidationError("access_level must be 'read' or 'send'", code="INVALID_ACCESS_LEVEL")
 
     token = make_wingman_token(body.wingman_name, ig_username)
     pool = await get_pool()
@@ -71,7 +73,7 @@ async def generate_session(
     async with pool.acquire() as conn:
         account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
         if not account:
-            raise HTTPException(400, "No active Instagram account selected")
+            raise ValidationError("No active Instagram account selected", code="NO_ACTIVE_ACCOUNT")
         exists = await session_repo.session_token_exists(conn, token)
         if exists:
             await session_repo.upsert_session_token(conn, token, body.access_level)
@@ -92,7 +94,7 @@ async def update_session(
     session_id: str, body: UpdateAccessBody, user=Depends(require_user)
 ):
     if not validate_access_level(body.access_level):
-        raise HTTPException(400, "Invalid access_level")
+        raise ValidationError("Invalid access_level", code="INVALID_ACCESS_LEVEL")
 
     pool = await get_pool()
     async with pool.acquire() as conn:
@@ -101,10 +103,10 @@ async def update_session(
         )
 
     if not row:
-        raise HTTPException(404, "Session not found")
+        raise NotFoundError("Session not found", code="SESSION_NOT_FOUND")
 
     if body.access_level == "revoked":
-        pass  # Supabase Realtime notifies clients via DB subscription
+        pass
 
     return format_session_for_display(dict(row))
 
@@ -114,5 +116,5 @@ async def delete_session(session_id: str, user=Depends(require_user)):
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await session_repo.delete_session(conn, session_id, user["id"])
-    if row:
-        pass  # Supabase Realtime notifies clients via DB subscription
+    if not row:
+        raise NotFoundError("Session not found or already deleted", code="SESSION_NOT_FOUND")

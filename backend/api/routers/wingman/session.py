@@ -4,10 +4,7 @@ api/routers/wingman/session.py
 LAYER: Router — GET /wingman/{token} endpoint.
 Returns public metadata for a wingman session (no auth required).
 """
-from fastapi import APIRouter, HTTPException
-
-from db import get_pool
-from repositories import session_repo
+from api.errors import NotFoundError
 
 router = APIRouter()
 
@@ -20,7 +17,7 @@ async def wingman_session_info(token: str):
         session = await session_repo.get_session_by_token(conn, token)
 
     if not session:
-        raise HTTPException(404, "Link not found or has been removed")
+        raise NotFoundError("Link not found or has been removed", code="LINK_NOT_FOUND")
 
     return {
         "token": token,

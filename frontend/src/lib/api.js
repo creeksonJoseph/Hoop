@@ -18,9 +18,13 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
+      const url = err.config?.url || "";
+      const isAuthRoute = url.includes("/auth/login") || url.includes("/auth/signup");
       const detail = err.response?.data?.detail || "";
-      // Do not wipe auth token if the 401 is specifically a Zernio API key error
-      if (!detail.toLowerCase().includes("zernio")) {
+      const currentPath = window.location.pathname;
+
+      // Do not wipe token or reload if this is a login/signup attempt, or if user is already on auth pages, or for Zernio key errors
+      if (!isAuthRoute && currentPath !== "/login" && currentPath !== "/signup" && !detail.toLowerCase().includes("zernio")) {
         localStorage.removeItem("hoop_token");
         window.location.href = "/login";
       }

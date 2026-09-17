@@ -10,6 +10,8 @@ from repositories import account_repo
 from services import zernio_service
 from db import get_pool
 
+from api.errors import NotFoundError, ZernioAPIError
+
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
@@ -20,10 +22,12 @@ async def delete_message(msg_id: str, user=Depends(require_user)):
         acc = await account_repo.get_any_account_for_user(conn, user["id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
-        raise HTTPException(404, "No connected account found")
+        raise NotFoundError("No connected account found", code="ACCOUNT_NOT_FOUND")
 
     try:
         result = await zernio_service.delete_message(msg_id, acc["zernio_api_key_enc"])
         return {"success": True, "result": result}
     except Exception as e:
-        raise HTTPException(501, f"Zernio does not support message deletion: {e}")
+        import logging
+        logging.error(f"[admin_delete_message] Zernio delete error for msg_id={msg_id}: {e}")
+        raise ZernioAPIError("Message deletion is not supported or failed on Instagram.", status_code=501, code="DELETE_UNSUPPORTED")
