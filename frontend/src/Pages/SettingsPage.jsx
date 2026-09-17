@@ -18,8 +18,11 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
+  // Use the live active account from AuthContext so it updates immediately after a switch.
+  // Fallback to what the settings API returned if AuthContext hasn't set one yet.
+  const activeIgUsername = user?.active_ig_username || settings?.ig_username;
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -83,10 +86,10 @@ export default function SettingsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3.5 border-b border-[#e5e3df]">
                     <div>
                       <p className="text-[13px] font-medium text-[#191918]">Instagram account</p>
-                      {settings?.ig_username ? (
+                      {activeIgUsername ? (
                         <p className="text-[12px] text-[#615d59] flex items-center gap-1.5 mt-0.5">
                           <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#0f6220]"></span>
-                          Connected as <span className="font-medium text-[#191918]">@{settings.ig_username}</span>
+                          Active account: <span className="font-medium text-[#191918]">@{activeIgUsername}</span>
                         </p>
                       ) : (
                         <p className="text-[12px] text-[#615d59] mt-0.5">No account connected</p>

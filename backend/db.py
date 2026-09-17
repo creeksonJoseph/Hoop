@@ -45,14 +45,45 @@ async def init_db():
         await conn.fetchval("SELECT 1")
 
         # ── tracked_dms: add account_username if missing ──────────────────────
-        await conn.execute("ALTER TABLE tracked_dms ADD COLUMN IF NOT EXISTS account_username TEXT")
+        await conn.execute("ALTER TABLE tracked_dms ADD COLUMN IF NOT EXISTS account_username TEXT NOT NULL DEFAULT ''")
         await conn.execute("""
             UPDATE tracked_dms t
             SET account_username = a.ig_username
             FROM connected_ig_accounts a
             WHERE t.user_id = a.user_id
-              AND t.account_username IS NULL
+              AND t.account_username = ''
               AND a.ig_username != '__pending__'
+        """)
+
+        # ── tracked_dms: migrate unique constraint to include account_username ──
+        # The old constraint only had (user_id, ig_username) which caused the second
+        # connected account's add_dm to silently no-op when tracking a shared target.
+        # We need (user_id, ig_username, account_username) so each IG account can
+        # independently track the same conversation partner.
+        await conn.execute("""
+            DO $$
+            BEGIN
+                -- Drop the old narrow constraint if it still exists
+                IF EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'tracked_dms_user_id_ig_username_key'
+                    AND conrelid = 'tracked_dms'::regclass
+                ) THEN
+                    ALTER TABLE tracked_dms DROP CONSTRAINT tracked_dms_user_id_ig_username_key;
+                END IF;
+
+                -- Create the wider constraint only if it does not exist yet
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'tracked_dms_user_id_ig_username_account_username_key'
+                    AND conrelid = 'tracked_dms'::regclass
+                ) THEN
+                    ALTER TABLE tracked_dms
+                    ADD CONSTRAINT tracked_dms_user_id_ig_username_account_username_key
+                    UNIQUE (user_id, ig_username, account_username);
+                END IF;
+            END
+            $$;
         """)
 
         # ── conversations: add account_username for per-account isolation ──────

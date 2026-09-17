@@ -63,8 +63,14 @@ async def add_dm(
         if not has_real_account or not acc or not acc.get("zernio_api_key_enc"):
             raise ValidationError("Connect an Instagram account first in Settings", code="NO_CONNECTED_ACCOUNT")
 
-        if await account_repo.is_own_connected_account(conn, user["id"], ig_username):
-            raise ValidationError("That is your own connected Instagram account", code="CANNOT_ADD_SELF")
+        # Only block adding the currently active account - a user can DM their other
+        # connected accounts from the active one (cross-account conversation tracking).
+        active_username = (acc.get("ig_username") or "").lower().strip()
+        if active_username and ig_username == active_username:
+            raise ValidationError(
+                "You can't add your own active Instagram account as a DM.",
+                code="CANNOT_ADD_SELF"
+            )
 
         # 1. Check if DM already exists in DB
         db_messages = await message_repo.get_messages_for_participant(conn, ig_username)

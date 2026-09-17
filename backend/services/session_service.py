@@ -13,13 +13,14 @@ from typing import Optional
 from config import WINGMAN_SECRET
 
 
-def make_wingman_token(wingman_name: str, ig_username: str) -> str:
+def make_wingman_token(wingman_name: str, ig_username: str, user_id: int) -> str:
     """
     Stable HMAC-SHA256 token - same inputs always produce the same token.
     This means re-generating a link for the same person regenerates
     the exact same link instead of creating a duplicate session.
+    user_id is included so tokens are isolated per Hoop account.
     """
-    raw = f"{wingman_name.lower().strip()}:{ig_username.lower().strip()}"
+    raw = f"{user_id}:{wingman_name.lower().strip()}:{ig_username.lower().strip()}"
     return hmac.new(WINGMAN_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
 
 

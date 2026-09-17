@@ -69,18 +69,29 @@ async def generate_session(
     if not validate_access_level(body.access_level) or body.access_level == "revoked":
         raise ValidationError("access_level must be 'read' or 'send'", code="INVALID_ACCESS_LEVEL")
 
-    token = make_wingman_token(body.wingman_name, ig_username)
+    token = make_wingman_token(body.wingman_name, ig_username, user["id"])
     pool = await get_pool()
 
     async with pool.acquire() as conn:
         account = await account_repo.get_active_account(conn, user["id"], x_hoop_instagram_account)
         if not account:
             raise ValidationError("No active Instagram account selected", code="NO_ACTIVE_ACCOUNT")
+
         exists = await session_repo.session_token_exists(conn, token)
         if exists:
             await session_repo.upsert_session_token(conn, token, body.access_level)
             row = await session_repo.get_session_by_token(conn, token)
             return {"token": token, "session_id": row["id"]}
+
+        # Block duplicate wingman names for the same conversation
+        name_taken = await session_repo.wingman_name_active_for_ig(
+            conn, user["id"], ig_username, body.wingman_name
+        )
+        if name_taken:
+            raise ValidationError(
+                f"There's already an active wingman named \"{body.wingman_name}\" for this conversation. Use a different name.",
+                code="DUPLICATE_WINGMAN_NAME"
+            )
 
         sid = new_session_id()
         await session_repo.create_session(

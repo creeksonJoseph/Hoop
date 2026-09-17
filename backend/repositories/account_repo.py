@@ -91,7 +91,7 @@ async def add_tracked_dm(
     await conn.execute("""
         INSERT INTO tracked_dms (user_id, ig_username, account_username)
         VALUES ($1, $2, $3)
-        ON CONFLICT (user_id, ig_username) DO NOTHING
+        ON CONFLICT (user_id, ig_username, account_username) DO NOTHING
     """, user_id, ig_username.lower().strip(), account_username)
 
 
@@ -116,12 +116,19 @@ async def list_dm_usernames_with_session_counts(
 ) -> List[asyncpg.Record]:
     return await conn.fetch("""
         SELECT t.ig_username, t.last_message, c.participant_name, c.profile_pic_url,
-               COUNT(s.id) AS session_count
+               COUNT(DISTINCT s.id) AS session_count
         FROM tracked_dms t
         LEFT JOIN conversations c
             ON LOWER(c.participant_username) = LOWER(t.ig_username)
+            AND (
+                $2::text IS NULL
+                OR LOWER(c.account_username) = LOWER($2)
+                OR c.account_username = ''
+            )
         LEFT JOIN wingman_sessions s
-            ON s.ig_username = t.ig_username AND s.user_id = t.user_id
+            ON s.ig_username = t.ig_username
+            AND s.user_id = t.user_id
+            AND s.access_level != 'revoked'
         WHERE t.user_id = $1 AND ($2::text IS NULL OR LOWER(t.account_username) = LOWER($2))
         GROUP BY t.ig_username, t.last_message, t.added_at, c.participant_name, c.profile_pic_url
         ORDER BY t.added_at DESC

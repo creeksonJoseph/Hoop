@@ -105,6 +105,20 @@ async def session_token_exists(conn: asyncpg.Connection, token: str) -> bool:
     return row is not None
 
 
+async def wingman_name_active_for_ig(
+    conn: asyncpg.Connection, user_id: int, ig_username: str, wingman_name: str
+) -> bool:
+    """Return True if a non-revoked session with this wingman_name already exists for this DM."""
+    row = await conn.fetchrow(
+        """SELECT id FROM wingman_sessions
+           WHERE user_id = $1 AND ig_username = $2
+             AND LOWER(wingman_name) = LOWER($3)
+             AND access_level != 'revoked'""",
+        user_id, ig_username.lower().strip(), wingman_name.strip(),
+    )
+    return row is not None
+
+
 async def delete_session(
     conn: asyncpg.Connection, session_id: str, user_id: int
 ) -> Optional[asyncpg.Record]:
