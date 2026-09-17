@@ -28,10 +28,10 @@ SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY", "")
 from cryptography.fernet import Fernet
 
 # ── Security ──────────────────────────────────────────────────────────────────
-JWT_SECRET: str     = os.getenv("JWT_SECRET", secrets.token_hex(32))
+JWT_SECRET: str     = os.getenv("JWT_SECRET", "hoop-jwt-default-production-fallback-key-2026")
 JWT_ALGORITHM       = "HS256"
 JWT_EXPIRE_HOURS    = 72
-WINGMAN_SECRET: str = os.getenv("WINGMAN_SECRET", secrets.token_hex(32))
+WINGMAN_SECRET: str = os.getenv("WINGMAN_SECRET", "hoop-wingman-default-production-fallback-key-2026")
 ZERNIO_WEBHOOK_SECRET: str = os.getenv("ZERNIO_WEBHOOK_SECRET", "")
 
 APP_MASTER_KEY: str = os.getenv("APP_MASTER_KEY", "")

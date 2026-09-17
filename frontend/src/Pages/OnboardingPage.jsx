@@ -17,7 +17,10 @@ export default function OnboardingPage() {
       if (targetUrl.startsWith('http')) {
         window.location.href = targetUrl
       } else {
-        window.location.href = `https://hoop-4thy.onrender.com${targetUrl}`
+        const authToken = localStorage.getItem('hoop_token') || ''
+        const sep = targetUrl.includes('?') ? '&' : '?'
+        const baseUrl = import.meta.env.VITE_API_URL || 'https://hoop-4thy.onrender.com'
+        window.location.href = `${baseUrl}${targetUrl}${authToken ? `${sep}token=${authToken}` : ''}`
       }
     } else {
       navigate('/home')

@@ -18,8 +18,12 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("hoop_token");
-      window.location.href = "/login";
+      const detail = err.response?.data?.detail || "";
+      // Do not wipe auth token if the 401 is specifically a Zernio API key error
+      if (!detail.toLowerCase().includes("zernio")) {
+        localStorage.removeItem("hoop_token");
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(err);
   },

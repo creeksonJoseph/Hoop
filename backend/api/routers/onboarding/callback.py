@@ -61,13 +61,14 @@ async def onboarding_callback(
             if ig_user and enc_key:
                 await account_repo.upsert_account(conn, user_id, ig_user, account_id, enc_key)
                 logging.info(f"[onboarding/callback] Connected @{ig_user} for user_id={user_id}")
-                return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1")
+                return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1&account={ig_user}")
 
         # Fallback: OAuth code exchange (some Zernio flows use this)
         if code and acc and acc.get("zernio_api_key_enc"):
             try:
                 await zernio_service.handle_oauth_callback(acc["zernio_api_key_enc"], code)
                 accounts = await zernio_service.get_accounts(acc["zernio_api_key_enc"])
+                last_ig = ""
                 for a in accounts:
                     ig_user = a.get("username") or a.get("instagramUsername") or ""
                     acc_id = a.get("_id") or a.get("id") or ""
@@ -75,7 +76,9 @@ async def onboarding_callback(
                         await account_repo.upsert_account(
                             conn, user_id, ig_user, acc_id, acc["zernio_api_key_enc"]
                         )
-                return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1")
+                        last_ig = ig_user
+                acc_param = f"&account={last_ig}" if last_ig else ""
+                return RedirectResponse(f"{FRONTEND_BASE}/home?connected=1{acc_param}")
             except Exception as e:
                 logging.warning(f"[onboarding/callback] Code exchange failed: {e}")
 

@@ -17,10 +17,12 @@ _bearer = HTTPBearer(auto_error=False)
 
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(_bearer),
+    token: Optional[str] = None,
 ) -> Optional[dict]:
-    if not credentials:
+    raw_token = credentials.credentials if credentials else token
+    if not raw_token:
         return None
-    payload = decode_jwt(credentials.credentials)
+    payload = decode_jwt(raw_token)
     if not payload:
         return None
     user_id = payload.get("sub")

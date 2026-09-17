@@ -6,8 +6,9 @@ import {
   CircleAlert as AlertCircle,
   ArrowRight,
 } from "lucide-react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDMs } from "../hooks/useDMs";
+import { useAuth } from "../context/AuthContext";
 import NavRail from "../components/NavRail";
 import DMList from "../components/home/DMList";
 import AddDMModal from "../components/home/AddDMModal";
@@ -16,10 +17,20 @@ import ChatView from "../components/chat/ChatView";
 
 export default function HomePage() {
   const { igUsername } = useParams();
+  const [searchParams] = useSearchParams();
+  const { setActiveAccount } = useAuth();
   const { dms, hasRealAccount, loading, addDM, deleteDM } = useDMs();
   const [showModal, setShowModal] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const navigate = useNavigate();
+
+  // If redirected back from OAuth callback with account info, set as active account
+  useEffect(() => {
+    const connectedAccount = searchParams.get("account");
+    if (connectedAccount) {
+      setActiveAccount(connectedAccount);
+    }
+  }, [searchParams, setActiveAccount]);
 
   // Auto-clear active chat pane if the selected DM is deleted or removed
   useEffect(() => {
