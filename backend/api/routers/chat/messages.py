@@ -48,11 +48,12 @@ async def get_messages(
         raise HTTPException(400, "No connected Instagram account found. Please connect your Instagram account in Settings.")
 
     target_user = ig_target or acc["ig_username"]
+    acc_username = acc["ig_username"]
 
-    # 1. Check local DB first
+    # 1. Check local DB first — always scoped to this account to prevent cross-account contamination
     async with pool.acquire() as conn:
-        existing_msgs = await message_repo.get_messages_for_participant(conn, target_user)
-        existing_conv = await message_repo.get_conversation_by_participant(conn, target_user)
+        existing_msgs = await message_repo.get_messages_for_participant(conn, target_user, account_username=acc_username)
+        existing_conv = await message_repo.get_conversation_by_participant(conn, target_user, account_username=acc_username)
 
     # 2. Return from DB if available, not a force-sync, and not requesting a cursor page.
     #    cursor here is Zernio's own cursor string — not a DB message ID.
@@ -81,7 +82,7 @@ async def get_messages(
                 raw = zernio_data.get("messages") or zernio_data.get("data") or []
                 if raw:
                     async with pool.acquire() as conn:
-                        await message_repo.upsert_messages_batch(conn, raw, conv["id"])
+                        await message_repo.upsert_messages_batch(conn, raw, conv["id"], account_username=acc_username)
                         existing_msgs = await message_repo.get_messages_by_conversation_id(conn, conv["id"])
 
                 pagination_info = {
@@ -140,9 +141,9 @@ async def get_messages(
 
     display_name, avatar_url = extract_profile_data(conv, target_user)
 
-    # 4. Persist conversation metadata
+    # 4. Persist conversation metadata — scoped to this account
     async with pool.acquire() as conn:
-        await message_repo.upsert_conversation(conn, conv["id"], target_user, display_name, avatar_url)
+        await message_repo.upsert_conversation(conn, conv["id"], target_user, display_name, avatar_url, account_username=acc_username)
 
     # 5. Fetch messages from Zernio (passing the Zernio cursor for older pages)
     sort_order = sort if sort in ("asc", "desc") else "desc"
@@ -172,9 +173,9 @@ async def get_messages(
     if sort_order == "desc":
         raw = list(reversed(raw))
 
-    # Upsert this batch into DB
+    # Upsert this batch into DB — scoped to this account
     async with pool.acquire() as conn:
-        await message_repo.upsert_messages_batch(conn, raw, conv["id"])
+        await message_repo.upsert_messages_batch(conn, raw, conv["id"], account_username=acc_username)
 
     pag = data.get("pagination") if isinstance(data.get("pagination"), dict) else {}
     next_cur = pag.get("nextCursor") or pag.get("cursor")

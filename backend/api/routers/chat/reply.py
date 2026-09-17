@@ -50,10 +50,11 @@ async def reply(
         raise HTTPException(400, "No connected Instagram account found. Please connect your Instagram account in Settings.")
 
     target_user = ig_target or acc["ig_username"]
+    acc_username = acc["ig_username"]
 
-    # Try local DB first to find conversation_id (avoids a Zernio round-trip)
+    # Try local DB first to find conversation_id — scoped to this account
     async with pool.acquire() as conn:
-        conv_record = await message_repo.get_conversation_by_participant(conn, target_user)
+        conv_record = await message_repo.get_conversation_by_participant(conn, target_user, account_username=acc_username)
 
     conv_id = conv_record["conversation_id"] if conv_record else None
 
@@ -68,7 +69,8 @@ async def reply(
                 conv_id = conv["id"]
                 async with pool.acquire() as conn:
                     await message_repo.upsert_conversation(
-                        conn, conv_id, target_user, conv.get("participantName")
+                        conn, conv_id, target_user, conv.get("participantName"),
+                        account_username=acc_username,
                     )
         except Exception as e:
             logging.warning(f"[reply] conversation lookup error: {e}")
@@ -109,6 +111,7 @@ async def reply(
             direction="outgoing",
             created_at=datetime.datetime.utcnow().isoformat() + "Z",
             platform="instagram",
+            account_username=acc_username,
         )
 
     return {"success": True, "sent_message": body.message, "zernio_response": result}

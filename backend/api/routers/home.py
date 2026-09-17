@@ -102,14 +102,14 @@ async def add_dm(
                 or conv.get("profilePicUrl")
                 or conv.get("profile_pic")
             )
-            await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url)
+            await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url, account_username=acc["ig_username"])
             try:
                 data = await zernio_service.get_messages(
                     conv["id"], acc["zernio_account_id"], acc["zernio_api_key_enc"], limit=50, sort="desc"
                 )
                 raw_msgs = data.get("messages") or data.get("data") or []
                 if raw_msgs:
-                    await message_repo.upsert_messages_batch(conn, list(reversed(raw_msgs)), conv["id"])
+                    await message_repo.upsert_messages_batch(conn, list(reversed(raw_msgs)), conv["id"], account_username=acc["ig_username"])
             except Exception as e:
                 import logging
                 logging.warning(f"[add_dm] pre-seed messages fetch failed: {e}")
@@ -139,7 +139,7 @@ async def delete_dm(
             conn, user["id"], ig_username
         )
         # 2. Delete all messages & conversation records for this participant from local DB
-        await message_repo.delete_messages_and_conversation(conn, ig_username)
+        await message_repo.delete_messages_and_conversation(conn, ig_username, account_username=account_username)
         # 3. Delete tracked DM record for this user
         await account_repo.delete_tracked_dm(conn, user["id"], ig_username, account_username)
         # 4. Return updated DM list

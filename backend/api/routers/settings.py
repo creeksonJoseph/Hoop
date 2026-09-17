@@ -31,42 +31,82 @@ async def get_settings(request: Request, user=Depends(require_user)):
     has_connected_account = False
     oauth_url = None
 
-    if accounts and accounts[0]["zernio_api_key_enc"]:
-        enc_key = accounts[0]["zernio_api_key_enc"]
-        masked_key = mask_api_key(enc_key)
+    # Find any account with an encrypted key (first one is enough for key display)
+    first_keyed_acc = next((a for a in accounts if a.get("zernio_api_key_enc")), None)
+    if not first_keyed_acc:
+        return {
+            "profile": {"id": user["id"], "email": user["email"]},
+            "masked_key": None,
+            "ig_username": None,
+            "has_connected_account": False,
+            "oauth_url": None,
+            "accounts": [],
+        }
 
-        for acc in accounts:
-            if acc["ig_username"] and acc["ig_username"] != "__pending__":
-                ig_username = acc["ig_username"]
-                has_connected_account = True
-                break
+    enc_key = first_keyed_acc["zernio_api_key_enc"]
+    masked_key = mask_api_key(enc_key)
 
-        # Edge case: DB has __pending__ or no real IG account, but Zernio already has linked accounts!
-        if not has_connected_account and enc_key:
-            try:
-                remote_accounts = await zernio_service.get_accounts(enc_key)
-                if remote_accounts:
-                    async with pool.acquire() as conn:
-                        for ra in remote_accounts:
-                            r_user = ra.get("username") or ra.get("instagramUsername") or ""
-                            r_id = ra.get("_id") or ra.get("id") or ""
-                            if r_user and r_id:
-                                await account_repo.upsert_account(conn, user["id"], r_user, r_id, enc_key)
-                                ig_username = r_user
-                                has_connected_account = True
-                    if has_connected_account:
-                        async with pool.acquire() as conn:
-                            accounts = await account_repo.get_accounts_for_user(conn, user["id"])
-            except Exception as e:
-                import logging
-                logging.warning(f"[get_settings] auto-sync check failed: {e}")
+    # ── Flaw 5 fix: Always reconcile against live Zernio account list ──────────
+    # This ensures accounts disconnected on Zernio's side disappear from the
+    # Switch Account list immediately on the next Settings load, instead of
+    # persisting indefinitely in the DB.
+    try:
+        remote_accounts = await zernio_service.get_accounts(enc_key)
+        remote_ids = {
+            (ra.get("_id") or ra.get("id") or "")
+            for ra in remote_accounts
+            if (ra.get("_id") or ra.get("id"))
+        }
+        remote_usernames = {
+            (ra.get("username") or ra.get("instagramUsername") or "").lower().strip()
+            for ra in remote_accounts
+        }
 
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            # Add any Zernio accounts not yet in our DB
+            for ra in remote_accounts:
+                r_user = (ra.get("username") or ra.get("instagramUsername") or "").strip().lower()
+                r_id = ra.get("_id") or ra.get("id") or ""
+                if r_user and r_id:
+                    await account_repo.upsert_account(conn, user["id"], r_user, r_id, enc_key)
+
+            # Remove DB accounts that Zernio no longer knows about
+            # (i.e. disconnected on Zernio's side)
+            for acc in accounts:
+                ign = acc["ig_username"]
+                if ign in ("__pending__", ""):
+                    continue
+                acc_id = acc.get("zernio_account_id", "")
+                # Remove if neither the username nor the Zernio account_id is in the live list
+                if ign.lower() not in remote_usernames and acc_id not in remote_ids:
+                    import logging
+                    logging.info(f"[settings reconcile] removing stale account @{ign} for user_id={user['id']}")
+                    await account_repo.delete_account(conn, user["id"], ign)
+
+            # Refresh accounts list after reconciliation
+            accounts = await account_repo.get_accounts_for_user(conn, user["id"])
+
+    except Exception as e:
+        import logging
+        logging.warning(f"[get_settings] Zernio reconciliation failed: {e}")
+
+    # Determine active connected account status after reconciliation
+    for acc in accounts:
+        if acc["ig_username"] and acc["ig_username"] != "__pending__":
+            ig_username = acc["ig_username"]
+            has_connected_account = True
+            break
+
+    # Generate OAuth URL for connecting another account
+    try:
         state = auth_service.make_oauth_state(user["id"])
         backend_base = f"{request.url.scheme}://{request.url.netloc}"
         redirect_uri = f"{backend_base}/api/onboarding/callback?state={state}"
-        oauth_url = await zernio_service.get_connect_url(
-            enc_key, redirect_uri, user["id"]
-        )
+        oauth_url = await zernio_service.get_connect_url(enc_key, redirect_uri, user["id"])
+    except Exception as e:
+        import logging
+        logging.warning(f"[get_settings] OAuth URL generation failed: {e}")
 
     return {
         "profile": {"id": user["id"], "email": user["email"]},
@@ -76,6 +116,7 @@ async def get_settings(request: Request, user=Depends(require_user)):
         "oauth_url": oauth_url,
         "accounts": [dict(a) for a in accounts],
     }
+
 
 
 @router.put("/api-key")

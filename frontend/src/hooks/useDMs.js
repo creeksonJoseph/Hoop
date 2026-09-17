@@ -2,39 +2,40 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import api from "../lib/api";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../context/ToastContext";
+import { useAuth } from "../context/AuthContext";
 
-// Module-level cache so DM list persists instantly across route transitions and re-mounts
-let cachedDMs = null;
-let cachedHasRealAccount = false;
-let initialFetchDone = false;
+// Module-level cache keyed by active account username.
+// Prevents cross-account data bleed when switching accounts.
+const dmsCacheByAccount = {};   // { [igUsername]: { dms, hasRealAccount } }
+let globalInitialFetchDone = false;
 let realtimeSubscriptionId = 0;
 
 export function clearDMsCache() {
-  cachedDMs = null;
-  cachedHasRealAccount = false;
-  initialFetchDone = false;
+  Object.keys(dmsCacheByAccount).forEach((k) => delete dmsCacheByAccount[k]);
+  globalInitialFetchDone = false;
 }
 
 export function useDMs() {
-  const [dms, setDMs] = useState(cachedDMs || []);
-  const [hasRealAccount, setHasRealAccount] = useState(cachedHasRealAccount);
-  const [loading, setLoading] = useState(
-    !initialFetchDone && cachedDMs === null,
-  );
+  const { accountVersion } = useAuth();
+  const activeAccount = localStorage.getItem("hoop_active_ig") || "__none__";
+
+  const cached = dmsCacheByAccount[activeAccount];
+  const [dms, setDMs] = useState(cached?.dms || []);
+  const [hasRealAccount, setHasRealAccount] = useState(cached?.hasRealAccount ?? false);
+  const [loading, setLoading] = useState(!cached);
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
   const fetchDMs = useCallback(async () => {
-    // Only show loading skeleton on absolute initial load when no cache exists
-    if (!initialFetchDone && cachedDMs === null) {
+    const key = localStorage.getItem("hoop_active_ig") || "__none__";
+    if (!dmsCacheByAccount[key]) {
       setLoading(true);
     }
     try {
       const { data } = await api.get("/dms");
-      cachedDMs = data.dms;
-      cachedHasRealAccount = data.has_real_account;
-      initialFetchDone = true;
+      dmsCacheByAccount[key] = { dms: data.dms, hasRealAccount: data.has_real_account };
+      globalInitialFetchDone = true;
       setDMs(data.dms);
       setHasRealAccount(data.has_real_account);
     } catch (err) {
@@ -48,9 +49,23 @@ export function useDMs() {
     }
   }, []);
 
+  // Re-fetch whenever the active account changes (accountVersion bump from AuthContext)
   useEffect(() => {
+    const key = localStorage.getItem("hoop_active_ig") || "__none__";
+    const hit = dmsCacheByAccount[key];
+    if (hit) {
+      // Serve cache immediately, then still re-fetch in background for freshness
+      setDMs(hit.dms);
+      setHasRealAccount(hit.hasRealAccount);
+      setLoading(false);
+    } else {
+      setDMs([]);
+      setHasRealAccount(false);
+      setLoading(true);
+    }
     fetchDMs();
-  }, [fetchDMs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountVersion, fetchDMs]);
 
   // Supabase Realtime — refresh list silently when new message is inserted
   useEffect(() => {
@@ -105,7 +120,8 @@ export function useDMs() {
   const addDM = async (igUsername) => {
     try {
       const { data } = await api.post("/dms", { ig_username: igUsername });
-      cachedDMs = data.dms;
+      const key = localStorage.getItem("hoop_active_ig") || "__none__";
+      dmsCacheByAccount[key] = { dms: data.dms, hasRealAccount: true };
       setDMs(data.dms);
       return { success: true };
     } catch (err) {
@@ -118,7 +134,8 @@ export function useDMs() {
   const deleteDM = async (igUsername) => {
     try {
       const { data } = await api.delete(`/dms/${igUsername}`);
-      cachedDMs = data.dms;
+      const key = localStorage.getItem("hoop_active_ig") || "__none__";
+      dmsCacheByAccount[key] = { dms: data.dms, hasRealAccount: true };
       setDMs(data.dms);
     } catch (err) {
       toastRef.current(
@@ -130,3 +147,4 @@ export function useDMs() {
 
   return { dms, hasRealAccount, loading, fetchDMs, addDM, deleteDM };
 }
+
