@@ -86,7 +86,7 @@ async def init_db():
             $$;
         """)
 
-        # ── conversations: add account_username for per-account isolation ──────
+        # conversations: add account_username for per-account isolation ──────
         # This is the core fix for cross-account data contamination.
         # Each conversation now belongs to a specific connected IG account.
         await conn.execute(

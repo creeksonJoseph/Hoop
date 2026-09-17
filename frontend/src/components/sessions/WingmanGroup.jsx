@@ -78,9 +78,9 @@ function CompactSessionItem({ session, onUpdate, onDelete }) {
     setMenuOpen(false)
     setConfirmModal({
       action: 'delete',
-      title: 'Delete Wingman Link?',
-      description: `Are you sure you want to permanently delete this access link for ${igHandle}? This action cannot be undone.`,
-      confirmText: 'Delete Wingman',
+      title: 'Remove session?',
+      description: `This will remove ${igHandle}'s access from this conversation. The wingman will no longer be able to view or reply to this DM.`,
+      confirmText: 'Remove session',
       isDestructive: true,
     })
   }
@@ -224,7 +224,7 @@ function CompactSessionItem({ session, onUpdate, onDelete }) {
                   onClick={promptDelete}
                   className="w-full px-3 py-1.5 text-left hover:bg-[#fef3f1] text-[#b01601] flex items-center gap-2 cursor-pointer border-t border-[#dfdcd9]/60"
                 >
-                  <Trash2 size={13} /> Delete wingman
+                  <Trash2 size={13} /> Remove session
                 </button>
               </div>
             </>
