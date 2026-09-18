@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const { logout, user } = useAuth();
+
   const navigate = useNavigate();
   // Use the live active account from AuthContext so it updates immediately after a switch.
   // Fallback to what the settings API returned if AuthContext hasn't set one yet.
@@ -37,7 +38,7 @@ export default function SettingsPage() {
   };
 
   const handleDisconnect = async () => {
-    if (!confirm("Disconnect your account? All wingman sessions will be revoked.")) return;
+    if (!confirm("This will remove your API key and delete all your DMs, messages, and wingman sessions. This cannot be undone.")) return;
     setDisconnecting(true);
     const ok = await deleteApiKey();
     if (ok) {

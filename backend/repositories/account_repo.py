@@ -77,10 +77,12 @@ async def upsert_account(
             zernio_api_key_enc = EXCLUDED.zernio_api_key_enc
     """, user_id, clean_username, zernio_account_id, zernio_api_key_enc)
 
-    if clean_username != "__pending__":
+    SENTINELS = {"__pending__", "__key_only__"}
+    if clean_username not in SENTINELS:
+        # A real account was saved - remove all sentinel rows for this user.
         await conn.execute(
-            "DELETE FROM connected_ig_accounts WHERE user_id = $1 AND ig_username = '__pending__'",
-            user_id,
+            "DELETE FROM connected_ig_accounts WHERE user_id = $1 AND ig_username = ANY($2::text[])",
+            user_id, list(SENTINELS),
         )
 
 
@@ -160,3 +162,28 @@ async def delete_account(conn: asyncpg.Connection, user_id: int, ig_username: st
     )
 
 
+async def delete_all_user_data(conn: asyncpg.Connection, user_id: int) -> None:
+    """Full wipe of all data owned by user_id.
+
+    Called when the user explicitly disconnects their API key from the app.
+    Deletes in dependency order to avoid FK violations:
+      1. wingman_sessions
+      2. tracked_dms
+      3. messages (via conversation cascade or direct delete)
+      4. conversations
+      5. connected_ig_accounts (including all sentinels)
+    """
+    await conn.execute("DELETE FROM wingman_sessions WHERE user_id = $1", user_id)
+    await conn.execute("DELETE FROM tracked_dms WHERE user_id = $1", user_id)
+    # messages reference conversations; delete messages first if no cascade is set
+    await conn.execute(
+        """
+        DELETE FROM messages
+        WHERE conversation_id IN (
+            SELECT conversation_id FROM conversations WHERE user_id = $1
+        )
+        """,
+        user_id,
+    )
+    await conn.execute("DELETE FROM conversations WHERE user_id = $1", user_id)
+    await conn.execute("DELETE FROM connected_ig_accounts WHERE user_id = $1", user_id)

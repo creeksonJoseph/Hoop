@@ -17,8 +17,14 @@ export default function SwitchAccountPage() {
   useEffect(() => {
     if (loading) return
     const available = (settings?.accounts || []).filter((a) => a.ig_username !== '__pending__')
-    if (!available.length) { navigate('/onboarding', { replace: true }); return }
-    if (!activeUsername) setActiveAccount(available[0].ig_username)
+    // Only redirect to onboarding when there is genuinely no API key.
+    // If the key exists but no IG account is linked (e.g. after disconnect),
+    // stay here so the user can reconnect without re-entering the key.
+    if (!available.length && !settings?.has_api_key && !settings?.masked_key) {
+      navigate('/onboarding', { replace: true })
+      return
+    }
+    if (!activeUsername && available.length) setActiveAccount(available[0].ig_username)
   }, [loading, settings, navigate, activeUsername, setActiveAccount])
 
   const chooseAccount = (username) => {
@@ -54,6 +60,20 @@ export default function SwitchAccountPage() {
           <SwitchAccountSkeleton />
         ) : (
           <div className="divide-y divide-[#ebebea]">
+            {accounts.length === 0 && (
+              <div className="py-5 flex items-start gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#f0eeec]">
+                  <Instagram size={16} className="text-[#615d59]" />
+                </span>
+                <div className="min-w-0 pt-1">
+                  <p className="text-[13px] font-medium text-[#191918]">No account connected</p>
+                  <p className="mt-0.5 text-[12px] text-[#615d59] leading-snug">
+                    Tap below to reconnect your Instagram account. You will not need to re-enter your key.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {accounts.map((account) => {
               const isActive = account.ig_username === activeUsername
               return (
@@ -76,7 +96,7 @@ export default function SwitchAccountPage() {
               )
             })}
 
-            {/* Connect another */}
+            {/* Connect another / reconnect */}
             <button
               onClick={connectAnother}
               disabled={connecting || !settings?.oauth_url}
@@ -86,8 +106,12 @@ export default function SwitchAccountPage() {
                 <Plus size={16} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px] font-semibold">Connect another account</span>
-                <span className="mt-0.5 block text-[11px] text-[#615d59]">Reconnect via your API key</span>
+                <span className="block text-[13px] font-semibold">
+                  {accounts.length === 0 ? 'Reconnect your account' : 'Connect another account'}
+                </span>
+                <span className="mt-0.5 block text-[11px] text-[#615d59]">
+                  {accounts.length === 0 ? 'Your key is saved, just link your account' : 'Add another Instagram profile'}
+                </span>
               </span>
               {connecting ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} className="text-[#a39e98]" />}
             </button>
