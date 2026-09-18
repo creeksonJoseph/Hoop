@@ -211,7 +211,9 @@ export default function SettingsPage() {
                           Disconnect account
                         </p>
                         <p className="text-[12px] text-[#6f0d00]">
-                          Disconnects your account and deletes your account data, including synced conversations, messages, and wingman sessions.
+                          Disconnects your account and deletes your account
+                          data, including synced conversations, messages, and
+                          wingman sessions.
                         </p>
                       </div>
                       <div className="sm:shrink-0">
