@@ -85,6 +85,7 @@ export default function SignupPage() {
               Already have an account?{' '}
               <Link to="/login" className="text-[#0075de] hover:text-[#005bab] transition-colors font-medium">Sign in</Link>
             </p>
+            <Link to="/privacy" className="mt-2 inline-block text-[11px] text-[#8c8782] hover:text-[#0075de] transition-colors">Privacy Policy</Link>
           </div>
         </div>
       </div>

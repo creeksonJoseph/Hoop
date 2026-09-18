@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Link2,
   Loader as Loader2,
@@ -216,6 +216,12 @@ export default function SettingsPage() {
               </section>
             </>
           )}
+
+          <footer className="mt-12 border-t border-[#e5e3df] pt-5 text-[12px] text-[#8c8782]">
+            <Link to="/privacy" className="text-[#0075de] hover:underline">
+              Privacy Policy
+            </Link>
+          </footer>
         </div>
       </main>
 

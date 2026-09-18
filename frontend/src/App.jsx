@@ -9,6 +9,7 @@ import SessionsPage from './Pages/SessionsPage'
 import SettingsPage from './Pages/SettingsPage'
 import SwitchAccountPage from './Pages/SwitchAccountPage'
 import WingmanPage from './Pages/WingmanPage'
+import PrivacyPage from './Pages/PrivacyPage'
 
 function Protected({ children }) {
   const { user, loading } = useAuth()
@@ -26,6 +27,7 @@ export default function App() {
   return <Routes>
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
+    <Route path="/privacy" element={<PrivacyPage />} />
     <Route path="/wingman/:token" element={<WingmanPage />} />
     <Route path="/onboarding" element={<Protected><OnboardingPage /></Protected>} />
     <Route path="/home" element={<Protected><HomePage /></Protected>} />

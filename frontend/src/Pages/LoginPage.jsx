@@ -72,6 +72,7 @@ export default function LoginPage() {
               Don't have an account?{' '}
               <Link to="/signup" className="text-[#0075de] hover:text-[#005bab] transition-colors font-medium">Sign up</Link>
             </p>
+            <Link to="/privacy" className="mt-2 inline-block text-[11px] text-[#8c8782] hover:text-[#0075de] transition-colors">Privacy Policy</Link>
           </div>
         </div>
       </div>
