@@ -27,7 +27,14 @@ export function useDMs() {
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
+  // Guard: prevents concurrent overlapping fetches from piling up.
+  const fetchingRef = useRef(false);
+  // Cooldown: prevents Realtime bursts from hammering the API.
+  const lastRealtimeFetchRef = useRef(0);
+
   const fetchDMs = useCallback(async () => {
+    if (fetchingRef.current) return;   // already in-flight, drop this call
+    fetchingRef.current = true;
     const key = localStorage.getItem("hoop_active_ig") || "__none__";
     if (!dmsCacheByAccount[key]) {
       setLoading(true);
@@ -48,6 +55,7 @@ export function useDMs() {
       }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, []);
 
@@ -70,14 +78,21 @@ export function useDMs() {
     fetchDMs();
   }, [accountVersion, fetchDMs]);
 
-  // Supabase Realtime - refresh list silently when new message is inserted
+  // Supabase Realtime - refresh list silently when new message is inserted.
+  // Use a unique channel name per mount so stale channels from unmounted instances
+  // cannot fire into this component after it has been cleaned up.
   useEffect(() => {
+    const channelName = `dms_list_realtime_${++realtimeSubscriptionId}`;
     const channel = supabase
-      .channel("dms_list_realtime")
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
         () => {
+          // Throttle: at most one refetch every 2 seconds from Realtime events.
+          const now = Date.now();
+          if (now - lastRealtimeFetchRef.current < 2000) return;
+          lastRealtimeFetchRef.current = now;
           fetchDMsRef.current();
         },
       )
