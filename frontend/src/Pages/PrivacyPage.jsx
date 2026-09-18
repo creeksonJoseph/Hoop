@@ -26,7 +26,7 @@ const sections = [
     title: "Data Deletion Instructions",
     items: [
       {
-        heading: "Inside the Hoop App (Recommended)",
+        heading: "Inside the Hoop App",
         body: "Log in to your Hoop dashboard, navigate to Settings, and scroll down to the Danger Zone. Click the Disconnect API Key & Delete Data button. This instantly wipes all your synced conversations, messages, and target profile pictures from our database. Only your basic Hoop login credentials remain.",
       },
     ],

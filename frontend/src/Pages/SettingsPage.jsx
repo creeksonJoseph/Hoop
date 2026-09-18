@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [saving, setSaving] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const { logout, user } = useAuth();
 
@@ -34,12 +35,6 @@ export default function SettingsPage() {
   };
 
   const handleDisconnect = async () => {
-    if (
-      !confirm(
-        "This will remove your API key and delete all your DMs, messages, and wingman sessions. This cannot be undone.",
-      )
-    )
-      return;
     setDisconnecting(true);
     const ok = await deleteApiKey();
     if (ok) {
@@ -47,6 +42,7 @@ export default function SettingsPage() {
       navigate("/onboarding");
     }
     setDisconnecting(false);
+    setShowDisconnectModal(false);
   };
 
   return (
@@ -215,13 +211,13 @@ export default function SettingsPage() {
                           Disconnect account
                         </p>
                         <p className="text-[12px] text-[#6f0d00]">
-                          Removes your API key and revokes all wingman sessions.
+                          Disconnects your account and deletes your account data, including synced conversations, messages, and wingman sessions.
                         </p>
                       </div>
                       <div className="sm:shrink-0">
                         <button
                           type="button"
-                          onClick={handleDisconnect}
+                          onClick={() => setShowDisconnectModal(true)}
                           disabled={disconnecting}
                           className="inline-flex items-center justify-center rounded-[6px] border border-[#e32d14] bg-transparent px-3 py-1.5 text-[12px] font-medium text-[#e32d14] hover:bg-[#e32d14] hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
                         >
@@ -269,6 +265,17 @@ export default function SettingsPage() {
           </footer>
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={showDisconnectModal}
+        title="Disconnect account?"
+        description="This will remove your API key and delete all your DMs, messages, and wingman sessions. This cannot be undone."
+        confirmText="Disconnect"
+        isDestructive
+        loading={disconnecting}
+        onConfirm={handleDisconnect}
+        onClose={() => setShowDisconnectModal(false)}
+      />
 
       <ConfirmModal
         isOpen={showSignOutModal}
