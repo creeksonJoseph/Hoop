@@ -5,6 +5,9 @@ LAYER: Router - GET /wingman/{token} endpoint.
 Returns public metadata for a wingman session (no auth required).
 """
 from fastapi import APIRouter
+
+from db import get_pool
+from repositories import session_repo
 from api.errors import NotFoundError
 
 router = APIRouter()
