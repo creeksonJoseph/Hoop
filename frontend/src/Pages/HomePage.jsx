@@ -6,7 +6,12 @@ import {
   CircleAlert as AlertCircle,
   ArrowRight,
 } from "lucide-react";
-import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useParams,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useDMs } from "../hooks/useDMs";
 import { useAuth } from "../context/AuthContext";
 import NavRail from "../components/NavRail";
@@ -29,8 +34,9 @@ export default function HomePage() {
     const connectedAccount = searchParams.get("account");
     if (connectedAccount) {
       setActiveAccount(connectedAccount);
+      navigate("/home", { replace: true });
     }
-  }, [searchParams, setActiveAccount]);
+  }, [searchParams, setActiveAccount, navigate]);
 
   // Auto-clear active chat pane if the selected DM is deleted or removed
   useEffect(() => {
