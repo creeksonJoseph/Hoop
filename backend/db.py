@@ -117,6 +117,11 @@ async def init_db():
               AND c.account_username != ''
         """)
 
+        # Older deployments may not have per-user ownership on wingman sessions.
+        await conn.execute(
+            "ALTER TABLE wingman_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER"
+        )
+
 
 
 

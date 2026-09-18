@@ -168,22 +168,53 @@ async def delete_all_user_data(conn: asyncpg.Connection, user_id: int) -> None:
     Called when the user explicitly disconnects their API key from the app.
     Deletes in dependency order to avoid FK violations:
       1. wingman_sessions
-      2. tracked_dms
-      3. messages (via conversation cascade or direct delete)
-      4. conversations
+      2. messages (via tracked DM ownership)
+      3. conversations (via tracked DM ownership)
+      4. tracked_dms
       5. connected_ig_accounts (including all sentinels)
     """
-    await conn.execute("DELETE FROM wingman_sessions WHERE user_id = $1", user_id)
-    await conn.execute("DELETE FROM tracked_dms WHERE user_id = $1", user_id)
-    # messages reference conversations; delete messages first if no cascade is set
-    await conn.execute(
-        """
-        DELETE FROM messages
-        WHERE conversation_id IN (
-            SELECT conversation_id FROM conversations WHERE user_id = $1
+    async with conn.transaction():
+        # Legacy sessions may have a NULL owner because older schemas lacked
+        # wingman_sessions.user_id. Scope those rows through tracked_dms.
+        await conn.execute(
+            """
+            DELETE FROM wingman_sessions s
+            USING tracked_dms t
+            WHERE LOWER(s.ig_username) = LOWER(t.ig_username)
+              AND t.user_id = $1
+              AND (s.user_id = $1 OR s.user_id IS NULL)
+            """,
+            user_id,
         )
-        """,
-        user_id,
-    )
-    await conn.execute("DELETE FROM conversations WHERE user_id = $1", user_id)
-    await conn.execute("DELETE FROM connected_ig_accounts WHERE user_id = $1", user_id)
+
+        # conversations are owned through tracked_dms; they do not have user_id.
+        await conn.execute(
+            """
+            DELETE FROM messages m
+            USING conversations c
+            JOIN tracked_dms t
+              ON LOWER(c.participant_username) = LOWER(t.ig_username)
+             AND (
+                 c.account_username = ''
+                 OR LOWER(c.account_username) = LOWER(t.account_username)
+             )
+            WHERE m.conversation_id = c.conversation_id
+              AND t.user_id = $1
+            """,
+            user_id,
+        )
+        await conn.execute(
+            """
+            DELETE FROM conversations c
+            USING tracked_dms t
+            WHERE LOWER(c.participant_username) = LOWER(t.ig_username)
+              AND (
+                  c.account_username = ''
+                  OR LOWER(c.account_username) = LOWER(t.account_username)
+              )
+              AND t.user_id = $1
+            """,
+            user_id,
+        )
+        await conn.execute("DELETE FROM tracked_dms WHERE user_id = $1", user_id)
+        await conn.execute("DELETE FROM connected_ig_accounts WHERE user_id = $1", user_id)
