@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const sections = [
   {
@@ -64,12 +65,18 @@ const sections = [
 ];
 
 export default function PrivacyPage() {
+  const { user, loading } = useAuth();
+  const hasToken =
+    typeof window !== "undefined" &&
+    Boolean(localStorage.getItem("hoop_token"));
+  const returnPath = user || (loading && hasToken) ? "/home" : "/login";
+
   return (
     <div className="min-h-screen bg-[#f9f9f8] px-4 py-10 text-[#191918] selection:bg-[#e6f3fe] selection:text-[#0075de] sm:px-8 sm:py-14">
       <main className="mx-auto max-w-190 fade-up">
         <header className="mb-10 border-b border-[#dfdcd9] pb-8">
           <Link
-            to="/login"
+            to={returnPath}
             className="mb-8 inline-flex items-center gap-2 text-[13px] font-semibold text-[#191918] hover:text-[#0075de] transition-colors"
           >
             <span className="flex size-8 items-center justify-center rounded-[8px] bg-[#191918] text-sm font-bold text-white">
@@ -112,7 +119,7 @@ export default function PrivacyPage() {
         </div>
 
         <footer className="mt-12 border-t border-[#dfdcd9] pt-5 text-[12px] text-[#8c8782]">
-          <Link to="/login" className="text-[#0075de] hover:underline">
+          <Link to={returnPath} className="text-[#0075de] hover:underline">
             Return to Hoop
           </Link>
         </footer>
