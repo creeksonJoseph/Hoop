@@ -80,8 +80,11 @@ app.include_router(settings.router,   prefix="/api")
 app.include_router(webhook.router)
 
 
-# ── Health ────────────────────────────────────────────────────────────────────
+# ── Health & Ping ─────────────────────────────────────────────────────────────
 
 @app.get("/health", tags=["System"])
-async def health():
-    return {"status": "ok", "version": "4.0.0"}
+@app.get("/ping", tags=["System"])
+@app.get("/api/ping", tags=["System"])
+async def health_ping():
+    return {"status": "ok", "message": "Server is up and running"}
+
