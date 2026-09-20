@@ -24,7 +24,7 @@ from api.errors import ValidationError, AuthenticationError, ConflictError, Zern
 
 router = APIRouter()
 
-FRONTEND_BASE = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
+FRONTEND_BASE = os.getenv("FRONTEND_URL", "https://hooop.tech")
 
 
 class ConnectBody(BaseModel):

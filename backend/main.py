@@ -50,14 +50,15 @@ app = FastAPI(
 _ALLOWED_ORIGINS = list(dict.fromkeys(filter(None, [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://frontend-eight-inky-38.vercel.app",
+    "https://hooop.tech",
+    "https://www.hooop.tech",
     FRONTEND_URL,
 ])))
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://.*(vercel\.app|hooop\.tech)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

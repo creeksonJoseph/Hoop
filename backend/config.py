@@ -41,7 +41,7 @@ if not APP_MASTER_KEY:
 # ── App ───────────────────────────────────────────────────────────────────────
 PORT: int         = int(os.getenv("PORT", "8000"))
 APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8000")
-FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://frontend-eight-inky-38.vercel.app")
+FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://hooop.tech")
 
 # ── Startup validation ────────────────────────────────────────────────────────
 if not DATABASE_URL:
