@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { BACKEND_URL } from "../lib/api";
 import { supabase } from "../lib/supabase";
 
 const publicApi = axios.create({
-  baseURL: "https://hoop-4thy.onrender.com/api",
+  baseURL: `${BACKEND_URL}/api`,
 });
 
 export function useWingman(token) {
@@ -20,7 +21,10 @@ export function useWingman(token) {
     seenIds.current.add(msg.id);
     setMessages((prev) => {
       const optIdx = prev.findIndex(
-        (m) => m.id.startsWith('opt_') && m.message === msg.message && m.direction === msg.direction
+        (m) =>
+          m.id.startsWith("opt_") &&
+          m.message === msg.message &&
+          m.direction === msg.direction,
       );
       if (optIdx !== -1) {
         seenIds.current.delete(prev[optIdx].id);
@@ -88,8 +92,14 @@ export function useWingman(token) {
         },
       )
       .subscribe((status, err) => {
-        if (err) console.error('[Supabase Realtime wingman] error:', err);
-        else console.log('[Supabase Realtime wingman] status:', status, 'conv_id:', convId);
+        if (err) console.error("[Supabase Realtime wingman] error:", err);
+        else
+          console.log(
+            "[Supabase Realtime wingman] status:",
+            status,
+            "conv_id:",
+            convId,
+          );
       });
     return () => {
       supabase.removeChannel(channel);
@@ -97,19 +107,24 @@ export function useWingman(token) {
   }, [convId, addMessage]);
 
   const sendMessage = async (text) => {
-    if (!text.trim()) return { success: false, error: 'Message cannot be empty' };
+    if (!text.trim())
+      return { success: false, error: "Message cannot be empty" };
     try {
       await publicApi.post(`/wingman/${token}/reply`, { message: text });
       return { success: true };
     } catch (err) {
       const errCode = err.response?.data?.code;
-      const errDetail = err.response?.data?.detail || err.response?.data?.message;
-      let errMsg = errDetail || 'Send failed';
+      const errDetail =
+        err.response?.data?.detail || err.response?.data?.message;
+      let errMsg = errDetail || "Send failed";
 
       if (
-        errCode === 'INSTAGRAM_24H_WINDOW_EXPIRED' ||
-        errCode === 'MESSAGING_WINDOW_EXPIRED' ||
-        (errMsg && (errMsg.includes('24 hours') || errMsg.includes('24-hour') || errMsg.includes('allowed window')))
+        errCode === "INSTAGRAM_24H_WINDOW_EXPIRED" ||
+        errCode === "MESSAGING_WINDOW_EXPIRED" ||
+        (errMsg &&
+          (errMsg.includes("24 hours") ||
+            errMsg.includes("24-hour") ||
+            errMsg.includes("allowed window")))
       ) {
         errMsg =
           "This message couldn't be sent. Instagram only allows messages within 24 hours of the person's last interaction with you, and that window has closed for now. It'll reopen as soon as they message, comment, or reply to your story.";
@@ -118,5 +133,12 @@ export function useWingman(token) {
     }
   };
 
-  return { session, messages, participantName, profilePicUrl, loading, sendMessage };
+  return {
+    session,
+    messages,
+    participantName,
+    profilePicUrl,
+    loading,
+    sendMessage,
+  };
 }

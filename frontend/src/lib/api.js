@@ -1,9 +1,18 @@
 import axios from "axios";
 
-const BASE_URL =
-  import.meta.env.VITE_API_URL || "https://hoop-4thy.onrender.com";
+function requireEnv(name) {
+  const value = import.meta.env[name];
+  if (!value) {
+    throw new Error(`Missing required frontend environment variable: ${name}`);
+  }
+  return value;
+}
 
-const api = axios.create({ baseURL: `${BASE_URL}/api` });
+export const BACKEND_URL = requireEnv("VITE_API_URL");
+export const SUPABASE_URL = requireEnv("VITE_SUPABASE_URL");
+export const SUPABASE_ANON_KEY = requireEnv("VITE_SUPABASE_ANON_KEY");
+
+const api = axios.create({ baseURL: `${BACKEND_URL}/api` });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("hoop_token");
@@ -19,12 +28,18 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       const url = err.config?.url || "";
-      const isAuthRoute = url.includes("/auth/login") || url.includes("/auth/signup");
+      const isAuthRoute =
+        url.includes("/auth/login") || url.includes("/auth/signup");
       const detail = err.response?.data?.detail || "";
       const currentPath = window.location.pathname;
 
       // Do not wipe token or reload if this is a login/signup attempt, or if user is already on auth pages, or for Zernio key errors
-      if (!isAuthRoute && currentPath !== "/login" && currentPath !== "/signup" && !detail.toLowerCase().includes("zernio")) {
+      if (
+        !isAuthRoute &&
+        currentPath !== "/login" &&
+        currentPath !== "/signup" &&
+        !detail.toLowerCase().includes("zernio")
+      ) {
         localStorage.removeItem("hoop_token");
         window.location.href = "/login";
       }

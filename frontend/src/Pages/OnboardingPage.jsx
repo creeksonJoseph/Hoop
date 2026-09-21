@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useOnboarding } from "../hooks/useOnboarding";
 import { useSettings } from "../hooks/useSettings";
+import { BACKEND_URL } from "../lib/api";
 
 export default function OnboardingPage() {
   const [key, setKey] = useState("");
@@ -33,9 +34,7 @@ export default function OnboardingPage() {
       } else {
         const authToken = localStorage.getItem("hoop_token") || "";
         const sep = targetUrl.includes("?") ? "&" : "?";
-        const baseUrl =
-          import.meta.env.VITE_API_URL || "https://hoop-4thy.onrender.com";
-        window.location.href = `${baseUrl}${targetUrl}${authToken ? `${sep}token=${authToken}` : ""}`;
+        window.location.href = `${BACKEND_URL}${targetUrl}${authToken ? `${sep}token=${authToken}` : ""}`;
       }
     } else {
       navigate("/home");
