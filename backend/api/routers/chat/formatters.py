@@ -86,15 +86,34 @@ def _message_id(message: Any) -> Optional[str]:
     return str(value) if value is not None else None
 
 
+def _message_fingerprint(message: Any) -> tuple:
+    return (
+        "fingerprint",
+        str(message.get("conversation_id") or message.get("conversationId") or ""),
+        str(message.get("direction") or ""),
+        str(message.get("message") or message.get("text") or ""),
+        str(
+            message.get("created_at")
+            or message.get("createdAt")
+            or message.get("sentAt")
+            or message.get("timestamp")
+            or ""
+        ),
+    )
+
+
 def _dedupe_messages(messages: list) -> list:
-    """Keep one response item per stable provider message ID."""
+    """Keep one response item per ID or exact duplicate fingerprint."""
     unique = []
     seen = set()
     for message in messages:
         message_id = _message_id(message)
-        if message_id is None or message_id in seen:
+        keys = [_message_fingerprint(message)]
+        if message_id is not None:
+            keys.append(("id", message_id))
+        if any(key in seen for key in keys):
             continue
-        seen.add(message_id)
+        seen.update(keys)
         unique.append(message)
     return unique
 

@@ -33,8 +33,11 @@ function dedupeMessages(messages) {
   const seen = new Set();
   return messages.filter((message) => {
     const messageId = message?.id == null ? null : String(message.id);
-    if (messageId == null || seen.has(messageId)) return false;
-    seen.add(messageId);
+    const fingerprint = `${message?.direction || ""}|${message?.message || ""}|${message?.created_at || ""}`;
+    const keys = [`fingerprint:${fingerprint}`];
+    if (messageId != null) keys.push(`id:${messageId}`);
+    if (keys.some((key) => seen.has(key))) return false;
+    keys.forEach((key) => seen.add(key));
     return true;
   });
 }
@@ -55,40 +58,31 @@ export function useMessages(igUsername) {
 
   const addMessage = useCallback((msg) => {
     const messageId = msg?.id == null ? null : String(msg.id);
-    if (messageId == null || seenIds.current.has(messageId)) return;
-    seenIds.current.add(messageId);
+    const fingerprint = `${msg?.direction || ""}|${msg?.message || ""}|${msg?.created_at || ""}`;
+    const messageKeys = [`fingerprint:${fingerprint}`];
+    if (messageId != null) messageKeys.push(`id:${messageId}`);
+    if (messageId == null || messageKeys.some((key) => seenIds.current.has(key))) return;
+    messageKeys.forEach((key) => seenIds.current.add(key));
     setMessages((prev) => {
       return sortChronologically([...prev, msg]);
     });
   }, []);
 
-  const reconcileOptimisticMessage = useCallback(
-    (optimisticId, confirmedMessage) => {
-      const confirmedId =
-        confirmedMessage?.id == null ? null : String(confirmedMessage.id);
-      if (confirmedId == null) return;
+  const reconcileOptimisticMessage = useCallback((optimisticId, confirmedMessage) => {
+    const confirmedId = confirmedMessage?.id == null ? null : String(confirmedMessage.id);
+    if (confirmedId == null) return;
 
-      seenIds.current.delete(String(optimisticId));
-      seenIds.current.add(confirmedId);
-      setMessages((prev) => {
-        const hasConfirmedMessage = prev.some(
-          (message) => String(message.id) === confirmedId,
-        );
-        return sortChronologically(
-          hasConfirmedMessage
-            ? prev.filter(
-                (message) => String(message.id) !== String(optimisticId),
-              )
-            : prev.map((message) =>
-                String(message.id) === String(optimisticId)
-                  ? confirmedMessage
-                  : message,
-              ),
-        );
-      });
-    },
-    [],
-  );
+    seenIds.current.delete(`id:${String(optimisticId)}`);
+    seenIds.current.add(`id:${confirmedId}`);
+    setMessages((prev) => {
+      const hasConfirmedMessage = prev.some((message) => String(message.id) === confirmedId);
+      return sortChronologically(
+        hasConfirmedMessage
+          ? prev.filter((message) => String(message.id) !== String(optimisticId))
+          : prev.map((message) => String(message.id) === String(optimisticId) ? confirmedMessage : message)
+      );
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,7 +102,10 @@ export function useMessages(igUsername) {
         if (cancelled) return;
         const initialMessages = dedupeMessages(data.messages || []);
         seenIds.current.clear();
-        initialMessages.forEach((m) => seenIds.current.add(String(m.id)));
+        initialMessages.forEach((m) => {
+          seenIds.current.add(`id:${String(m.id)}`);
+          seenIds.current.add(`fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`);
+        });
         setMessages(sortChronologically(initialMessages));
         setConvId(data.conversation_id);
         setParticipantName(data.participant_name || null);
@@ -152,9 +149,13 @@ export function useMessages(igUsername) {
       // Only prepend messages we haven't seen yet (older ones arrive first)
       const fetchedMsgs = data.messages || [];
       const newOlderMsgs = dedupeMessages(fetchedMsgs).filter(
-        (m) => !seenIds.current.has(String(m.id)),
+        (m) => !seenIds.current.has(`id:${String(m.id)}`) &&
+          !seenIds.current.has(`fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`),
       );
-      newOlderMsgs.forEach((m) => seenIds.current.add(String(m.id)));
+      newOlderMsgs.forEach((m) => {
+        seenIds.current.add(`id:${String(m.id)}`);
+        seenIds.current.add(`fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`);
+      });
 
       if (newOlderMsgs.length > 0) {
         setMessages((prev) => sortChronologically([...newOlderMsgs, ...prev]));
@@ -175,6 +176,7 @@ export function useMessages(igUsername) {
     loading,
     seenIds,
     addMessage,
+    reconcileOptimisticMessage,
     reconcileOptimisticMessage,
     hasMore,
     loadingMore,
