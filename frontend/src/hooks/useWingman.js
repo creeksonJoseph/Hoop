@@ -17,21 +17,13 @@ export function useWingman(token) {
   const seenIds = useRef(new Set());
 
   const addMessage = useCallback((msg) => {
-    if (seenIds.current.has(msg.id)) return;
-    seenIds.current.add(msg.id);
+    const messageId = msg?.id == null ? null : String(msg.id);
+    const fingerprint = `${msg?.direction || ""}|${msg?.message || ""}|${msg?.created_at || ""}`;
+    const keys = [`fingerprint:${fingerprint}`];
+    if (messageId != null) keys.push(`id:${messageId}`);
+    if (messageId == null || keys.some((key) => seenIds.current.has(key))) return;
+    keys.forEach((key) => seenIds.current.add(key));
     setMessages((prev) => {
-      const optIdx = prev.findIndex(
-        (m) =>
-          m.id.startsWith("opt_") &&
-          m.message === msg.message &&
-          m.direction === msg.direction,
-      );
-      if (optIdx !== -1) {
-        seenIds.current.delete(prev[optIdx].id);
-        const next = [...prev];
-        next[optIdx] = msg;
-        return next;
-      }
       return [...prev, msg];
     });
   }, []);
@@ -53,7 +45,10 @@ export function useWingman(token) {
       .get(`/wingman/${token}/messages`)
       .then(({ data }) => {
         if (!active) return;
-        data.messages.forEach((msg) => seenIds.current.add(msg.id));
+        data.messages.forEach((msg) => {
+          seenIds.current.add(`id:${String(msg.id)}`);
+          seenIds.current.add(`fingerprint:${msg.direction || ""}|${msg.message || ""}|${msg.created_at || ""}`);
+        });
         setMessages(data.messages);
         setParticipantName(data.participant_name || null);
         setProfilePicUrl(data.profile_pic_url || null);
@@ -92,14 +87,11 @@ export function useWingman(token) {
         },
       )
       .subscribe((status, err) => {
+        console.log("[Supabase Realtime wingman] status:", status, "conv_id:", convId);
         if (err) console.error("[Supabase Realtime wingman] error:", err);
-        else
-          console.log(
-            "[Supabase Realtime wingman] status:",
-            status,
-            "conv_id:",
-            convId,
-          );
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("[Supabase Realtime wingman] check that public.messages is enabled in Supabase Realtime.");
+        }
       });
     return () => {
       supabase.removeChannel(channel);

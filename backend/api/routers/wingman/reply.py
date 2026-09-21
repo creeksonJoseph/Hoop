@@ -5,7 +5,6 @@ LAYER: Router - POST /wingman/{token}/reply endpoint.
 Allows a wingman with 'send' access to reply in a DM.
 """
 import datetime
-import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -77,25 +76,16 @@ async def wingman_reply(token: str, body: ReplyBody):
             )
         raise ZernioAPIError("Failed to send message as wingman. Please try again.", status_code=502, code="REPLY_FAILED")
 
-    # Immediately write sent message to DB
     sent_msg_id = (
         (result.get("message") or {}).get("id")
+        or (result.get("message") or {}).get("message_id")
         or result.get("id")
-        or f"sent_{int(time.time() * 1000)}"
+        or result.get("message_id")
     )
-    wingman_label = session.get("wingman_name") or "Wingman"
-    async with pool.acquire() as conn:
-        await message_repo.upsert_message(
-            conn,
-            msg_id=str(sent_msg_id),
-            conversation_id=str(conv_id),
-            sender_id=session.get("id"),
-            sender_name=wingman_label,
-            message=body.message,
-            direction="outgoing",
-            created_at=datetime.datetime.utcnow().isoformat() + "Z",
-            platform="instagram",
-        )
 
-    return {"success": True, "zernio_response": result}
+    return {
+        "success": True,
+        "message_id": str(sent_msg_id) if sent_msg_id else None,
+        "zernio_response": result,
+    }
 

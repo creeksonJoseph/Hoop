@@ -14,6 +14,7 @@ from db import get_pool
 from repositories import account_repo, message_repo, session_repo
 from services import zernio_service
 from api.errors import NotFoundError, ForbiddenError, ZernioAPIError
+from api.routers.chat.formatters import format_db_messages, format_zernio_messages
 
 router = APIRouter()
 
@@ -68,17 +69,7 @@ async def wingman_messages(token: str):
             "conversation_id": conv_id,
             "participant_name": p_name,
             "profile_pic_url": pic_url,
-            "messages": [
-                {
-                    "id": m["id"],
-                    "message": m.get("message"),
-                    "direction": m.get("direction"),
-                    "sender_name": m.get("sender_name") or ig_username,
-                    "created_at": m.get("created_at"),
-                    "attachments": [],
-                }
-                for m in db_messages
-            ],
+            "messages": format_db_messages(db_messages, ig_username),
         }
 
     # 2. Fallback to Zernio API if DB is empty (first-time access)
@@ -121,15 +112,5 @@ async def wingman_messages(token: str):
         "conversation_id": conv["id"],
         "participant_name": display_name,
         "profile_pic_url": avatar_url,
-        "messages": [
-            {
-                "id": m["id"],
-                "message": m.get("text") or m.get("message"),
-                "direction": m.get("direction"),
-                "sender_name": (m.get("sender") or {}).get("name") or m.get("senderName") or ig_username,
-                "created_at": m.get("sentAt") or m.get("createdAt"),
-                "attachments": m.get("attachments", []),
-            }
-            for m in raw_messages
-        ],
+        "messages": format_zernio_messages(raw_messages, ig_username),
     }
