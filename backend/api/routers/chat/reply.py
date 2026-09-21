@@ -113,9 +113,12 @@ async def reply(
     # Immediately persist the sent message so the UI is snappy
     sent_msg_id = (
         (result.get("message") or {}).get("id")
+        or (result.get("message") or {}).get("message_id")
         or result.get("id")
+        or result.get("message_id")
         or f"sent_{int(time.time() * 1000)}"
     )
+    sent_created_at = datetime.datetime.utcnow().isoformat() + "Z"
     async with pool.acquire() as conn:
         await message_repo.upsert_message(
             conn,
@@ -125,9 +128,15 @@ async def reply(
             sender_name=acc.get("ig_username") or "You",
             message=body.message,
             direction="outgoing",
-            created_at=datetime.datetime.utcnow().isoformat() + "Z",
+            created_at=sent_created_at,
             platform="instagram",
             account_username=acc_username,
         )
 
-    return {"success": True, "sent_message": body.message, "zernio_response": result}
+    return {
+        "success": True,
+        "message_id": str(sent_msg_id),
+        "created_at": sent_created_at,
+        "sent_message": body.message,
+        "zernio_response": result,
+    }

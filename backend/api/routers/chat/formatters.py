@@ -44,7 +44,7 @@ class MessageItem(BaseModel):
             )
             msg_text = m.get("text") or m.get("message")
             created_at = m.get("sentAt") or m.get("createdAt") or m.get("created_at")
-            msg_id = m.get("id")
+            msg_id = m.get("id") or m.get("message_id")
             attachments = m.get("attachments") or []
             msg_type = (m.get("type") or "").lower()
 
@@ -77,6 +77,28 @@ class MessageItem(BaseModel):
         )
 
 
+def _message_id(message: Any) -> Optional[str]:
+    """Return the provider's canonical ID from a DB row or API payload."""
+    if isinstance(message, dict):
+        value = message.get("id") or message.get("message_id")
+    else:
+        value = message.get("id") or message.get("message_id")
+    return str(value) if value is not None else None
+
+
+def _dedupe_messages(messages: list) -> list:
+    """Keep one response item per stable provider message ID."""
+    unique = []
+    seen = set()
+    for message in messages:
+        message_id = _message_id(message)
+        if message_id is None or message_id in seen:
+            continue
+        seen.add(message_id)
+        unique.append(message)
+    return unique
+
+
 
 def extract_profile_data(conv: dict, fallback_username: str) -> Tuple[str, Optional[str]]:
     """
@@ -106,10 +128,10 @@ def extract_profile_data(conv: dict, fallback_username: str) -> Tuple[str, Optio
 
 def format_db_messages(messages: list, fallback_sender: str) -> List[dict]:
     """Normalise DB message records into Pydantic model dicts."""
-    return [MessageItem.from_db(m, fallback_sender).model_dump() for m in messages]
+    return [MessageItem.from_db(m, fallback_sender).model_dump() for m in _dedupe_messages(messages)]
 
 
 def format_zernio_messages(messages: list, fallback_sender: str) -> List[dict]:
     """Normalise raw Zernio message dicts into Pydantic model dicts."""
-    return [MessageItem.from_zernio(m, fallback_sender).model_dump() for m in messages]
+    return [MessageItem.from_zernio(m, fallback_sender).model_dump() for m in _dedupe_messages(messages)]
 
