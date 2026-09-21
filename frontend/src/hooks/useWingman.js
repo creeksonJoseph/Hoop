@@ -21,7 +21,8 @@ export function useWingman(token) {
     const fingerprint = `${msg?.direction || ""}|${msg?.message || ""}|${msg?.created_at || ""}`;
     const keys = [`fingerprint:${fingerprint}`];
     if (messageId != null) keys.push(`id:${messageId}`);
-    if (messageId == null || keys.some((key) => seenIds.current.has(key))) return;
+    if (messageId == null || keys.some((key) => seenIds.current.has(key)))
+      return;
     keys.forEach((key) => seenIds.current.add(key));
     setMessages((prev) => {
       return [...prev, msg];
@@ -47,7 +48,9 @@ export function useWingman(token) {
         if (!active) return;
         data.messages.forEach((msg) => {
           seenIds.current.add(`id:${String(msg.id)}`);
-          seenIds.current.add(`fingerprint:${msg.direction || ""}|${msg.message || ""}|${msg.created_at || ""}`);
+          seenIds.current.add(
+            `fingerprint:${msg.direction || ""}|${msg.message || ""}|${msg.created_at || ""}`,
+          );
         });
         setMessages(data.messages);
         setParticipantName(data.participant_name || null);
@@ -87,10 +90,17 @@ export function useWingman(token) {
         },
       )
       .subscribe((status, err) => {
-        console.log("[Supabase Realtime wingman] status:", status, "conv_id:", convId);
+        console.log(
+          "[Supabase Realtime wingman] status:",
+          status,
+          "conv_id:",
+          convId,
+        );
         if (err) console.error("[Supabase Realtime wingman] error:", err);
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.error("[Supabase Realtime wingman] check that public.messages is enabled in Supabase Realtime.");
+          console.error(
+            "[Supabase Realtime wingman] check that public.messages is enabled in Supabase Realtime.",
+          );
         }
       });
     return () => {
