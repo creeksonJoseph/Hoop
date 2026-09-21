@@ -7,11 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://hoop-4thy.onrender.com',
+        target: 'https://api.hooop.tech',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'wss://hoop-4thy.onrender.com',
+        target: 'wss://api.hooop.tech',
         ws: true,
         changeOrigin: true,
       },
