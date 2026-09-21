@@ -4,12 +4,11 @@ api/routers/chat/reply.py
 ===========================
 LAYER: Router - POST /messages/reply endpoint.
 
-Sends a message via Zernio and immediately writes the sent
-message to local DB so the UI reflects it before Realtime fires.
+Sends a message via Zernio and returns a provider ID when available.
+The webhook owns persistence when the provider does not return an ID.
 """
 import datetime
 import logging
-import time
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
@@ -110,32 +109,17 @@ async def reply(
             )
         raise ZernioAPIError("Failed to send message to Instagram. Please try again.", status_code=502, code="REPLY_FAILED")
 
-    # Immediately persist the sent message so the UI is snappy
     sent_msg_id = (
         (result.get("message") or {}).get("id")
         or (result.get("message") or {}).get("message_id")
         or result.get("id")
         or result.get("message_id")
-        or f"sent_{int(time.time() * 1000)}"
     )
-    sent_created_at = datetime.datetime.utcnow().isoformat() + "Z"
-    async with pool.acquire() as conn:
-        await message_repo.upsert_message(
-            conn,
-            msg_id=str(sent_msg_id),
-            conversation_id=str(conv_id),
-            sender_id=acc.get("zernio_account_id"),
-            sender_name=acc.get("ig_username") or "You",
-            message=body.message,
-            direction="outgoing",
-            created_at=sent_created_at,
-            platform="instagram",
-            account_username=acc_username,
-        )
+    sent_created_at = datetime.datetime.utcnow().isoformat() + "Z" if sent_msg_id else None
 
     return {
         "success": True,
-        "message_id": str(sent_msg_id),
+        "message_id": str(sent_msg_id) if sent_msg_id else None,
         "created_at": sent_created_at,
         "sent_message": body.message,
         "zernio_response": result,

@@ -4,6 +4,8 @@ api/routers/chat/formatters.py
 LAYER: Router helpers - Pydantic schemas and pure helper functions for
 extracting and formatting conversation / message data.
 """
+import datetime
+import re
 from typing import Any, List, Optional, Tuple
 from pydantic import BaseModel, Field
 
@@ -86,20 +88,34 @@ def _message_id(message: Any) -> Optional[str]:
     return str(value) if value is not None else None
 
 
-def _message_fingerprint(message: Any) -> tuple:
-    return (
-        "fingerprint",
-        str(message.get("conversation_id") or message.get("conversationId") or ""),
-        str(message.get("direction") or ""),
-        str(message.get("message") or message.get("text") or ""),
-        str(
-            message.get("created_at")
-            or message.get("createdAt")
-            or message.get("sentAt")
-            or message.get("timestamp")
-            or ""
-        ),
-    )
+def _message_value(message: Any, *names: str) -> Any:
+    return next((message.get(name) for name in names if message.get(name) is not None), None)
+
+
+def _message_timestamp(message: Any) -> Optional[datetime.datetime]:
+    value = _message_value(message, "created_at", "createdAt", "sentAt", "timestamp")
+    if isinstance(value, datetime.datetime):
+        return value
+    if value is None:
+        return None
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _same_message_fingerprint(left: Any, right: Any) -> bool:
+    if str(_message_value(left, "conversation_id", "conversationId") or "") != str(
+        _message_value(right, "conversation_id", "conversationId") or ""
+    ):
+        return False
+    if str(_message_value(left, "direction") or "") != str(_message_value(right, "direction") or ""):
+        return False
+    left_text = re.sub(r"\s+", " ", str(_message_value(left, "message", "text") or "").strip()).casefold()
+    right_text = re.sub(r"\s+", " ", str(_message_value(right, "message", "text") or "").strip()).casefold()
+    left_time = _message_timestamp(left)
+    right_time = _message_timestamp(right)
+    return bool(left_time and right_time and left_text == right_text and abs((left_time - right_time).total_seconds()) <= 2)
 
 
 def _dedupe_messages(messages: list) -> list:
@@ -108,12 +124,10 @@ def _dedupe_messages(messages: list) -> list:
     seen = set()
     for message in messages:
         message_id = _message_id(message)
-        keys = [_message_fingerprint(message)]
-        if message_id is not None:
-            keys.append(("id", message_id))
-        if any(key in seen for key in keys):
+        if message_id in seen or any(_same_message_fingerprint(message, previous) for previous in unique):
             continue
-        seen.update(keys)
+        if message_id is not None:
+            seen.add(message_id)
         unique.append(message)
     return unique
 

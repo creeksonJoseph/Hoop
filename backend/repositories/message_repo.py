@@ -11,9 +11,59 @@ ACCOUNT ISOLATION:
   multiple connected Instagram accounts.
 """
 import datetime
+import re
 from typing import List, Optional
 
 import asyncpg
+
+
+_DUPLICATE_WINDOW_SECONDS = 2
+
+
+def _normalize_message(value: Optional[str]) -> str:
+    return re.sub(r"\s+", " ", (value or "").strip()).casefold()
+
+
+def _parse_created_at(value: Optional[str]) -> Optional[datetime.datetime]:
+    if not value:
+        return None
+    if isinstance(value, datetime.datetime):
+        return value
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+async def _is_recent_duplicate(
+    conn: asyncpg.Connection,
+    *,
+    msg_id: str,
+    conversation_id: str,
+    message: Optional[str],
+    direction: Optional[str],
+    created_at: Optional[str],
+) -> bool:
+    timestamp = _parse_created_at(created_at)
+    if timestamp is None:
+        return False
+
+    candidates = await conn.fetch(
+        """
+        SELECT message
+        FROM messages
+        WHERE conversation_id = $1
+          AND direction IS NOT DISTINCT FROM $2
+          AND created_at BETWEEN $3 - INTERVAL '2 seconds'
+                              AND $3 + INTERVAL '2 seconds'
+          AND id <> $4
+        ORDER BY created_at DESC
+        LIMIT 20
+        """,
+        str(conversation_id), direction, timestamp, str(msg_id),
+    )
+    normalized = _normalize_message(message)
+    return any(_normalize_message(row["message"]) == normalized for row in candidates)
 
 
 
@@ -30,7 +80,20 @@ async def upsert_message(
     platform: str = "instagram",
     account_username: str = "",
 ) -> None:
-    """Insert a single message row. Silently ignores duplicate IDs."""
+    """Insert a message once, collapsing duplicate provider/webhook events."""
+    if str(msg_id).startswith("sent_"):
+        return
+
+    if await _is_recent_duplicate(
+        conn,
+        msg_id=str(msg_id),
+        conversation_id=str(conversation_id),
+        message=message,
+        direction=direction,
+        created_at=created_at,
+    ):
+        return
+
     await conn.execute(
         """
         INSERT INTO messages
