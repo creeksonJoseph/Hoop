@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -82,6 +82,21 @@ app.include_router(webhook.router)
 
 
 # ── Health & Ping ─────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse, tags=["System"])
+async def root():
+        return """
+        <!doctype html>
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Hooop API</title>
+            </head>
+            <body>
+                <h1>Server is up and running</h1>
+            </body>
+        </html>
+        """
 
 @app.get("/health", tags=["System"])
 @app.get("/ping", tags=["System"])
