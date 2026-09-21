@@ -61,28 +61,44 @@ export function useMessages(igUsername) {
     const fingerprint = `${msg?.direction || ""}|${msg?.message || ""}|${msg?.created_at || ""}`;
     const messageKeys = [`fingerprint:${fingerprint}`];
     if (messageId != null) messageKeys.push(`id:${messageId}`);
-    if (messageId == null || messageKeys.some((key) => seenIds.current.has(key))) return;
+    if (
+      messageId == null ||
+      messageKeys.some((key) => seenIds.current.has(key))
+    )
+      return;
     messageKeys.forEach((key) => seenIds.current.add(key));
     setMessages((prev) => {
       return sortChronologically([...prev, msg]);
     });
   }, []);
 
-  const reconcileOptimisticMessage = useCallback((optimisticId, confirmedMessage) => {
-    const confirmedId = confirmedMessage?.id == null ? null : String(confirmedMessage.id);
-    if (confirmedId == null) return;
+  const reconcileOptimisticMessage = useCallback(
+    (optimisticId, confirmedMessage) => {
+      const confirmedId =
+        confirmedMessage?.id == null ? null : String(confirmedMessage.id);
+      if (confirmedId == null) return;
 
-    seenIds.current.delete(`id:${String(optimisticId)}`);
-    seenIds.current.add(`id:${confirmedId}`);
-    setMessages((prev) => {
-      const hasConfirmedMessage = prev.some((message) => String(message.id) === confirmedId);
-      return sortChronologically(
-        hasConfirmedMessage
-          ? prev.filter((message) => String(message.id) !== String(optimisticId))
-          : prev.map((message) => String(message.id) === String(optimisticId) ? confirmedMessage : message)
-      );
-    });
-  }, []);
+      seenIds.current.delete(`id:${String(optimisticId)}`);
+      seenIds.current.add(`id:${confirmedId}`);
+      setMessages((prev) => {
+        const hasConfirmedMessage = prev.some(
+          (message) => String(message.id) === confirmedId,
+        );
+        return sortChronologically(
+          hasConfirmedMessage
+            ? prev.filter(
+                (message) => String(message.id) !== String(optimisticId),
+              )
+            : prev.map((message) =>
+                String(message.id) === String(optimisticId)
+                  ? confirmedMessage
+                  : message,
+              ),
+        );
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +120,9 @@ export function useMessages(igUsername) {
         seenIds.current.clear();
         initialMessages.forEach((m) => {
           seenIds.current.add(`id:${String(m.id)}`);
-          seenIds.current.add(`fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`);
+          seenIds.current.add(
+            `fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`,
+          );
         });
         setMessages(sortChronologically(initialMessages));
         setConvId(data.conversation_id);
@@ -149,12 +167,17 @@ export function useMessages(igUsername) {
       // Only prepend messages we haven't seen yet (older ones arrive first)
       const fetchedMsgs = data.messages || [];
       const newOlderMsgs = dedupeMessages(fetchedMsgs).filter(
-        (m) => !seenIds.current.has(`id:${String(m.id)}`) &&
-          !seenIds.current.has(`fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`),
+        (m) =>
+          !seenIds.current.has(`id:${String(m.id)}`) &&
+          !seenIds.current.has(
+            `fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`,
+          ),
       );
       newOlderMsgs.forEach((m) => {
         seenIds.current.add(`id:${String(m.id)}`);
-        seenIds.current.add(`fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`);
+        seenIds.current.add(
+          `fingerprint:${m.direction || ""}|${m.message || ""}|${m.created_at || ""}`,
+        );
       });
 
       if (newOlderMsgs.length > 0) {
