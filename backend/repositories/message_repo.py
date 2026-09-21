@@ -29,8 +29,19 @@ def _parse_created_at(value: Optional[str]) -> Optional[datetime.datetime]:
         return None
     if isinstance(value, datetime.datetime):
         return value
+    if isinstance(value, (int, float)):
+        ts_sec = value / 1000.0 if value > 1e10 else float(value)
+        return datetime.datetime.fromtimestamp(ts_sec, tz=datetime.timezone.utc)
+    val_str = str(value).strip()
+    if val_str.isdigit():
+        try:
+            val_num = float(val_str)
+            ts_sec = val_num / 1000.0 if val_num > 1e10 else val_num
+            return datetime.datetime.fromtimestamp(ts_sec, tz=datetime.timezone.utc)
+        except (ValueError, OverflowError):
+            return None
     try:
-        return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return datetime.datetime.fromisoformat(val_str.replace("Z", "+00:00"))
     except ValueError:
         return None
 
@@ -50,21 +61,23 @@ async def _is_recent_duplicate(
 
     candidates = await conn.fetch(
         """
-        SELECT message
+        SELECT message, created_at
         FROM messages
         WHERE conversation_id = $1
           AND direction IS NOT DISTINCT FROM $2
-          AND created_at BETWEEN $3 - INTERVAL '2 seconds'
-                              AND $3 + INTERVAL '2 seconds'
-          AND id <> $4
+          AND id <> $3
         ORDER BY created_at DESC
         LIMIT 20
         """,
-        str(conversation_id), direction, timestamp, str(msg_id),
+        str(conversation_id), direction, str(msg_id),
     )
     normalized = _normalize_message(message)
-    return any(_normalize_message(row["message"]) == normalized for row in candidates)
-
+    for row in candidates:
+        if _normalize_message(row["message"]) == normalized:
+            cand_ts = _parse_created_at(row["created_at"])
+            if cand_ts and abs((timestamp - cand_ts).total_seconds()) <= _DUPLICATE_WINDOW_SECONDS:
+                return True
+    return False
 
 
 async def upsert_message(
@@ -80,9 +93,13 @@ async def upsert_message(
     platform: str = "instagram",
     account_username: str = "",
 ) -> None:
-    """Insert a message once, collapsing duplicate provider/webhook events."""
-    if str(msg_id).startswith("sent_"):
+    """Insert a message once, updating existing values on conflict."""
+    if not msg_id or str(msg_id).startswith("sent_"):
         return
+
+    # Ensure created_at is valid ISO timestamp if provided
+    dt = _parse_created_at(created_at)
+    formatted_ts = dt.isoformat().replace("+00:00", "Z") if dt else created_at
 
     if await _is_recent_duplicate(
         conn,
@@ -90,7 +107,7 @@ async def upsert_message(
         conversation_id=str(conversation_id),
         message=message,
         direction=direction,
-        created_at=created_at,
+        created_at=formatted_ts,
     ):
         return
 
@@ -100,10 +117,16 @@ async def upsert_message(
             (id, conversation_id, sender_id, sender_name, message, direction, created_at, platform, account_username)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (id) DO UPDATE SET
-            account_username = COALESCE(EXCLUDED.account_username, messages.account_username)
+            conversation_id  = EXCLUDED.conversation_id,
+            sender_id        = COALESCE(EXCLUDED.sender_id, messages.sender_id),
+            sender_name      = COALESCE(EXCLUDED.sender_name, messages.sender_name),
+            message          = COALESCE(EXCLUDED.message, messages.message),
+            direction        = COALESCE(EXCLUDED.direction, messages.direction),
+            created_at       = COALESCE(EXCLUDED.created_at, messages.created_at),
+            account_username = COALESCE(NULLIF(EXCLUDED.account_username, ''), messages.account_username)
         """,
         str(msg_id), str(conversation_id), sender_id, sender_name,
-        message, direction, created_at, platform, account_username,
+        message, direction, formatted_ts, platform, account_username,
     )
 
 
@@ -119,24 +142,34 @@ async def upsert_messages_batch(
     Each dict is expected to have the shape returned by zernio_service.get_messages().
     """
     for msg in messages:
+        if not isinstance(msg, dict):
+            continue
+        msg_id = msg.get("id") or msg.get("message_id")
+        if not msg_id:
+            continue
+
         sender = msg.get("sender") or {}
         raw_ts = msg.get("sentAt") or msg.get("createdAt") or msg.get("created_at") or msg.get("timestamp")
-        if isinstance(raw_ts, (int, float)):
-            ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
-            parsed_ts = datetime.datetime.fromtimestamp(ts_sec, tz=datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-        elif raw_ts is not None:
-            parsed_ts = str(raw_ts)
+        dt = _parse_created_at(raw_ts)
+        parsed_ts = dt.isoformat().replace("+00:00", "Z") if dt else datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+
+        raw_dir = str(msg.get("direction") or "").lower()
+        is_from_me = bool(msg.get("isFromMe") or msg.get("is_from_me") or msg.get("fromMe"))
+        if raw_dir in ("outbound", "outgoing", "sent", "echo") or is_from_me:
+            direction = "outgoing"
+        elif raw_dir in ("inbound", "incoming", "received"):
+            direction = "incoming"
         else:
-            parsed_ts = None
+            direction = "outgoing" if is_from_me else "incoming"
 
         await upsert_message(
             conn,
-            msg_id=str(msg.get("id") or msg.get("message_id")),
+            msg_id=str(msg_id),
             conversation_id=conversation_id,
             sender_id=sender.get("id") or msg.get("senderId"),
             sender_name=sender.get("name") or sender.get("username") or msg.get("senderName"),
             message=msg.get("text") or msg.get("message"),
-            direction=msg.get("direction"),
+            direction=direction,
             created_at=parsed_ts,
             platform=platform,
             account_username=account_username,

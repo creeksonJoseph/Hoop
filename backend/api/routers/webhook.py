@@ -136,8 +136,8 @@ async def zernio_webhook(request: Request):
 
     raw_ts = msg.get("sentAt") or msg.get("createdAt") or msg.get("created_at") or msg.get("timestamp") or payload.get("timestamp")
     if isinstance(raw_ts, (int, float)):
-        ts_sec = raw_ts / 1000 if raw_ts > 1e10 else raw_ts
-        created_at = str(int(ts_sec))
+        ts_sec = raw_ts / 1000.0 if raw_ts > 1e10 else float(raw_ts)
+        created_at = datetime.datetime.fromtimestamp(ts_sec, tz=datetime.timezone.utc).isoformat().replace("+00:00", "Z")
     elif raw_ts is not None:
         created_at = str(raw_ts)
     else:

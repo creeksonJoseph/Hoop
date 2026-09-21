@@ -115,11 +115,29 @@ async def reply(
         or result.get("id")
         or result.get("message_id")
     )
-    sent_created_at = datetime.datetime.utcnow().isoformat() + "Z" if sent_msg_id else None
+    sent_created_at = datetime.datetime.utcnow().isoformat() + "Z"
+    effective_msg_id = str(sent_msg_id) if sent_msg_id else f"msg_sent_{int(datetime.datetime.utcnow().timestamp() * 1000)}"
+
+    try:
+        async with pool.acquire() as conn:
+            await message_repo.upsert_message(
+                conn,
+                msg_id=effective_msg_id,
+                conversation_id=str(conv_id),
+                sender_id=None,
+                sender_name=acc_username,
+                message=body.message,
+                direction="outgoing",
+                created_at=sent_created_at,
+                platform="instagram",
+                account_username=acc_username,
+            )
+    except Exception as db_err:
+        logging.error(f"[reply] Failed to persist sent message to DB: {db_err}")
 
     return {
         "success": True,
-        "message_id": str(sent_msg_id) if sent_msg_id else None,
+        "message_id": effective_msg_id,
         "created_at": sent_created_at,
         "sent_message": body.message,
         "zernio_response": result,

@@ -82,10 +82,32 @@ async def wingman_reply(token: str, body: ReplyBody):
         or result.get("id")
         or result.get("message_id")
     )
+    sent_created_at = datetime.datetime.utcnow().isoformat() + "Z"
+    effective_msg_id = str(sent_msg_id) if sent_msg_id else f"wingman_sent_{int(datetime.datetime.utcnow().timestamp() * 1000)}"
+    acc_owner = acc.get("ig_username", "")
+
+    try:
+        async with pool.acquire() as conn:
+            await message_repo.upsert_message(
+                conn,
+                msg_id=effective_msg_id,
+                conversation_id=str(conv_id),
+                sender_id=None,
+                sender_name=session.get("wingman_name") or "Wingman",
+                message=body.message,
+                direction="outgoing",
+                created_at=sent_created_at,
+                platform="instagram",
+                account_username=acc_owner,
+            )
+    except Exception as db_err:
+        logging.error(f"[wingman_reply] Failed to persist sent message to DB: {db_err}")
 
     return {
         "success": True,
-        "message_id": str(sent_msg_id) if sent_msg_id else None,
+        "message_id": effective_msg_id,
+        "created_at": sent_created_at,
+        "sent_message": body.message,
         "zernio_response": result,
     }
 
