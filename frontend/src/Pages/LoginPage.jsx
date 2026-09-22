@@ -31,10 +31,10 @@ export default function LoginPage() {
           </span>
           <div>
             <h1 className="text-[20px] font-semibold text-[#191918] tracking-tight">
-              Sign in to Hooop
+              Sign in to Hoop
             </h1>
             <p className="text-[13px] text-[#615d59] mt-1">
-              When you're out of words, let your wingman handle it.
+              Welcome back to Hoop.
             </p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
+                  className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 transition-all"
                   placeholder="name@organization.com"
                 />
               </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-[11px] font-medium text-[#0075de] hover:underline"
+                  className="text-[11px] font-medium text-[#191918] hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -110,7 +110,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
+                  className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -119,7 +119,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#0075de] hover:bg-[#005bab] active:bg-[#00396b] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2"
+              className="w-full bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -136,7 +136,7 @@ export default function LoginPage() {
               Don't have an account?{" "}
               <Link
                 to="/signup"
-                className="text-[#0075de] hover:text-[#005bab] transition-colors font-medium"
+                className="text-[#191918] hover:underline transition-colors font-medium"
               >
                 Sign up
               </Link>

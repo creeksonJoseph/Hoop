@@ -25,8 +25,7 @@ import logging
 from config import FRONTEND_URL
 from db import get_pool, init_db
 
-from api.routers import auth, home, chat, sessions, wingman, onboarding, admin, settings, webhook
-
+from api.routers import auth, home, chat, sessions, wingman, onboarding, admin, settings, webhook, feedback
 
 # ── App lifecycle ─────────────────────────────────────────────────────────────
 
@@ -78,6 +77,7 @@ app.include_router(wingman.router,    prefix="/api")
 app.include_router(onboarding.router, prefix="/api")
 app.include_router(admin.router,      prefix="/api")
 app.include_router(settings.router,   prefix="/api")
+app.include_router(feedback.router,   prefix="/api")
 app.include_router(webhook.router)
 
 

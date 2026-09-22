@@ -218,3 +218,24 @@ async def delete_all_user_data(conn: asyncpg.Connection, user_id: int) -> None:
         )
         await conn.execute("DELETE FROM tracked_dms WHERE user_id = $1", user_id)
         await conn.execute("DELETE FROM connected_ig_accounts WHERE user_id = $1", user_id)
+
+
+async def get_all_accounts_admin(conn: asyncpg.Connection) -> list:
+    rows = await conn.fetch("""
+        SELECT 
+            a.id,
+            a.user_id,
+            a.ig_username,
+            a.created_at,
+            u.email AS user_email
+        FROM connected_ig_accounts a
+        JOIN users u ON u.id = a.user_id
+        WHERE a.ig_username != ''
+        ORDER BY a.created_at DESC
+    """)
+    return [dict(r) for r in rows]
+
+
+async def delete_account_admin(conn: asyncpg.Connection, account_id: int) -> bool:
+    res = await conn.execute("DELETE FROM connected_ig_accounts WHERE id = $1", account_id)
+    return "DELETE 1" in res

@@ -38,3 +38,14 @@ async def require_user(user=Depends(get_current_user)) -> dict:
     if not user:
         raise HTTPException(status_code=401, detail="Authentication required")
     return user
+
+
+ADMIN_EMAILS = {"charanajoseph@gmail.com"}
+
+
+async def require_admin(user=Depends(require_user)) -> dict:
+    email = (user.get("email") or "").strip().lower()
+    if email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+

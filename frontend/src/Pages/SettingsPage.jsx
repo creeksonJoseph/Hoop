@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Link2, Loader as Loader2, ChevronRight } from "lucide-react";
+import { Link2, Loader as Loader2, ChevronRight, Send, Lightbulb } from "lucide-react";
 import { useSettings } from "../hooks/useSettings";
 import NavRail from "../components/NavRail";
 import { SettingsSkeleton } from "../components/skeletons/Skeletons";
 import ConfirmModal from "../components/common/ConfirmModal";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import api from "../lib/api";
 
 export default function SettingsPage() {
   const { settings, loading, updateApiKey, deleteApiKey } = useSettings();
@@ -15,7 +17,13 @@ export default function SettingsPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+
+  const [feedbackCategory, setFeedbackCategory] = useState("feature_suggestion");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
   const { logout, user } = useAuth();
+  const { toast } = useToast();
 
   const navigate = useNavigate();
   // Use the live active account from AuthContext so it updates immediately after a switch.
@@ -32,6 +40,25 @@ export default function SettingsPage() {
       setShowKeyInput(false);
     }
     setSaving(false);
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackMessage.trim()) return;
+    setSubmittingFeedback(true);
+    try {
+      const { data } = await api.post("/feedback", {
+        category: feedbackCategory,
+        message: feedbackMessage.trim(),
+      });
+      toast(data.message || "Thank you! Your suggestion has been submitted.", "success");
+      setFeedbackMessage("");
+    } catch (err) {
+      const msg = err.response?.data?.detail || "Failed to submit feedback.";
+      toast(msg, "error");
+    } finally {
+      setSubmittingFeedback(false);
+    }
   };
 
   const handleDisconnect = async () => {
@@ -202,6 +229,60 @@ export default function SettingsPage() {
                       </form>
                     )}
                   </div>
+                </div>
+              </section>
+
+              {/* SECTION: FEATURE SUGGESTIONS & FEEDBACK */}
+              <section className="mt-10">
+                <h2 className="mb-2 text-[11px] font-semibold tracking-wider uppercase text-[#615d59]">
+                  Suggest a Feature or Feedback
+                </h2>
+
+                <div className="bg-white border border-[#dfdcd9] rounded-[10px] p-5 shadow-xs space-y-4">
+                  <p className="text-[12.5px] text-[#615d59]">
+                    Have an idea to improve Hoop or noticed an issue? Send your suggestion directly to our product team.
+                  </p>
+
+                  <form onSubmit={handleFeedbackSubmit} className="space-y-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <select
+                        value={feedbackCategory}
+                        onChange={(e) => setFeedbackCategory(e.target.value)}
+                        className="bg-white border border-[#d3d0cb] rounded-[6px] px-3 py-1.5 text-[12px] text-[#191918] focus:outline-none focus:border-[#191918] cursor-pointer"
+                      >
+                        <option value="feature_suggestion">💡 Feature Suggestion</option>
+                        <option value="bug_report">🐛 Bug Report</option>
+                        <option value="general_feedback">💬 General Feedback</option>
+                      </select>
+                    </div>
+
+                    <textarea
+                      rows={3}
+                      required
+                      value={feedbackMessage}
+                      onChange={(e) => setFeedbackMessage(e.target.value)}
+                      placeholder="Describe the feature or improvement you'd like to see…"
+                      className="w-full bg-white border border-[#d3d0cb] rounded-[6px] p-3 text-[12.5px] text-[#191918] placeholder:text-[#8c8782] focus:outline-none focus:border-[#191918] focus:ring-1 focus:ring-[#191918] resize-none"
+                    />
+
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={submittingFeedback || !feedbackMessage.trim()}
+                        className="bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium px-4 py-1.5 rounded-[6px] text-[12px] transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        {submittingFeedback ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin" /> Sending…
+                          </>
+                        ) : (
+                          <>
+                            <Send size={13} /> Submit Suggestion
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </section>
 

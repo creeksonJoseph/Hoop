@@ -14,6 +14,7 @@ import PrivacyPage from "./Pages/PrivacyPage";
 import SecurityPage from "./Pages/SecurityPage";
 import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
 import PwaInstallPrompt from "./components/common/PwaInstallPrompt";
+import AdminPage from "./Pages/AdminPage";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -28,6 +29,15 @@ function Protected({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+function AdminProtected({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user || user.email?.toLowerCase() !== "charanajoseph@gmail.com") {
+    return <Navigate to="/home" replace />;
+  }
+  return children;
+}
+
 export default function App() {
   return (
     <>
@@ -37,6 +47,14 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/wingman/:token" element={<WingmanPage />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminProtected>
+              <AdminPage />
+            </AdminProtected>
+          }
+        />
         <Route
           path="/onboarding"
           element={

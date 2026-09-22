@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Settings, Users, Home, LogOut, UserRound } from "lucide-react";
+import { Settings, Users, Home, LogOut, UserRound, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import ConfirmModal from "./common/ConfirmModal";
 
@@ -57,10 +57,13 @@ export default function NavRail({ activePage }) {
   const { logout, user } = useAuth();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
 
+  const isAdmin = user?.email?.toLowerCase() === "charanajoseph@gmail.com";
+
   const navItems = [
     { href: "/home", icon: Home, label: "Home", key: "home" },
     { href: "/wingmen", icon: Users, label: "Wingmen", key: "sessions" },
     { href: "/settings", icon: Settings, label: "Settings", key: "settings" },
+    ...(isAdmin ? [{ href: "/admin", icon: ShieldCheck, label: "Admin Portal", key: "admin" }] : []),
   ];
 
   const current =
