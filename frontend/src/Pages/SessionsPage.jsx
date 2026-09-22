@@ -40,7 +40,7 @@ export default function SessionsPage() {
     <div className="min-h-screen flex bg-background text-foreground font-sans">
       <NavRail activePage={isChatSpecific ? "chat" : "sessions"} />
 
-      <main className="fluid-page min-w-0 flex-1 flex flex-col pt-12 pb-20 md:pt-0 md:pb-0">
+      <main className="fluid-page min-w-0 flex-1 flex flex-col pt-[calc(3.75rem+env(safe-area-inset-top,0px))] pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pt-0 md:pb-0">
         <div className="w-full flex-1 flex flex-col p-[clamp(.75rem,3vw,1.5rem)] gap-4">
           {/* Page Header with Back Button */}
           <header className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shrink-0">

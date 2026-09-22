@@ -39,7 +39,7 @@ export default function SwitchAccountPage() {
   return (
     <div className="min-h-screen w-full flex bg-[#f9f9f8] text-[#191918] font-sans">
       <NavRail activePage="settings" />
-      <main className="min-w-0 flex-1 pt-14 pb-24 md:pt-0 md:pb-0 px-4 sm:px-6 py-5">
+      <main className="min-w-0 flex-1 pt-[calc(3.75rem+env(safe-area-inset-top,0px))] pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pt-0 md:pb-0 px-4 sm:px-6 py-5">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6 pt-3 md:pt-5">

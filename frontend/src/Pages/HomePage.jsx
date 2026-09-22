@@ -54,7 +54,7 @@ export default function HomePage() {
     <div className="h-screen h-dvh w-full flex overflow-hidden bg-[#f9f9f8] text-[#191918] font-sans">
       <NavRail activePage="home" />
 
-      <div className="flex-1 h-full w-full flex overflow-hidden pt-12 pb-16 md:pt-0 md:pb-0 bg-[#f9f9f8]">
+      <div className="flex-1 h-full w-full flex overflow-hidden pt-[calc(3.25rem+env(safe-area-inset-top,0px))] pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))] md:pt-0 md:pb-0 bg-[#f9f9f8]">
         {/* Conversation list column (sidebar) */}
         <div
           className={`w-full md:w-[clamp(18rem,34vw,22rem)] h-full min-w-0 flex flex-col bg-white border-r border-[#dfdcd9] shrink-0 z-10 ${igUsername ? "hidden md:flex" : "flex"}`}

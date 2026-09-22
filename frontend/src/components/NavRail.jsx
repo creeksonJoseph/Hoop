@@ -85,7 +85,7 @@ export default function NavRail({ activePage }) {
   return (
     <>
       {/* Persistent Mobile Top Header with Hooop Logo */}
-      <header className="fixed inset-x-0 top-0 w-full h-12 border-b border-[#dfdcd9] bg-white/95 px-4 backdrop-blur flex items-center justify-between md:hidden z-40">
+      <header className="fixed inset-x-0 top-0 w-full pt-[env(safe-area-inset-top,0px)] border-b border-[#dfdcd9] bg-white/95 px-4 backdrop-blur flex items-center justify-between h-[calc(3.25rem+env(safe-area-inset-top,0px))] md:hidden z-40">
         <Link to="/home" className="flex items-center gap-2">
           <span className="flex size-7 items-center justify-center rounded-[8px] bg-[#191918] text-xs font-bold text-white shadow-xs">
             H
@@ -161,14 +161,14 @@ export default function NavRail({ activePage }) {
       </aside>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-start justify-around border-t border-border bg-white/95 px-1 pt-1 backdrop-blur md:hidden safe-bottom">
+      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-[calc(3.75rem+env(safe-area-inset-bottom,0px))] items-start justify-around border-t border-border bg-white/95 px-1 pt-1.5 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden">
         {navItems.map(({ href, icon: Icon, label, key }) => {
           const active = current === key;
           return (
             <Link
               key={key}
               to={href}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}
+              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-1 text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}
             >
               <Icon size={20} strokeWidth={active ? 2.5 : 2} />
               <span>{label}</span>

@@ -143,7 +143,7 @@ export default function AdminPage() {
     <div className="h-screen w-full flex overflow-hidden bg-[#f9f9f8] text-[#191918] font-sans">
       <NavRail activePage="admin" />
 
-      <main className="flex-1 min-w-0 overflow-y-auto custom-scrollbar px-4 py-8 pt-16 pb-24 sm:px-8 md:px-12 md:py-12">
+      <main className="flex-1 min-w-0 overflow-y-auto custom-scrollbar px-4 py-8 pt-[calc(4.25rem+env(safe-area-inset-top,0px))] pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:py-12 md:pt-12 md:pb-24 sm:px-8 md:px-12">
         <div className="w-full max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#dfdcd9] pb-6">

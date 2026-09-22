@@ -107,7 +107,7 @@ export default function ChatView({ igUsername }) {
   return (
     <div className="flex-1 h-full flex flex-col min-w-0 bg-[#f9f9f8] text-[#191918] font-sans relative overflow-hidden">
       {/* Header */}
-      <header className="h-14 px-4 border-b border-[#dfdcd9] flex items-center justify-between bg-white shrink-0 z-30">
+      <header className="px-4 border-b border-[#dfdcd9] flex items-center justify-between bg-white shrink-0 z-30 pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:pt-0 md:h-14">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/home"
             className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] bg-white border border-[#dfdcd9] text-[#494744] hover:text-[#191918] hover:bg-[#f6f5f4] transition-colors">
