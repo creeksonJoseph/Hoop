@@ -21,3 +21,18 @@ async def create_user(conn: asyncpg.Connection, email: str, password_hash: str) 
         "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email",
         email.lower().strip(), password_hash,
     )
+
+
+async def get_or_create_google_user(conn: asyncpg.Connection, email: str, default_password_hash: str) -> asyncpg.Record:
+    normalized = email.lower().strip()
+    user = await get_user_by_email(conn, normalized)
+    if user:
+        return user
+    return await create_user(conn, normalized, default_password_hash)
+
+
+async def update_user_password(conn: asyncpg.Connection, user_id: int, password_hash: str) -> None:
+    await conn.execute(
+        "UPDATE users SET password_hash = $1 WHERE id = $2",
+        password_hash, user_id,
+    )

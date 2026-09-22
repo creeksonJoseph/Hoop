@@ -70,7 +70,7 @@ export default function SettingsPage() {
 
                 <div className="border-t border-[#e5e3df]">
                   {/* Row: Hoop profile */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-3.5 border-b border-[#e5e3df]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3.5 border-b border-[#e5e3df]">
                     <div>
                       <p className="text-[13px] font-medium text-[#191918]">
                         Hoop profile
@@ -79,10 +79,18 @@ export default function SettingsPage() {
                         Primary account email address
                       </p>
                     </div>
-                    <div className="sm:text-right mt-1 sm:mt-0">
+                    <div className="flex items-center gap-3 sm:shrink-0 mt-1 sm:mt-0">
                       <span className="text-[13px] text-[#191918] font-normal">
                         {settings?.profile?.email || "Signed-in account"}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/settings/security")}
+                        className="inline-flex items-center gap-1 rounded-[6px] border border-[#d3d0cb] bg-white px-3 py-1.5 text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer"
+                      >
+                        Change password
+                        <ChevronRight size={14} className="text-[#615d59]" />
+                      </button>
                     </div>
                   </div>
 

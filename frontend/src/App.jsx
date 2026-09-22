@@ -11,6 +11,9 @@ import SwitchAccountPage from "./Pages/SwitchAccountPage";
 import WingmanPage from "./Pages/WingmanPage";
 import PrivacyPage from "./Pages/PrivacyPage";
 
+import SecurityPage from "./Pages/SecurityPage";
+import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
+
 function Protected({ children }) {
   const { user, loading } = useAuth();
   const hasToken =
@@ -29,6 +32,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/wingman/:token" element={<WingmanPage />} />
       <Route
@@ -76,6 +80,14 @@ export default function App() {
         element={
           <Protected>
             <SettingsPage />
+          </Protected>
+        }
+      />
+      <Route
+        path="/settings/security"
+        element={
+          <Protected>
+            <SecurityPage />
           </Protected>
         }
       />

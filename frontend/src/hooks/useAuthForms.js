@@ -61,3 +61,87 @@ export function useSignup() {
 
   return { submit, loading, error, setError }
 }
+
+export function useGoogleAuth() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const { login } = useAuth()
+  const { toast } = useToast()
+  const navigate = useNavigate()
+
+  const submitGoogleToken = async (credential) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await api.post('/auth/google', { credential })
+      login(data.access_token, data.user)
+      toast('Signed in with Google', 'success')
+      navigate(data.onboarded ? '/home' : '/onboarding')
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.response?.data?.message || 'Google authentication failed.'
+      setError(msg)
+      toast(msg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { submitGoogleToken, loading, error, setError }
+}
+
+export function useSendOTP() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const { toast } = useToast()
+
+  const sendOTP = async (email) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await api.post('/auth/send-otp', { email })
+      toast(data.message || 'Verification code sent to email', 'success')
+      return true
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.response?.data?.message || 'Failed to send OTP code'
+      setError(msg)
+      toast(msg, 'error')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { sendOTP, loading, error, setError }
+}
+
+export function useVerifyOTP() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const { login } = useAuth()
+  const { toast } = useToast()
+  const navigate = useNavigate()
+
+  const verifyOTP = async (email, code, password, confirmPassword) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await api.post('/auth/verify-otp', {
+        email,
+        code,
+        password,
+        confirm_password: confirmPassword,
+      })
+      login(data.access_token, data.user)
+      toast('Email verified & account created!', 'success')
+      navigate('/onboarding')
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.response?.data?.message || 'OTP verification failed'
+      setError(msg)
+      toast(msg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { verifyOTP, loading, error, setError }
+}
