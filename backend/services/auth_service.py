@@ -42,6 +42,25 @@ def decode_jwt(token: str) -> Optional[dict]:
         return None
 
 
+def create_signup_token(email: str) -> str:
+    payload = {
+        "sub": email.strip().lower(),
+        "purpose": "signup",
+        "exp": datetime.utcnow() + timedelta(minutes=15),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def verify_signup_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("purpose") != "signup":
+            return None
+        return payload.get("sub")
+    except JWTError:
+        return None
+
+
 # ── OAuth state token helpers ─────────────────────────────────────────────────
 
 def make_oauth_state(user_id: int) -> str:
