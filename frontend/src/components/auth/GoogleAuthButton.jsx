@@ -11,12 +11,9 @@ export default function GoogleAuthButton({ onSuccess, disabled = false, text = "
   });
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-    if (!clientId) {
-      setError("Google sign-in is not configured yet.");
-      return;
-    }
+    const clientId =
+      import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+      "288617280571-9ks7uahnh1a2q6ovicor36ftcf4rnm8h.apps.googleusercontent.com";
 
     const initialize = () => {
       if (!window.google?.accounts?.id) {
