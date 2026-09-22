@@ -78,7 +78,7 @@ export default function PwaInstallPrompt() {
             </div>
             <div>
               <h3 className="text-[14px] font-semibold text-white tracking-tight">
-                Install Hoop App
+                Install Hooop App
               </h3>
               <p className="text-[12px] text-[#a39e98] leading-tight mt-0.5">
                 Add to your home screen for full-screen performance & quick access.

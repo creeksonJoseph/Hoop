@@ -7,11 +7,11 @@ const sections = [
     items: [
       {
         heading: "What information we collect",
-        body: "When you connect your Instagram account to Hoop, we access your Direct Messages (DMs), the usernames of the people you are messaging, and their profile pictures. We only access the specific conversations you choose to share.",
+        body: "When you connect your Instagram account to Hooop, we access your Direct Messages (DMs), the usernames of the people you are messaging, and their profile pictures. We only access the specific conversations you choose to share.",
       },
       {
         heading: "Who sees your data",
-        body: "The only people who can read your shared DMs or send messages on your behalf are the friends (Wingmen) you explicitly send your secure Hoop link to.",
+        body: "The only people who can read your shared DMs or send messages on your behalf are the friends (Wingmen) you explicitly send your secure Hooop link to.",
       },
       {
         heading: "How we store it",
@@ -27,8 +27,8 @@ const sections = [
     title: "Data Deletion Instructions",
     items: [
       {
-        heading: "Inside the Hoop App",
-        body: "Log in to your Hoop dashboard, navigate to Settings, and scroll down to the Danger Zone. Click the Disconnect API Key & Delete Data button. This instantly wipes all your synced conversations, messages, and target profile pictures from our database. Only your basic Hoop login credentials remain.",
+        heading: "Inside the Hooop App",
+        body: "Log in to your Hooop dashboard, navigate to Settings, and scroll down to the Danger Zone. Click the Disconnect API Key & Delete Data button. This instantly wipes all your synced conversations, messages, and target profile pictures from our database. Only your basic Hooop login credentials remain.",
       },
     ],
   },
@@ -37,15 +37,15 @@ const sections = [
     items: [
       {
         heading: "No Harassment or Abuse",
-        body: "You may not use Hoop (or allow your Wingmen to use Hoop) to bully, harass, threaten, or spam anyone.",
+        body: "You may not use Hooop (or allow your Wingmen to use Hooop) to bully, harass, threaten, or spam anyone.",
       },
       {
         heading: "You Are Responsible",
-        body: "You are handing the keyboard to your friends. If your Wingman sends something that violates Instagram's Community Guidelines, your Instagram account is the one that will get banned. Hoop takes zero legal liability for what is said through our platform.",
+        body: "You are handing the keyboard to your friends. If your Wingman sends something that violates Instagram's Community Guidelines, your Instagram account is the one that will get banned. Hooop takes zero legal liability for what is said through our platform.",
       },
       {
         heading: "No Unsolicited Spam",
-        body: "You may only use Hoop for existing, consensual conversations. Using the API to blast unsolicited marketing links or spam will result in an immediate ban from Hoop.",
+        body: "You may only use Hooop for existing, consensual conversations. Using the API to blast unsolicited marketing links or spam will result in an immediate ban from Hooop.",
       },
       {
         heading: "The Kill Switch",
@@ -58,7 +58,7 @@ const sections = [
     items: [
       {
         heading: "Not Affiliated with Meta",
-        body: 'Hoop is an independent third-party tool built using the official Meta Graph API via Zernio. Hoop is not affiliated with, endorsed by, sponsored by, or officially connected to Meta Platforms, Inc., Instagram, or WhatsApp. "Instagram" and "Meta" are registered trademarks of Meta Platforms, Inc.',
+        body: 'Hooop is an independent third-party tool built using the official Meta Graph API via Zernio. Hooop is not affiliated with, endorsed by, sponsored by, or officially connected to Meta Platforms, Inc., Instagram, or WhatsApp. "Instagram" and "Meta" are registered trademarks of Meta Platforms, Inc.',
       },
     ],
   },
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
             Privacy and Policies
           </h1>
           <p className="mt-3 max-w-150 text-[14px] leading-6 text-[#615d59]">
-            How Hoop handles your data, how to delete it, and the rules for
+            How Hooop handles your data, how to delete it, and the rules for
             using the service responsibly.
           </p>
         </header>
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
 
         <footer className="mt-12 border-t border-[#dfdcd9] pt-5 text-[12px] text-[#8c8782]">
           <Link to={returnPath} className="text-[#0075de] hover:underline">
-            Return to Hoop
+            Return to Hooop
           </Link>
         </footer>
       </main>

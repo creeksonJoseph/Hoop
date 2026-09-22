@@ -44,7 +44,7 @@ async def send_feedback_admin_notification(
     <head>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>{heading_title} - Hoop</title>
+      <title>{heading_title} - Hooop</title>
     </head>
     <body style="margin:0; padding:24px 12px; background-color:#f9f9f8; font-family:Arial, sans-serif; color:#191918;">
       <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -52,7 +52,7 @@ async def send_feedback_admin_notification(
           <td align="center">
             <div style="max-width: 540px; width: 100%; text-align: left; background-color: #ffffff; border: 1px solid #dfdcd9; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #dfdcd9; padding-bottom: 12px;">
-                <span style="font-size: 20px; font-weight: bold; color: #191918;">Hoop Admin Alert</span>
+                <span style="font-size: 20px; font-weight: bold; color: #191918;">Hooop Admin Alert</span>
                 <span style="margin-left: auto; padding: 4px 10px; border-radius: 20px; background-color: #f0f0f0; color: #191918; font-size: 11px; font-weight: bold;">{formatted_cat}</span>
               </div>
               <h2 style="font-size: 18px; color: #191918; margin: 0 0 12px 0;">{heading_title}</h2>
@@ -75,7 +75,7 @@ async def send_feedback_admin_notification(
     </html>
     """
 
-    from_addr = config.RESEND_FROM_EMAIL or "Hoop <auth@hooop.tech>"
+    from_addr = getattr(config, "RESEND_FEATURE_FROM_EMAIL", "Hooop <customersupport@hoop.tech>")
     payload = {
         "from": from_addr,
         "to": [ADMIN_EMAIL],
@@ -92,7 +92,7 @@ async def send_feedback_admin_notification(
             
             # Fallback if domain is unverified
             if resp.status_code in (400, 403, 422) and "onboarding@resend.dev" not in from_addr:
-                payload["from"] = "Hoop <onboarding@resend.dev>"
+                payload["from"] = "Hooop <onboarding@resend.dev>"
                 fallback_resp = await client.post(url, json=payload, headers=headers)
                 if fallback_resp.status_code in (200, 201):
                     return True, "Notification sent via test domain."
@@ -105,7 +105,7 @@ async def send_feedback_admin_notification(
 
 
 async def send_user_reply_email(user_email: str, reply_message: str) -> Tuple[bool, str]:
-    """Send reply HTML email to user from Hoop Admin."""
+    """Send reply HTML email to user from Hooop Admin."""
     if not config.RESEND_API_KEY:
         return True, "Development mode: Reply logged."
 
@@ -121,18 +121,18 @@ async def send_user_reply_email(user_email: str, reply_message: str) -> Tuple[bo
     <head>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Response to your Hoop Suggestion</title>
+      <title>Response to your Hooop Suggestion</title>
     </head>
     <body style="margin:0; padding:24px 12px; background-color:#f9f9f8; font-family:Arial, sans-serif; color:#191918;">
       <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
           <td align="center">
             <div style="max-width: 540px; width: 100%; text-align: left; background-color: #ffffff; border: 1px solid #dfdcd9; border-radius: 12px; padding: 24px;">
-              <h2 style="font-size: 18px; color: #191918; margin-top: 0;">Response to your Hoop Suggestion</h2>
+              <h2 style="font-size: 18px; color: #191918; margin-top: 0;">Response to your Hooop Suggestion</h2>
               <p style="font-size: 13px; color: #615d59;">Hi there,</p>
               <p style="font-size: 13px; color: #615d59;">Our team responded to your feedback:</p>
               <div style="background-color: #f9f9f8; border: 1px solid #dfdcd9; border-radius: 8px; padding: 14px; font-size: 13px; line-height: 1.6; color: #191918; margin-bottom: 20px; white-space: pre-wrap;">{reply_message}</div>
-              <p style="font-size: 12px; color: #8c8782; margin: 0; padding-top: 12px; border-top: 1px solid #dfdcd9;">Thank you for helping us improve Hoop!</p>
+              <p style="font-size: 12px; color: #8c8782; margin: 0; padding-top: 12px; border-top: 1px solid #dfdcd9;">Thank you for helping us improve Hooop!</p>
             </div>
           </td>
         </tr>
@@ -141,11 +141,11 @@ async def send_user_reply_email(user_email: str, reply_message: str) -> Tuple[bo
     </html>
     """
 
-    from_addr = config.RESEND_FROM_EMAIL or "Hoop <auth@hooop.tech>"
+    from_addr = getattr(config, "RESEND_FEATURE_FROM_EMAIL", "Hooop <customersupport@hoop.tech>")
     payload = {
         "from": from_addr,
         "to": [user_email],
-        "subject": "Re: Your Hoop Feature Suggestion",
+        "subject": "Re: Your Hooop Feature Suggestion",
         "html": html_content,
     }
 
@@ -155,7 +155,7 @@ async def send_user_reply_email(user_email: str, reply_message: str) -> Tuple[bo
             if resp.status_code in (200, 201):
                 return True, "Reply email sent successfully."
             if resp.status_code in (400, 403, 422) and "onboarding@resend.dev" not in from_addr:
-                payload["from"] = "Hoop <onboarding@resend.dev>"
+                payload["from"] = "Hooop <onboarding@resend.dev>"
                 fallback_resp = await client.post(url, json=payload, headers=headers)
                 if fallback_resp.status_code in (200, 201):
                     return True, "Reply sent via test domain."

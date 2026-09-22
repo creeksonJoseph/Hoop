@@ -66,7 +66,7 @@ export default function OnboardingPage() {
             <p className="text-[14px] text-[#a39e98] leading-relaxed max-w-[340px]">
               Hooop uses <span className="text-white font-medium">Zernio</span>
               ,a secure third-party platform as a bridge to your Instagram DMs.
-              No Instagram password is ever shared with Hoop.
+              No Instagram password is ever shared with Hooop.
             </p>
           </div>
 

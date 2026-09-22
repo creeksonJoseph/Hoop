@@ -31,10 +31,10 @@ export default function LoginPage() {
           </span>
           <div>
             <h1 className="text-[20px] font-semibold text-[#191918] tracking-tight">
-              Sign in to Hoop
+              Sign in to Hooop
             </h1>
             <p className="text-[13px] text-[#615d59] mt-1">
-              Welcome back to Hoop.
+              Welcome back to Hooop.
             </p>
           </div>
         </div>

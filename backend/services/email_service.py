@@ -32,7 +32,7 @@ async def send_otp_email(to_email: str, otp_code: str) -> Tuple[bool, str]:
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #dfdcd9; border-radius: 12px; background-color: #ffffff;">
       <h2 style="color: #191918; margin-top: 0;">Verification Code</h2>
-      <p style="color: #615d59; font-size: 14px;">Use the verification code below to complete your verification for <strong>Hoop</strong>:</p>
+      <p style="color: #615d59; font-size: 14px;">Use the verification code below to complete your verification for <strong>Hooop</strong>:</p>
       <div style="background-color: #f9f9f8; border: 1px dashed #191918; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0;">
         <span style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #191918;">{otp_code}</span>
       </div>
@@ -40,11 +40,11 @@ async def send_otp_email(to_email: str, otp_code: str) -> Tuple[bool, str]:
     </div>
     """
 
-    from_address = config.RESEND_FROM_EMAIL or "Hoop <auth@hooop.tech>"
+    from_address = config.RESEND_FROM_EMAIL or "Hooop <auth@hooop.tech>"
     payload = {
         "from": from_address,
         "to": [normalized],
-        "subject": f"{otp_code} is your Hoop verification code",
+        "subject": f"{otp_code} is your Hooop verification code",
         "html": html_content,
     }
 
@@ -60,8 +60,8 @@ async def send_otp_email(to_email: str, otp_code: str) -> Tuple[bool, str]:
 
             # If domain isn't verified in Resend yet, fallback to onboarding sender so test emails still deliver
             if resp.status_code in (400, 403, 422) and "onboarding@resend.dev" not in from_address:
-                logging.info("[Resend] Retrying with Hoop <onboarding@resend.dev> fallback...")
-                payload["from"] = "Hoop <onboarding@resend.dev>"
+                logging.info("[Resend] Retrying with Hooop <onboarding@resend.dev> fallback...")
+                payload["from"] = "Hooop <onboarding@resend.dev>"
                 fallback_resp = await client.post(url, json=payload, headers=headers)
                 if fallback_resp.status_code in (200, 201):
                     logging.info(f"[Resend Fallback] OTP delivered via onboarding@resend.dev")

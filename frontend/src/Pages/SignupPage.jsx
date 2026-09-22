@@ -65,7 +65,7 @@ export default function SignupPage() {
 
   const stepTitles = {
     1: {
-      heading: "Create your Hoop account",
+      heading: "Create your Hooop account",
       sub: "Start by entering your email address below.",
     },
     2: {

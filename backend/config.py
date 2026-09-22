@@ -49,7 +49,8 @@ GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
 UPSTASH_REDIS_REST_URL: str = os.getenv("UPSTASH_REDIS_REST_URL", "").strip('"')
 UPSTASH_REDIS_REST_TOKEN: str = os.getenv("UPSTASH_REDIS_REST_TOKEN", "").strip('"')
 RESEND_API_KEY: str       = os.getenv("RESEND_API_KEY", "")
-RESEND_FROM_EMAIL: str    = os.getenv("RESEND_FROM_EMAIL", "Hoop <auth@hooop.tech>")
+RESEND_FROM_EMAIL: str    = os.getenv("RESEND_FROM_EMAIL", "Hooop <auth@hooop.tech>")
+RESEND_FEATURE_FROM_EMAIL: str = os.getenv("RESEND_FEATURE_FROM_EMAIL", "Hooop <customersupport@hoop.tech>")
 
 # ── Startup validation ────────────────────────────────────────────────────────
 if not DATABASE_URL:
