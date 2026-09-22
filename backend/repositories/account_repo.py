@@ -226,12 +226,12 @@ async def get_all_accounts_admin(conn: asyncpg.Connection) -> list:
             a.id,
             a.user_id,
             a.ig_username,
-            a.created_at,
+            a.added_at AS created_at,
             u.email AS user_email
         FROM connected_ig_accounts a
         JOIN users u ON u.id = a.user_id
         WHERE a.ig_username != ''
-        ORDER BY a.created_at DESC
+        ORDER BY a.added_at DESC
     """)
     return [dict(r) for r in rows]
 

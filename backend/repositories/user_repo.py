@@ -46,7 +46,7 @@ async def get_all_users_admin(conn: asyncpg.Connection) -> list:
             u.created_at,
             COUNT(DISTINCT a.id) AS account_count
         FROM users u
-        LEFT JOIN accounts a ON a.user_id = u.id
+        LEFT JOIN connected_ig_accounts a ON a.user_id = u.id
         GROUP BY u.id, u.email, u.created_at
         ORDER BY u.created_at DESC
     """)
@@ -68,7 +68,7 @@ async def bulk_delete_users_admin(conn: asyncpg.Connection, user_ids: list) -> i
 
 async def get_admin_dashboard_stats(conn: asyncpg.Connection) -> dict:
     total_users = await conn.fetchval("SELECT COUNT(*) FROM users") or 0
-    total_accounts = await conn.fetchval("SELECT COUNT(*) FROM accounts") or 0
+    total_accounts = await conn.fetchval("SELECT COUNT(*) FROM connected_ig_accounts WHERE ig_username != '__pending__'") or 0
     total_messages = await conn.fetchval("SELECT COUNT(*) FROM messages") or 0
     
     # Active wingman sessions
