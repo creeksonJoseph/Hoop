@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Link2, Loader as Loader2, ChevronRight, Send, Lightbulb } from "lucide-react";
+import { Link2, Loader as Loader2, ChevronRight, ChevronDown, Send, Lightbulb } from "lucide-react";
 import { useSettings } from "../hooks/useSettings";
 import NavRail from "../components/NavRail";
 import { SettingsSkeleton } from "../components/skeletons/Skeletons";
@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
 
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [feedbackCategory, setFeedbackCategory] = useState("feature_suggestion");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
@@ -53,6 +54,7 @@ export default function SettingsPage() {
       });
       toast(data.message || "Thank you! Your suggestion has been submitted.", "success");
       setFeedbackMessage("");
+      setShowFeedbackForm(false);
     } catch (err) {
       const msg = err.response?.data?.detail || "Failed to submit feedback.";
       toast(msg, "error");
@@ -113,7 +115,7 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => navigate("/settings/security")}
-                        className="inline-flex items-center gap-1 rounded-[6px] border border-[#d3d0cb] bg-white px-3 py-1.5 text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 rounded-[6px] border border-[#d3d0cb] bg-white px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer shrink-0"
                       >
                         Change password
                         <ChevronRight size={14} className="text-[#615d59]" />
@@ -145,7 +147,7 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => navigate("/settings/accounts")}
-                        className="inline-flex items-center gap-1 rounded-[6px] border border-[#d3d0cb] bg-white px-3 py-1.5 text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 rounded-[6px] border border-[#d3d0cb] bg-white px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer shrink-0"
                       >
                         Switch
                         <ChevronRight size={14} className="text-[#615d59]" />
@@ -188,7 +190,7 @@ export default function SettingsPage() {
                         <button
                           type="button"
                           onClick={() => setShowKeyInput(!showKeyInput)}
-                          className="inline-flex items-center justify-center rounded-[6px] border border-[#d3d0cb] bg-white px-3 py-1.5 text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer"
+                          className="inline-flex items-center justify-center rounded-[6px] border border-[#d3d0cb] bg-white px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer shrink-0"
                         >
                           {showKeyInput ? "Cancel" : "Change key"}
                         </button>
@@ -215,7 +217,7 @@ export default function SettingsPage() {
                         <button
                           type="submit"
                           disabled={saving || !newKey.trim()}
-                          className="shrink-0 bg-[#0075de] hover:bg-[#005bab] text-white font-medium px-3.5 py-1.5 rounded-[6px] text-[12px] transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                          className="shrink-0 bg-[#0075de] hover:bg-[#005bab] text-white font-medium px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-[6px] text-[11px] sm:text-[12px] transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                         >
                           {saving ? (
                             <>
@@ -232,58 +234,93 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              {/* SECTION: FEATURE SUGGESTIONS & FEEDBACK */}
+              {/* SECTION: FEATURE SUGGESTIONS & FEEDBACK (Collapsible) */}
               <section className="mt-10">
                 <h2 className="mb-2 text-[11px] font-semibold tracking-wider uppercase text-[#615d59]">
                   Suggest a Feature or Feedback
                 </h2>
 
-                <div className="bg-white border border-[#dfdcd9] rounded-[10px] p-5 shadow-xs space-y-4">
-                  <p className="text-[12.5px] text-[#615d59]">
-                    Have an idea to improve Hoop or noticed an issue? Send your suggestion directly to our product team.
-                  </p>
-
-                  <form onSubmit={handleFeedbackSubmit} className="space-y-3">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <select
-                        value={feedbackCategory}
-                        onChange={(e) => setFeedbackCategory(e.target.value)}
-                        className="bg-white border border-[#d3d0cb] rounded-[6px] px-3 py-1.5 text-[12px] text-[#191918] focus:outline-none focus:border-[#191918] cursor-pointer"
-                      >
-                        <option value="feature_suggestion">💡 Feature Suggestion</option>
-                        <option value="bug_report">🐛 Bug Report</option>
-                        <option value="general_feedback">💬 General Feedback</option>
-                      </select>
+                {!showFeedbackForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowFeedbackForm(true)}
+                    className="inline-flex items-center justify-between sm:justify-start gap-2 rounded-[6px] border border-[#d3d0cb] bg-white px-2.5 py-1.5 text-[11px] sm:px-3 sm:py-1.5 sm:text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer shadow-xs"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Lightbulb size={14} className="text-amber-500 shrink-0" />
+                      <span>Suggest a Feature or Feedback</span>
                     </div>
-
-                    <textarea
-                      rows={3}
-                      required
-                      value={feedbackMessage}
-                      onChange={(e) => setFeedbackMessage(e.target.value)}
-                      placeholder="Describe the feature or improvement you'd like to see…"
-                      className="w-full bg-white border border-[#d3d0cb] rounded-[6px] p-3 text-[12.5px] text-[#191918] placeholder:text-[#8c8782] focus:outline-none focus:border-[#191918] focus:ring-1 focus:ring-[#191918] resize-none"
-                    />
-
-                    <div className="flex justify-end">
+                    <ChevronDown size={14} className="text-[#615d59] shrink-0" />
+                  </button>
+                ) : (
+                  <div className="bg-white border border-[#dfdcd9] rounded-[10px] p-4 sm:p-5 shadow-xs space-y-4 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between border-b border-[#e5e3df] pb-3">
+                      <p className="text-[12.5px] font-semibold text-[#191918] flex items-center gap-1.5">
+                        <Lightbulb size={15} className="text-amber-500" />
+                        Suggest a Feature or Feedback
+                      </p>
                       <button
-                        type="submit"
-                        disabled={submittingFeedback || !feedbackMessage.trim()}
-                        className="bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium px-4 py-1.5 rounded-[6px] text-[12px] transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        type="button"
+                        onClick={() => setShowFeedbackForm(false)}
+                        className="text-[11px] text-[#615d59] hover:text-[#191918] px-2 py-0.5 rounded-[4px] hover:bg-[#f0eeec] transition-colors cursor-pointer"
                       >
-                        {submittingFeedback ? (
-                          <>
-                            <Loader2 size={13} className="animate-spin" /> Sending…
-                          </>
-                        ) : (
-                          <>
-                            <Send size={13} /> Submit Suggestion
-                          </>
-                        )}
+                        Close
                       </button>
                     </div>
-                  </form>
-                </div>
+
+                    <p className="text-[12px] sm:text-[12.5px] text-[#615d59]">
+                      Have an idea to improve Hoop or noticed an issue? Send your suggestion directly to our product team.
+                    </p>
+
+                    <form onSubmit={handleFeedbackSubmit} className="space-y-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <select
+                          value={feedbackCategory}
+                          onChange={(e) => setFeedbackCategory(e.target.value)}
+                          className="bg-white border border-[#d3d0cb] rounded-[6px] px-2.5 py-1.5 text-[11.5px] sm:text-[12px] text-[#191918] focus:outline-none focus:border-[#191918] cursor-pointer"
+                        >
+                          <option value="feature_suggestion">💡 Feature Suggestion</option>
+                          <option value="bug_report">🐛 Bug Report</option>
+                          <option value="general_feedback">💬 General Feedback</option>
+                        </select>
+                      </div>
+
+                      <textarea
+                        rows={3}
+                        required
+                        value={feedbackMessage}
+                        onChange={(e) => setFeedbackMessage(e.target.value)}
+                        placeholder="Describe the feature or improvement you'd like to see…"
+                        className="w-full bg-white border border-[#d3d0cb] rounded-[6px] p-2.5 text-[12px] sm:text-[12.5px] text-[#191918] placeholder:text-[#8c8782] focus:outline-none focus:border-[#191918] focus:ring-1 focus:ring-[#191918] resize-none"
+                      />
+
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowFeedbackForm(false)}
+                          className="px-3 py-1 text-[11px] sm:text-[12px] font-medium text-[#615d59] hover:text-[#191918] rounded-[6px] hover:bg-[#f0eeec] transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={submittingFeedback || !feedbackMessage.trim()}
+                          className="bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-[6px] text-[11px] sm:text-[12px] transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          {submittingFeedback ? (
+                            <>
+                              <Loader2 size={13} className="animate-spin" /> Sending…
+                            </>
+                          ) : (
+                            <>
+                              <Send size={13} /> Submit Suggestion
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </section>
 
               {/* SECTION 2: DANGER ZONE */}
@@ -310,7 +347,7 @@ export default function SettingsPage() {
                           type="button"
                           onClick={() => setShowDisconnectModal(true)}
                           disabled={disconnecting}
-                          className="inline-flex items-center justify-center rounded-[6px] border border-[#e32d14] bg-transparent px-3 py-1.5 text-[12px] font-medium text-[#e32d14] hover:bg-[#e32d14] hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+                          className="inline-flex items-center justify-center rounded-[6px] border border-[#e32d14] bg-transparent px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[12px] font-medium text-[#e32d14] hover:bg-[#e32d14] hover:text-white transition-colors disabled:opacity-50 cursor-pointer shrink-0"
                         >
                           {disconnecting ? (
                             <>
@@ -338,7 +375,7 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => setShowSignOutModal(true)}
-                        className="inline-flex items-center justify-center rounded-[6px] border border-[#d3d0cb] bg-white px-3 py-1.5 text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center rounded-[6px] border border-[#d3d0cb] bg-white px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[12px] font-medium text-[#191918] hover:bg-[#f0eeec] hover:border-[#bcbab5] active:bg-[#e8e6e2] transition-colors cursor-pointer shrink-0"
                       >
                         Sign out
                       </button>
@@ -383,3 +420,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

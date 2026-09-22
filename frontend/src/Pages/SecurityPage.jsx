@@ -36,7 +36,7 @@ export default function SecurityPage() {
           <div className="mb-6 flex flex-col gap-2">
             <button
               onClick={() => navigate("/settings")}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] border border-[#dfdcd9] text-xs font-medium text-[#191918] bg-white hover:bg-[#f0eeec] transition-colors self-start shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-[8px] border border-[#dfdcd9] text-[11px] sm:text-xs font-medium text-[#191918] bg-white hover:bg-[#f0eeec] transition-colors self-start shadow-xs cursor-pointer"
             >
               <ArrowLeft size={14} />
               <span>Back to Settings</span>
