@@ -117,12 +117,12 @@ export default function PwaInstallPrompt() {
         {isIos && (
           <div className="bg-white/5 rounded-[10px] p-3 text-[12px] text-[#d4d0cb] space-y-2 border border-white/5 mt-1">
             <p className="font-medium text-white flex items-center gap-1.5">
-              <Smartphone size={14} className="text-[#0075de]" /> To install on iOS Safari:
+              <Smartphone size={14} className="text-[#0075de]" /> To install on your browser:
             </p>
             <ol className="space-y-1.5 pl-1">
               <li className="flex items-center gap-2">
                 <span className="flex size-5 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold">1</span>
-                Tap the <strong className="text-white inline-flex items-center gap-1">Share <Share size={13} className="text-[#0075de]" /></strong> button in Safari toolbar.
+                Tap the <strong className="text-white inline-flex items-center gap-1">Share <Share size={13} className="text-[#0075de]" /></strong> or menu button in your browser.
               </li>
               <li className="flex items-center gap-2">
                 <span className="flex size-5 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold">2</span>
