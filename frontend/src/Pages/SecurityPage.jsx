@@ -93,7 +93,7 @@ export default function SecurityPage() {
                       <button
                         type="submit"
                         disabled={pwdLoading}
-                        className="inline-flex items-center justify-center py-2 px-4 rounded-[8px] font-medium text-xs text-white bg-[#0075de] hover:bg-[#005bab] transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center justify-center py-2 px-4 rounded-[8px] font-medium text-xs text-white bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                       >
                         {pwdLoading ? (
                           <div className="flex items-center gap-1.5">
@@ -136,7 +136,7 @@ export default function SecurityPage() {
                           setPwdError("");
                         }}
                         placeholder="000000"
-                        className="w-56 px-4 py-2.5 rounded-[8px] tracking-[0.5em] text-center font-mono text-lg outline-none border border-[#dfdcd9] focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 bg-white text-[#191918] transition-all block disabled:bg-[#f6f5f4] disabled:opacity-80"
+                        className="w-56 px-4 py-2.5 rounded-[8px] tracking-[0.5em] text-center font-mono text-lg outline-none border border-[#dfdcd9] focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 bg-white text-[#191918] transition-all block disabled:bg-[#f6f5f4] disabled:opacity-80"
                       />
                     </div>
 
@@ -144,7 +144,7 @@ export default function SecurityPage() {
                       <div>
                         <button
                           type="submit"
-                          className="inline-flex items-center justify-center py-2 px-4 rounded-[8px] font-medium text-xs text-white bg-[#0075de] hover:bg-[#005bab] transition-all shadow-xs cursor-pointer"
+                          className="inline-flex items-center justify-center py-2 px-4 rounded-[8px] font-medium text-xs text-white bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] transition-all shadow-xs cursor-pointer"
                         >
                           Verify Code & Continue
                         </button>
@@ -172,14 +172,14 @@ export default function SecurityPage() {
                       {pwdStep === 2 &&
                         (pwdCountdown > 0 ? (
                           <span>
-                            Resend in <strong className="text-[#0075de]">{pwdCountdown}s</strong>
+                            Resend in <strong className="text-[#191918]">{pwdCountdown}s</strong>
                           </span>
                         ) : (
                           <button
                             type="button"
                             onClick={handleResendOtp}
                             disabled={pwdLoading}
-                            className="font-semibold text-[#0075de] hover:underline cursor-pointer disabled:opacity-50"
+                            className="font-semibold text-[#191918] hover:underline cursor-pointer disabled:opacity-50"
                           >
                             {pwdLoading ? "Sending..." : "Resend Code"}
                           </button>
@@ -224,7 +224,7 @@ export default function SecurityPage() {
                           setPwdError("");
                         }}
                         placeholder="Min. 8 characters"
-                        className="w-full pl-3.5 pr-10 py-2 rounded-[8px] text-xs outline-none border border-[#dfdcd9] focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 bg-white text-[#191918] transition-all"
+                        className="w-full pl-3.5 pr-10 py-2 rounded-[8px] text-xs outline-none border border-[#dfdcd9] focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 bg-white text-[#191918] transition-all"
                       />
                       <button
                         type="button"
@@ -250,7 +250,7 @@ export default function SecurityPage() {
                         setPwdError("");
                       }}
                       placeholder="Confirm new password"
-                      className="w-full px-3.5 py-2 rounded-[8px] text-xs outline-none border border-[#dfdcd9] focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 bg-white text-[#191918] transition-all"
+                      className="w-full px-3.5 py-2 rounded-[8px] text-xs outline-none border border-[#dfdcd9] focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 bg-white text-[#191918] transition-all"
                     />
                   </div>
 
@@ -258,7 +258,7 @@ export default function SecurityPage() {
                     <button
                       type="submit"
                       disabled={pwdStep < 3 || pwdLoading}
-                      className="inline-flex items-center justify-center py-2 px-4 rounded-[8px] font-medium text-xs text-white bg-[#0075de] hover:bg-[#005bab] transition-all shadow-xs disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                      className="inline-flex items-center justify-center py-2 px-4 rounded-[8px] font-medium text-xs text-white bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] transition-all shadow-xs disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                     >
                       {pwdLoading ? (
                         <div className="flex items-center gap-1.5">

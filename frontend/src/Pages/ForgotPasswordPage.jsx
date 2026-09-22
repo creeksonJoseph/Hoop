@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading || !email}
-                className="w-full bg-[#0075de] hover:bg-[#005bab] active:bg-[#00396b] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2 cursor-pointer"
+                className="w-full bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2 cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -115,7 +115,7 @@ export default function ForgotPasswordPage() {
                       setError("");
                     }}
                     placeholder="000000"
-                    className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[14px] font-mono tracking-widest text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
+                    className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[14px] font-mono tracking-widest text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 transition-all"
                     autoFocus
                   />
                 </div>
@@ -140,7 +140,7 @@ export default function ForgotPasswordPage() {
                       setError("");
                     }}
                     placeholder="Min. 8 characters"
-                    className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-10 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
+                    className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-10 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 transition-all"
                   />
                   <button
                     type="button"
@@ -171,7 +171,7 @@ export default function ForgotPasswordPage() {
                       setError("");
                     }}
                     placeholder="Confirm new password"
-                    className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
+                    className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 transition-all"
                   />
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading || !form.otp || !form.password}
-                className="w-full bg-[#0075de] hover:bg-[#005bab] active:bg-[#00396b] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2 cursor-pointer"
+                className="w-full bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2 cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -193,14 +193,14 @@ export default function ForgotPasswordPage() {
               <div className="flex flex-col items-center gap-2 pt-2 text-[12px] text-[#615d59]">
                 {countdown > 0 ? (
                   <p>
-                    Resend code in <strong className="text-[#0075de]">{countdown}s</strong>
+                    Resend code in <strong className="text-[#191918]">{countdown}s</strong>
                   </p>
                 ) : (
                   <button
                     type="button"
                     onClick={handleResendOtp}
                     disabled={loading}
-                    className="font-semibold text-[#0075de] hover:underline cursor-pointer disabled:opacity-50"
+                    className="font-semibold text-[#191918] hover:underline cursor-pointer disabled:opacity-50"
                   >
                     {loading ? "Sending..." : "Resend code"}
                   </button>
@@ -222,7 +222,7 @@ export default function ForgotPasswordPage() {
           <div className="pt-4 border-t border-[#f0f0f0] text-center">
             <p className="text-[12px] text-[#615d59]">
               Remembered your password?{" "}
-              <Link to="/login" className="text-[#0075de] hover:text-[#005bab] transition-colors font-medium">
+              <Link to="/login" className="text-[#191918] hover:underline transition-colors font-medium">
                 Sign in
               </Link>
             </p>
