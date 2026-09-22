@@ -84,10 +84,10 @@ export default function ChatView({ igUsername }) {
   }
 
   const handleSend = async () => {
-    if (!input.trim()) return
+    if (!input.trim() || windowStatus.isExpired) return
     const text = input
     setInput('')
-    await sendMessage(text)
+    await sendMessage(text, { isExpired: windowStatus.isExpired })
   }
 
   const handleKeyDown = (e) => {
@@ -187,15 +187,20 @@ export default function ChatView({ igUsername }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isMobile ? 'Type a reply…' : 'Type a reply… (Enter to send, Shift+Enter for newline)'}
+                disabled={windowStatus.isExpired}
+                placeholder={
+                  windowStatus.isExpired
+                    ? (displayName ? `Messaging window closed — waiting for ${displayName} to reply…` : `Messaging window closed — waiting for @${igUsername} to reply…`)
+                    : (isMobile ? 'Type a reply…' : 'Type a reply… (Enter to send, Shift+Enter for newline)')
+                }
                 rows={1}
-                className="w-full bg-transparent border-none focus:ring-0 text-[#191918] py-2.5 px-3.5 resize-none custom-scrollbar max-h-28 text-[13px] placeholder:text-[#a39e98] outline-none"
+                className="w-full bg-transparent border-none focus:ring-0 text-[#191918] py-2.5 px-3.5 resize-none custom-scrollbar max-h-28 text-[13px] placeholder:text-[#a39e98] outline-none disabled:bg-[#f6f5f4] disabled:text-[#a39e98] disabled:cursor-not-allowed"
                 style={{ minHeight: '40px' }}
               />
               <div className="flex items-center pr-2 shrink-0">
                 <button
                   onClick={handleSend}
-                  disabled={!input.trim()}
+                  disabled={windowStatus.isExpired || !input.trim()}
                   className="p-2 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[8px] transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
                   <Send size={16} strokeWidth={2} />

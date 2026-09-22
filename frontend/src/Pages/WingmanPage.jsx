@@ -21,10 +21,10 @@ export default function WingmanPage() {
   }, [messages])
 
   const handleSend = async () => {
-    if (!input.trim()) return
+    if (!input.trim() || windowStatus.isExpired) return
     const text = input
     setInput('')
-    const res = await sendMessage(text)
+    const res = await sendMessage(text, { isExpired: windowStatus.isExpired })
     if (res && res.success === false && res.error) {
       toast(res.error, 'error')
     }
@@ -92,13 +92,18 @@ export default function WingmanPage() {
           <textarea
             value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-            placeholder="Type a reply…"
+            disabled={windowStatus.isExpired}
+            placeholder={
+              windowStatus.isExpired
+                ? "Messaging window closed — waiting for reply…"
+                : "Type a reply…"
+            }
             rows={1}
-            className="flex-1 bg-white border border-[#dfdcd9] rounded-[10px] px-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 resize-none transition-all"
+            className="flex-1 bg-white border border-[#dfdcd9] rounded-[10px] px-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 resize-none transition-all disabled:bg-[#f6f5f4] disabled:text-[#a39e98] disabled:cursor-not-allowed"
           />
           <button
-            onClick={handleSend} disabled={!input.trim()}
-            className="p-2.5 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[8px] transition-colors disabled:opacity-40 shadow-sm shrink-0"
+            onClick={handleSend} disabled={windowStatus.isExpired || !input.trim()}
+            className="p-2.5 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shrink-0"
           >
             <Send size={16} strokeWidth={2} />
           </button>

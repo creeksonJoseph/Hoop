@@ -200,7 +200,6 @@ export function useMessages(igUsername) {
     seenIds,
     addMessage,
     reconcileOptimisticMessage,
-    reconcileOptimisticMessage,
     hasMore,
     loadingMore,
     loadMore,

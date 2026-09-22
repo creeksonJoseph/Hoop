@@ -24,8 +24,16 @@ export function useActions(
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
-  const sendMessage = async (text) => {
+  const sendMessage = async (text, options = {}) => {
     if (!text.trim()) return false;
+    if (options?.isExpired) {
+      toastRef.current(
+        "This message couldn't be sent. Instagram's 24-hour messaging window has expired.",
+        "error"
+      );
+      return false;
+    }
+
     const optimistic = {
       id: `opt_${Date.now()}`,
       message: text,
@@ -73,7 +81,11 @@ export function useActions(
       }
 
       toastRef.current(errMsg, "error");
+      seenIds.current.delete(`id:${optimistic.id}`);
       seenIds.current.delete(optimistic.id);
+      seenIds.current.delete(
+        `fingerprint:${optimistic.direction || ""}|${optimistic.message || ""}|${optimistic.created_at || ""}`
+      );
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       return false;
     }
