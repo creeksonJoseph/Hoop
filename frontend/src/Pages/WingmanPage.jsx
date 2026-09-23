@@ -1,34 +1,41 @@
-import { useRef, useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { Send, Ban, Eye, Loader as Loader2 } from 'lucide-react'
-import { useWingman } from '../hooks/useWingman'
-import MessageBubble from '../components/chat/MessageBubble'
-import { MessagesSkeleton } from '../components/skeletons/Skeletons'
-import Instagram24hNotice from '../components/chat/Instagram24hNotice'
-import { get24hWindowStatus } from '../utils/instagramWindow'
-import { useToast } from '../context/ToastContext'
+import { useRef, useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { Send, Ban, Eye, Loader as Loader2 } from "lucide-react";
+import { useWingman } from "../hooks/useWingman";
+import MessageBubble from "../components/chat/MessageBubble";
+import { MessagesSkeleton } from "../components/skeletons/Skeletons";
+import Instagram24hNotice from "../components/chat/Instagram24hNotice";
+import { get24hWindowStatus } from "../utils/instagramWindow";
+import { useToast } from "../context/ToastContext";
 
 export default function WingmanPage() {
-  const { token } = useParams()
-  const { session, messages, participantName, profilePicUrl, loading, sendMessage } = useWingman(token)
-  const { toast } = useToast()
-  const [input, setInput] = useState('')
-  const [headerImgError, setHeaderImgError] = useState(false)
-  const messagesEndRef = useRef(null)
+  const { token } = useParams();
+  const {
+    session,
+    messages,
+    participantName,
+    profilePicUrl,
+    loading,
+    sendMessage,
+  } = useWingman(token);
+  const { toast } = useToast();
+  const [input, setInput] = useState("");
+  const [headerImgError, setHeaderImgError] = useState(false);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || windowStatus.isExpired) return
-    const text = input
-    setInput('')
-    const res = await sendMessage(text, { isExpired: windowStatus.isExpired })
+    if (!input.trim() || windowStatus.isExpired) return;
+    const text = input;
+    setInput("");
+    const res = await sendMessage(text, { isExpired: windowStatus.isExpired });
     if (res && res.success === false && res.error) {
-      toast(res.error, 'error')
+      toast(res.error, "error");
     }
-  }
+  };
 
   if (!loading && !session) {
     return (
@@ -36,12 +43,15 @@ export default function WingmanPage() {
         <Ban size={32} strokeWidth={1.5} className="text-[#a39e98]" />
         <p>Link not found or has been removed.</p>
       </div>
-    )
+    );
   }
 
-  const isRevoked = session?.access_level === 'revoked'
-  const canSend = session?.access_level === 'send'
-  const windowStatus = get24hWindowStatus(messages, participantName || session?.ig_username)
+  const isRevoked = session?.access_level === "revoked";
+  const canSend = session?.access_level === "send";
+  const windowStatus = get24hWindowStatus(
+    messages,
+    participantName || session?.ig_username,
+  );
 
   return (
     <div className="fluid-page h-[100dvh] flex flex-col bg-[#f9f9f8] text-[#191918] overflow-hidden font-sans">
@@ -50,16 +60,22 @@ export default function WingmanPage() {
           {profilePicUrl && !headerImgError ? (
             <img
               src={profilePicUrl}
-              alt={session?.ig_username || 'Avatar'}
+              alt={session?.ig_username || "Avatar"}
               onError={() => setHeaderImgError(true)}
               className="w-8 h-8 rounded-[8px] object-cover border border-[#0075de]/20 shrink-0 shadow-xs"
             />
           ) : (
-            <div className="w-8 h-8 rounded-[8px] bg-[#191918] flex items-center justify-center font-bold text-white text-[12px]">H</div>
+            <div className="w-8 h-8 rounded-[8px] bg-[#191918] flex items-center justify-center font-bold text-white text-[12px]">
+              H
+            </div>
           )}
           <div>
-            <p className="text-[14px] font-semibold text-[#191918] tracking-tight">{participantName || session?.ig_username || '…'}</p>
-            <p className="text-[11px] text-[#615d59]">@{session?.ig_username}</p>
+            <p className="text-[14px] font-semibold text-[#191918] tracking-tight">
+              {participantName || session?.ig_username || "…"}
+            </p>
+            <p className="text-[11px] text-[#615d59]">
+              @{session?.ig_username}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -72,12 +88,19 @@ export default function WingmanPage() {
       </header>
 
       <main className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]">
-        {loading
-          ? <MessagesSkeleton />
-          : messages.map((msg) => (
-              <MessageBubble key={msg.id} msg={msg} igUsername={session?.ig_username || ''} avatarUrl={profilePicUrl} onContextMenu={() => {}} />
-            ))
-        }
+        {loading ? (
+          <MessagesSkeleton />
+        ) : (
+          messages.map((msg) => (
+            <MessageBubble
+              key={msg.id}
+              msg={msg}
+              igUsername={session?.ig_username || ""}
+              avatarUrl={profilePicUrl}
+              onContextMenu={() => {}}
+            />
+          ))
+        )}
         <div ref={messagesEndRef} />
       </main>
 
@@ -90,19 +113,26 @@ export default function WingmanPage() {
       {canSend && !isRevoked && (
         <div className="p-3 border-t border-[#dfdcd9] bg-white flex gap-2 items-end">
           <textarea
-            value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             disabled={windowStatus.isExpired}
             placeholder={
               windowStatus.isExpired
-                ? "Messaging window closed — waiting for reply…"
+                ? "Messaging window closed - waiting for reply…"
                 : "Type a reply…"
             }
             rows={1}
             className="flex-1 bg-white border border-[#dfdcd9] rounded-[10px] px-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 resize-none transition-all disabled:bg-[#f6f5f4] disabled:text-[#a39e98] disabled:cursor-not-allowed"
           />
           <button
-            onClick={handleSend} disabled={windowStatus.isExpired || !input.trim()}
+            onClick={handleSend}
+            disabled={windowStatus.isExpired || !input.trim()}
             className="p-2.5 bg-[#0075de] hover:bg-[#005bab] text-white rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shrink-0"
           >
             <Send size={16} strokeWidth={2} />
@@ -117,5 +147,5 @@ export default function WingmanPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
