@@ -30,15 +30,21 @@ api.interceptors.response.use(
       const url = err.config?.url || "";
       const isAuthRoute =
         url.includes("/auth/login") || url.includes("/auth/signup");
-      const detail = err.response?.data?.detail || "";
+      const isMeRoute = url.includes("/auth/me");
+      const detail = err.response?.data?.detail || err.response?.data?.message || "";
+      const code = err.response?.data?.code || "";
       const currentPath = window.location.pathname;
 
-      // Do not wipe token or reload if this is a login/signup attempt, or if user is already on auth pages, or for Zernio key errors
+      // Only wipe user token on genuine user JWT expiration (/auth/me or explicit UNAUTHORIZED session error)
+      const isUserTokenExpired =
+        isMeRoute ||
+        (code === "UNAUTHORIZED" && detail.toLowerCase().includes("authentication required"));
+
       if (
+        isUserTokenExpired &&
         !isAuthRoute &&
         currentPath !== "/login" &&
-        currentPath !== "/signup" &&
-        !detail.toLowerCase().includes("zernio")
+        currentPath !== "/signup"
       ) {
         localStorage.removeItem("hoop_token");
         window.location.href = "/login";

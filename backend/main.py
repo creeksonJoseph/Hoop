@@ -59,8 +59,16 @@ app.add_middleware(
     allow_origins=_ALLOWED_ORIGINS,
     allow_origin_regex=r"https://.*(vercel\.app|hooop\.tech)",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "X-Hoop-Instagram-Account",
+        "x-hoop-instagram-account",
+    ],
 )
 
 

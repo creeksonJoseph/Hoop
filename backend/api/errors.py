@@ -102,8 +102,8 @@ def _cors_headers(request: Request) -> Dict[str, str]:
     return {
         "Access-Control-Allow-Origin": origin if origin != "*" else "*",
         "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "*",
-        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, X-Requested-With, X-Hoop-Instagram-Account, x-hoop-instagram-account",
     }
 
 
