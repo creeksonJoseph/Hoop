@@ -112,7 +112,7 @@ export function useMessages(igUsername) {
 
     const load = async () => {
       try {
-        const { data } = await api.get("/messages", {
+        const { data } = await api.get("/messages/", {
           params: { username: igUsername, limit: 50, sort: "desc" },
         });
         if (cancelled) return;
@@ -150,7 +150,7 @@ export function useMessages(igUsername) {
     setLoadingMore(true);
 
     try {
-      const { data } = await api.get("/messages", {
+      const { data } = await api.get("/messages/", {
         params: {
           username: igUsername,
           limit: 50,

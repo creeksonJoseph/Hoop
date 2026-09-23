@@ -13,7 +13,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { submit, loading, error: loginError } = useLogin();
-  const { submitGoogleToken, loading: googleLoading, error: googleError } = useGoogleAuth();
+  const {
+    submitGoogleToken,
+    loading: googleLoading,
+    error: googleError,
+  } = useGoogleAuth();
 
   const activeError = loginError || googleError;
 
@@ -82,7 +86,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#191918] focus:ring-2 focus:ring-[#191918]/15 transition-all"
-                  placeholder="name@organization.com"
+                  placeholder="name@gmail.com"
                 />
               </div>
             </div>

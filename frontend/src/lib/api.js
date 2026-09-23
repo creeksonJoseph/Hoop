@@ -29,24 +29,39 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       const url = err.config?.url || "";
       const isAuthRoute =
-        url.includes("/auth/login") || url.includes("/auth/signup");
+        url.includes("/auth/login") ||
+        url.includes("/auth/signup") ||
+        url.includes("/auth/google");
       const isMeRoute = url.includes("/auth/me");
-      const detail = err.response?.data?.detail || err.response?.data?.message || "";
+      const detail =
+        err.response?.data?.detail || err.response?.data?.message || "";
       const code = err.response?.data?.code || "";
       const currentPath = window.location.pathname;
+      const currentSearch = window.location.search || "";
+      const hasSessionToken = Boolean(localStorage.getItem("hoop_token"));
 
-      // Only wipe user token on genuine user JWT expiration (/auth/me or explicit UNAUTHORIZED session error)
-      const isUserTokenExpired =
+      const loginMessage = detail.toLowerCase();
+      const hasSessionExpiry =
         isMeRoute ||
-        (code === "UNAUTHORIZED" && detail.toLowerCase().includes("authentication required"));
+        code === "TOKEN_EXPIRED" ||
+        code === "INVALID_TOKEN" ||
+        code === "SESSION_EXPIRED" ||
+        (hasSessionToken &&
+          loginMessage.includes("authentication required") &&
+          loginMessage.includes("token"));
 
       if (
-        isUserTokenExpired &&
+        hasSessionExpiry &&
         !isAuthRoute &&
         currentPath !== "/login" &&
-        currentPath !== "/signup"
+        currentPath !== "/signup" &&
+        currentPath !== "/forgot-password"
       ) {
         localStorage.removeItem("hoop_token");
+        sessionStorage.setItem(
+          "hoop_redirect_after_login",
+          `${currentPath}${currentSearch}`,
+        );
         window.location.href = "/login";
       }
     }

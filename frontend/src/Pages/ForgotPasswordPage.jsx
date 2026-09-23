@@ -1,6 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Mail, KeyRound, Lock, Eye, EyeOff, Loader as Loader2, CircleAlert as AlertCircle } from "lucide-react";
+import {
+  Mail,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader as Loader2,
+  CircleAlert as AlertCircle,
+} from "lucide-react";
 import { usePasswordReset } from "../hooks/usePasswordReset";
 
 export default function ForgotPasswordPage() {
@@ -46,7 +54,10 @@ export default function ForgotPasswordPage() {
         <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-6 shadow-[0px_1px_3px_rgba(0,0,0,0.06)] space-y-5">
           {error && (
             <div className="p-3 bg-[#fff0f0] border border-[#ffcdd2] text-[#d32f2f] text-[13px] rounded-[8px] flex items-start gap-2.5">
-              <AlertCircle size={16} className="shrink-0 text-[#d32f2f] mt-0.5" />
+              <AlertCircle
+                size={16}
+                className="shrink-0 text-[#d32f2f] mt-0.5"
+              />
               <span className="leading-snug">{error}</span>
             </div>
           )}
@@ -72,7 +83,7 @@ export default function ForgotPasswordPage() {
                       setError("");
                     }}
                     className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all"
-                    placeholder="name@organization.com"
+                    placeholder="name@gmail.com"
                     autoFocus
                   />
                 </div>
@@ -193,7 +204,8 @@ export default function ForgotPasswordPage() {
               <div className="flex flex-col items-center gap-2 pt-2 text-[12px] text-[#615d59]">
                 {countdown > 0 ? (
                   <p>
-                    Resend code in <strong className="text-[#191918]">{countdown}s</strong>
+                    Resend code in{" "}
+                    <strong className="text-[#191918]">{countdown}s</strong>
                   </p>
                 ) : (
                   <button
@@ -222,7 +234,10 @@ export default function ForgotPasswordPage() {
           <div className="pt-4 border-t border-[#f0f0f0] text-center">
             <p className="text-[12px] text-[#615d59]">
               Remembered your password?{" "}
-              <Link to="/login" className="text-[#191918] hover:underline transition-colors font-medium">
+              <Link
+                to="/login"
+                className="text-[#191918] hover:underline transition-colors font-medium"
+              >
                 Sign in
               </Link>
             </p>
