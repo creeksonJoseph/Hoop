@@ -8,7 +8,12 @@ from typing import List, Optional
 
 
 async def init_feedback_table(conn: asyncpg.Connection) -> None:
-    """Ensure the feedback table exists in PostgreSQL."""
+    """Ensure the feedback table exists in PostgreSQL.
+
+    Security note: RLS is enabled with no policies, meaning all direct
+    PostgREST / Supabase client access is denied by default. Only the
+    backend service role (which bypasses RLS) can interact with this table.
+    """
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS feedback (
             id SERIAL PRIMARY KEY,
@@ -20,6 +25,10 @@ async def init_feedback_table(conn: asyncpg.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON feedback(user_id);
         CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON feedback(created_at DESC);
+
+        -- Enable Row Level Security with no policies (deny-all for direct clients).
+        -- The backend service role bypasses RLS, so all repo operations work normally.
+        ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
     """)
 
 
