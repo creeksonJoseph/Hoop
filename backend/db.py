@@ -122,6 +122,87 @@ async def init_db():
             "ALTER TABLE wingman_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER"
         )
 
+        # ── Performance indexes ──────────────────────────────────────────────────
+        # All use IF NOT EXISTS so re-running on startup is safe.
+
+        # messages: primary lookup by conversation_id with time-ordering
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
+            ON messages (conversation_id, created_at ASC)
+        """)
+
+        # messages: per-account scoping used in fallback queries
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_messages_account_username
+            ON messages (account_username)
+        """)
+
+        # messages: case-insensitive sender_name fallback lookup
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_messages_sender_name_lower
+            ON messages (LOWER(sender_name))
+        """)
+
+        # conversations: primary account-scoped participant lookup
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_conversations_participant_account
+            ON conversations (LOWER(participant_username), LOWER(account_username))
+        """)
+
+        # conversations: bare participant lookup (used in fallback / wingman routes)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_conversations_participant_lower
+            ON conversations (LOWER(participant_username))
+        """)
+
+        # tracked_dms: per-user + account scoping (list DMs query)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_tracked_dms_user_account
+            ON tracked_dms (user_id, LOWER(account_username))
+        """)
+
+        # tracked_dms: ig_username JOIN used in list_dm_usernames_with_session_counts
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_tracked_dms_ig_username_lower
+            ON tracked_dms (LOWER(ig_username))
+        """)
+
+        # wingman_sessions: primary owner+target lookup (get_sessions_for_ig)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_wingman_sessions_user_ig
+            ON wingman_sessions (user_id, ig_username)
+        """)
+
+        # wingman_sessions: token lookup used on every authenticated wingman request
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_wingman_sessions_token
+            ON wingman_sessions (token)
+        """)
+
+        # wingman_sessions: ig_username + access_level filter (get_active_tokens_for_ig)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_wingman_sessions_ig_access
+            ON wingman_sessions (ig_username, access_level)
+        """)
+
+        # connected_ig_accounts: per-user listing (get_accounts_for_user)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_connected_ig_accounts_user_id
+            ON connected_ig_accounts (user_id)
+        """)
+
+        # connected_ig_accounts: cross-user ig_username lookup (get_account_by_ig)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_connected_ig_accounts_ig_username
+            ON connected_ig_accounts (ig_username)
+        """)
+
+        # users: email lookup used on every login / registration
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_users_email
+            ON users (email)
+        """)
+
 
 
 
