@@ -15,6 +15,7 @@ import SecurityPage from "./Pages/SecurityPage";
 import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
 import PwaInstallPrompt from "./components/common/PwaInstallPrompt";
 import AdminPage from "./Pages/AdminPage";
+import LandingPage from "./Pages/LandingPage";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -119,8 +120,8 @@ export default function App() {
             </Protected>
           }
         />
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="*" element={<Navigate to="/home" replace />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <PwaInstallPrompt />
     </>

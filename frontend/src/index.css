@@ -43,6 +43,147 @@
   --font-sans: var(--font-sans);
   --radius-md: var(--radius);
   --radius-lg: 1rem;
+
+  /* Landing Page Design Tokens - Black & White with Minimal Blue */
+  --color-on-primary-fixed-variant: #005bb5;
+  --color-tertiary-container: #ebe9e5;
+  --color-secondary-container: #f0eeec;
+  --color-tertiary: #615d59;
+  --color-tertiary-fixed-dim: #dfdcd9;
+  --color-on-tertiary-container: #191918;
+  --color-inverse-on-surface: #ffffff;
+  --color-secondary-fixed: #f0eeec;
+  --color-outline: #8c8782;
+  --color-on-primary: #ffffff;
+  --color-inverse-surface: #191918;
+  --color-surface-container: #ebe9e5;
+  --color-error-container: #fff0f0;
+  --color-on-secondary: #ffffff;
+  --color-surface-variant: #f0eeec;
+  --color-on-surface-variant: #615d59;
+  --color-on-secondary-fixed: #191918;
+  --color-secondary-fixed-dim: #dfdcd9;
+  --color-on-primary-container: #ffffff;
+  --color-error: #d32f2f;
+  --color-on-error: #ffffff;
+  --color-on-secondary-container: #191918;
+  --color-primary-container: #191918;
+  --color-surface-tint: #0075de;
+  --color-on-primary-fixed: #003770;
+  --color-on-error-container: #d32f2f;
+  --color-outline-variant: #dfdcd9;
+  --color-primary-fixed: #e6f3fe;
+  --color-on-tertiary-fixed: #191918;
+  --color-primary-fixed-dim: #cce7fd;
+  --color-surface-bright: #ffffff;
+  --color-on-surface: #191918;
+  --color-on-background: #191918;
+  --color-surface: #f9f9f8;
+  --color-tertiary-fixed: #ebe9e5;
+  --color-surface-container-low: #f4f3f0;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-dim: #f0eeec;
+  --color-on-tertiary-fixed-variant: #615d59;
+  --color-on-tertiary: #ffffff;
+  --color-inverse-primary: #e6f3fe;
+  --color-surface-container-highest: #dedad5;
+  --color-primary: #0075de;
+  --color-on-secondary-fixed-variant: #615d59;
+  --color-surface-container-high: #e3e0dc;
+
+  --spacing-gutter: 1rem;
+  --spacing-margin-lg: 2rem;
+  --spacing-gutter-lg: 1.5rem;
+  --spacing-margin: 1rem;
+  --spacing-space-xl: 2rem;
+  --spacing-margin-md: 1.5rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-lg: 1.25rem;
+  --spacing-space-xs: 0.25rem;
+
+  --font-body-lg: "Manrope", sans-serif;
+  --font-headline-lg-mobile: "Plus Jakarta Sans", sans-serif;
+  --font-headline-sm: "Plus Jakarta Sans", sans-serif;
+  --font-body-md: "Manrope", sans-serif;
+  --font-label-sm: "Plus Jakarta Sans", sans-serif;
+  --font-label-md: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body-sm: "Manrope", sans-serif;
+  --font-headline-md: "Plus Jakarta Sans", sans-serif;
+  --font-label-caps: "Plus Jakarta Sans", sans-serif;
+  --font-headline-lg: "Plus Jakarta Sans", sans-serif;
+}
+
+/* Landing Page utility classes */
+.rounded-DEFAULT {
+  border-radius: 1rem;
+}
+.text-display {
+  font-size: 3rem;
+  line-height: 3.5rem;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+.text-headline-lg {
+  font-size: 2rem;
+  line-height: 2.5rem;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+.text-headline-lg-mobile {
+  font-size: 1.625rem;
+  line-height: 2.125rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.text-headline-md {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+.text-headline-sm {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.text-body-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+.text-body-md {
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  letter-spacing: 0em;
+  font-weight: 400;
+}
+.text-body-sm {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.005em;
+  font-weight: 400;
+}
+.text-label-md {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+.text-label-sm {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+.text-label-caps {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
 * { border-color: var(--border); }
@@ -91,3 +232,70 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #d0d5dd; border-radius: 99px; }
 .fade-up { animation: fade-up .3s ease-out both; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Orbit Carousel for How to Hooop */
+.orbit-stage {
+  position: relative;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  user-select: none;
+}
+.orbit-card {
+  position: absolute;
+  width: 100%;
+  max-width: 420px;
+  min-height: 240px;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  filter: none !important;
+}
+/* Center Active Card */
+.orbit-card[data-pos="0"] {
+  transform: translate3d(0, 0, 0) scale(1);
+  z-index: 30;
+  opacity: 1;
+  background: #ffffff !important;
+  border-color: #191918 !important;
+  box-shadow: 0 24px 48px -12px rgba(25, 25, 24, 0.14) !important;
+}
+/* Left Wing Card */
+.orbit-card[data-pos="-1"] {
+  transform: translate3d(-58%, 8px, 0) scale(0.9);
+  z-index: 15;
+  opacity: 0.7;
+  background: #f9f9f8 !important;
+  border-color: #dfdcd9 !important;
+}
+/* Right Wing Card */
+.orbit-card[data-pos="1"] {
+  transform: translate3d(58%, 8px, 0) scale(0.9);
+  z-index: 15;
+  opacity: 0.7;
+  background: #f9f9f8 !important;
+  border-color: #dfdcd9 !important;
+}
+.orbit-card[data-pos="-1"]:hover,
+.orbit-card[data-pos="1"]:hover {
+  opacity: 0.95;
+}
+@media (max-width: 768px) {
+  .orbit-card[data-pos="-1"] {
+    transform: translate3d(-18%, 10px, 0) scale(0.9);
+  }
+  .orbit-card[data-pos="1"] {
+    transform: translate3d(18%, 10px, 0) scale(0.9);
+  }
+}
+.orbit-pill {
+  transition: all 0.3s ease;
+}
+.orbit-pill.active {
+  background: #191918 !important;
+  color: #ffffff !important;
+  padding-inline: 1.25rem !important;
+}
