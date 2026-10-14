@@ -153,9 +153,8 @@ export default function OnboardingPage() {
           </div>
 
           {/* Mobile steps */}
-          <ol className="md:hidden relative flex flex-col gap-5">
-            <span aria-hidden="true" className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-[#191918]" />
-            <li className="relative z-10 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+          <ol className="md:hidden flex flex-col items-center">
+            <li className="w-full rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
               <div className="flex gap-3">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">1</span>
                 <div className="min-w-0 flex-1">
@@ -175,7 +174,8 @@ export default function OnboardingPage() {
                 </div>
               </div>
             </li>
-            <li className="relative z-10 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+            <li aria-hidden="true" className="h-5 w-px bg-[#191918]" />
+            <li className="w-full rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
               <div className="flex gap-3">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">2</span>
                 <div className="min-w-0 flex-1">
