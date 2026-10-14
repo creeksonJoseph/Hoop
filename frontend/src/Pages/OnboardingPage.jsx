@@ -121,16 +121,8 @@ export default function OnboardingPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-[11.5px] text-[#4a4744]">
-          Hooop is not affiliated with Zernio.{" "}
-          <a
-            href="https://zernio.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-[#6b6662] transition-colors"
-          >
-            Learn more
-          </a>
+          <p className="text-[11.5px] text-[#4a4744]">
+          Hooop is not affiliated with Zernio.
         </p>
       </div>
 
@@ -231,7 +223,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* Form card */}
-          <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-5 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
+          <div className="hidden md:block bg-white border border-[#dfdcd9] rounded-[12px] p-5 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-[12px] font-medium text-[#494744] mb-1.5">
@@ -279,15 +271,7 @@ export default function OnboardingPage() {
 
           {/* Mobile footer */}
           <p className="text-center text-[11px] text-[#b8b4b0] md:hidden">
-            Not affiliated with Zernio.{" "}
-            <a
-              href="https://zernio.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-[#615d59]"
-            >
-              Learn more
-            </a>
+            Not affiliated with Zernio.
           </p>
         </div>
       </div>
