@@ -33,7 +33,7 @@ function Protected({ children }) {
 function AdminProtected({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (!user || user.email?.toLowerCase() !== "charanajoseph@gmail.com") {
+  if (!user || !user.is_admin) {
     return <Navigate to="/home" replace />;
   }
   return children;

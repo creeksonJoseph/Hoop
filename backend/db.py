@@ -44,6 +44,12 @@ async def init_db():
     async with pool.acquire() as conn:
         await conn.fetchval("SELECT 1")
 
+        # ── users: add role column for role-based access control ──────────────
+        await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) NOT NULL DEFAULT 'user'")
+        admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+        if admin_email:
+            await conn.execute("UPDATE users SET role = 'admin' WHERE LOWER(email) = $1", admin_email)
+
         # ── tracked_dms: add account_username if missing ──────────────────────
         await conn.execute("ALTER TABLE tracked_dms ADD COLUMN IF NOT EXISTS account_username TEXT NOT NULL DEFAULT ''")
         await conn.execute("""

@@ -2,7 +2,7 @@
 services/feedback_service.py
 ==============================
 LAYER: Service - Feature Suggestions & Feedback business workflows and Resend email dispatch.
-Dispatches instant HTML notification emails to charanajoseph@gmail.com upon submission,
+Dispatches instant HTML notification emails to admin upon submission,
 and dispatches user reply emails when admin responds via Admin Portal.
 """
 import logging
@@ -14,7 +14,22 @@ import config
 from repositories import feedback_repo
 
 logger = logging.getLogger("hoop.feedback")
-ADMIN_EMAIL = "charanajoseph@gmail.com"
+
+
+async def get_admin_notification_email() -> str:
+    """Resolve admin email dynamically from config or database role."""
+    if config.ADMIN_NOTIFICATION_EMAIL:
+        return config.ADMIN_NOTIFICATION_EMAIL
+    if config.ADMIN_EMAIL:
+        return config.ADMIN_EMAIL
+    try:
+        from db import get_pool
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            email = await conn.fetchval("SELECT email FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1")
+            return email or ""
+    except Exception:
+        return ""
 
 
 async def send_feedback_admin_notification(
@@ -23,7 +38,7 @@ async def send_feedback_admin_notification(
     category: str,
     feedback_id: int
 ) -> Tuple[bool, str]:
-    """Send styled HTML notification email to charanajoseph@gmail.com via Resend API."""
+    """Send styled HTML notification email to admin via Resend API."""
     if not config.RESEND_API_KEY:
         logger.warning(f"[FEEDBACK DEV] Resend key missing. Feedback from {user_email}: {message}")
         return True, "Development mode: Notification logged."
@@ -75,10 +90,15 @@ async def send_feedback_admin_notification(
     </html>
     """
 
+    admin_email = await get_admin_notification_email()
+    if not admin_email:
+        logger.warning(f"[FEEDBACK] No admin email found. Feedback logged: {message}")
+        return True, "Notification logged."
+
     from_addr = getattr(config, "RESEND_FEATURE_FROM_EMAIL", "Hooop <customersupport@hoop.tech>")
     payload = {
         "from": from_addr,
-        "to": [ADMIN_EMAIL],
+        "to": [admin_email],
         "subject": f"[{formatted_cat}] New Feedback from {user_email}",
         "html": html_content,
     }
@@ -87,7 +107,7 @@ async def send_feedback_admin_notification(
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(url, json=payload, headers=headers)
             if resp.status_code in (200, 201):
-                logger.info(f"[Resend] Admin notification sent to {ADMIN_EMAIL}")
+                logger.info(f"[Resend] Admin notification sent to {admin_email}")
                 return True, "Notification email sent."
             
             # Fallback if domain is unverified

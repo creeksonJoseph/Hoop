@@ -2,7 +2,7 @@
 api/routers/admin.py
 =====================
 LAYER: Router - admin-only operations (Metrics dashboard, User management, Accounts & Sessions directory).
-Protected by require_admin dependency (restricted to charanajoseph@gmail.com).
+Protected by require_admin dependency (restricted to users with role 'admin').
 """
 import logging
 from typing import List
@@ -105,7 +105,14 @@ async def get_all_sessions(admin=Depends(require_admin)):
                 s.token,
                 s.access_level,
                 s.created_at,
-                u.email AS owner_email
+                COALESCE(u.email, 'Unknown') AS owner_email,
+                (
+                    SELECT a.ig_username 
+                    FROM connected_ig_accounts a 
+                    WHERE a.user_id = s.user_id 
+                    ORDER BY a.created_at DESC 
+                    LIMIT 1
+                ) AS owner_ig_username
             FROM wingman_sessions s
             LEFT JOIN users u ON u.id = s.user_id
             ORDER BY s.created_at DESC

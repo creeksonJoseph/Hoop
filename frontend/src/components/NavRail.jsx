@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Settings, Users, Home, LogOut, UserRound } from "lucide-react";
+import { Settings, Users, Home, LogOut, UserRound, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import ConfirmModal from "./common/ConfirmModal";
 
@@ -61,18 +61,23 @@ export default function NavRail({ activePage }) {
     { href: "/home", icon: Home, label: "Home", key: "home" },
     { href: "/wingmen", icon: Users, label: "Wingmen", key: "sessions" },
     { href: "/settings", icon: Settings, label: "Settings", key: "settings" },
+    ...(user?.is_admin
+      ? [{ href: "/admin", icon: ShieldCheck, label: "Admin", key: "admin" }]
+      : []),
   ];
 
   const current =
     activePage !== undefined
       ? activePage
-      : location.pathname.startsWith("/settings")
-        ? "settings"
-        : location.pathname === "/wingmen" ||
-          location.pathname === "/sessions/all" ||
-          location.pathname === "/sessions"
-          ? "sessions"
-          : "home";
+      : location.pathname.startsWith("/admin")
+        ? "admin"
+        : location.pathname.startsWith("/settings")
+          ? "settings"
+          : location.pathname === "/wingmen" ||
+            location.pathname === "/sessions/all" ||
+            location.pathname === "/sessions"
+            ? "sessions"
+            : "home";
 
   const handleSignOut = () => {
     logout();

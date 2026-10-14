@@ -51,11 +51,17 @@ async def login(body: LoginBody):
         raise AuthenticationError("Incorrect password. Please try again.", code="INVALID_PASSWORD")
 
     token = create_jwt(user["id"], user["email"])
+    user_role = user.get("role", "user")
     return {
         "access_token": token,
         "token_type": "bearer",
         "onboarded": cnt > 0,
-        "user": {"id": user["id"], "email": user["email"]},
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "role": user_role,
+            "is_admin": user_role == "admin",
+        },
     }
 
 
@@ -78,11 +84,17 @@ async def google_login(body: GoogleLoginBody):
         cnt = await account_repo.count_accounts_for_user(conn, user["id"])
 
     token = create_jwt(user["id"], user["email"])
+    user_role = user.get("role", "user")
     return {
         "access_token": token,
         "token_type": "bearer",
         "onboarded": cnt > 0,
-        "user": {"id": user["id"], "email": user["email"]},
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "role": user_role,
+            "is_admin": user_role == "admin",
+        },
     }
 
 
@@ -252,4 +264,11 @@ async def me(user=Depends(require_user)):
     pool = await get_pool()
     async with pool.acquire() as conn:
         cnt = await account_repo.count_accounts_for_user(conn, user["id"])
-    return {"id": user["id"], "email": user["email"], "onboarded": cnt > 0}
+    user_role = user.get("role", "user")
+    return {
+        "id": user["id"],
+        "email": user["email"],
+        "role": user_role,
+        "onboarded": cnt > 0,
+        "is_admin": user_role == "admin",
+    }

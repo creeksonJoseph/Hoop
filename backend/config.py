@@ -51,6 +51,8 @@ UPSTASH_REDIS_REST_TOKEN: str = os.getenv("UPSTASH_REDIS_REST_TOKEN", "").strip(
 RESEND_API_KEY: str       = os.getenv("RESEND_API_KEY", "")
 RESEND_FROM_EMAIL: str    = os.getenv("RESEND_FROM_EMAIL", "Hooop <auth@hooop.tech>")
 RESEND_FEATURE_FROM_EMAIL: str = os.getenv("RESEND_FEATURE_FROM_EMAIL", "Hooop <customersupport@hoop.tech>")
+ADMIN_EMAIL: str           = os.getenv("ADMIN_EMAIL", "")
+ADMIN_NOTIFICATION_EMAIL: str = os.getenv("ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_EMAIL", ""))
 
 # ── Startup validation ────────────────────────────────────────────────────────
 if not DATABASE_URL:

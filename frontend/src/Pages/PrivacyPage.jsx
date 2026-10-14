@@ -69,7 +69,7 @@ export default function PrivacyPage() {
   const hasToken =
     typeof window !== "undefined" &&
     Boolean(localStorage.getItem("hoop_token"));
-  const returnPath = user || (loading && hasToken) ? "/home" : "/login";
+  const returnPath = user || (loading && hasToken) ? "/home" : "/";
 
   return (
     <div className="min-h-screen bg-[#f9f9f8] px-4 py-10 text-[#191918] selection:bg-[#e6f3fe] selection:text-[#0075de] sm:px-8 sm:py-14">
@@ -79,9 +79,15 @@ export default function PrivacyPage() {
             to={returnPath}
             className="mb-8 inline-flex items-center gap-2 text-[13px] font-semibold text-[#191918] hover:text-[#0075de] transition-colors"
           >
-            <span className="flex size-8 items-center justify-center rounded-[8px] bg-[#191918] text-sm font-bold text-white">
-              H
-            </span>
+            <svg
+              className="w-7 h-7 rounded-[8px] shadow-xs shrink-0"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect width="32" height="32" rx="8" fill="#191918" />
+              <path fill="#FFFFFF" d="M8 7h4v7h8V7h4v18h-4v-7H12v7H8V7z" />
+            </svg>
             Hooop
           </Link>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0075de]">

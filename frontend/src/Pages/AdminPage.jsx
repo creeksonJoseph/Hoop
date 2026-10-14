@@ -22,7 +22,7 @@ import NavRail from "../components/NavRail";
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const isAdmin = user?.email?.toLowerCase() === "charanajoseph@gmail.com";
+  const isAdmin = Boolean(user?.is_admin);
 
   const {
     stats,
@@ -155,7 +155,7 @@ export default function AdminPage() {
                 </h1>
               </div>
               <p className="text-xs sm:text-sm text-[#615d59]">
-                System metrics, user directory, connected accounts, and feature suggestions for charanajoseph@gmail.com.
+                System metrics, user directory, connected accounts, and feature suggestions.
               </p>
             </div>
 
@@ -481,6 +481,7 @@ export default function AdminPage() {
                   <table className="w-full text-left text-xs text-[#191918]">
                     <thead className="bg-[#f9f9f8] border-b border-[#dfdcd9] text-[11px] font-semibold uppercase text-[#615d59]">
                       <tr>
+                        <th className="py-2.5 px-3">Token Owner</th>
                         <th className="py-2.5 px-3">Guest Name</th>
                         <th className="py-2.5 px-3">DM Target</th>
                         <th className="py-2.5 px-3">Token</th>
@@ -491,9 +492,21 @@ export default function AdminPage() {
                     <tbody className="divide-y divide-[#dfdcd9]">
                       {sessions.map((s) => (
                         <tr key={s.id} className="hover:bg-[#f9f9f8]">
+                          <td className="py-3 px-3">
+                            <span className="font-semibold text-[#191918] block">
+                              {s.owner_email || `User #${s.user_id || "?"}`}
+                            </span>
+                            {s.owner_ig_username && (
+                              <span className="text-[11px] text-[#0075de] font-mono">
+                                @{s.owner_ig_username}
+                              </span>
+                            )}
+                          </td>
                           <td className="py-3 px-3 font-bold">{s.wingman_name}</td>
                           <td className="py-3 px-3">@{s.ig_username}</td>
-                          <td className="py-3 px-3 font-mono text-[11px] text-[#615d59]">{s.token}</td>
+                          <td className="py-3 px-3 font-mono text-[11px] text-[#615d59] max-w-xs truncate" title={s.token}>
+                            {s.token}
+                          </td>
                           <td className="py-3 px-3 text-[#615d59]">{new Date(s.created_at).toLocaleDateString()}</td>
                           <td className="py-3 px-3 text-right">
                             <button

@@ -11,8 +11,15 @@ import { clearDMsCache } from "../hooks/useDMs";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("hoop_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => !localStorage.getItem("hoop_token"));
   const [activeIgUsername, setActiveIgUsername] = useState(
     () => localStorage.getItem("hoop_active_ig") || null,
   );
@@ -28,13 +35,23 @@ export function AuthProvider({ children }) {
     }
     api
       .get("/auth/me")
-      .then((r) => setUser(r.data))
-      .catch(() => localStorage.removeItem("hoop_token"))
+      .then((r) => {
+        setUser(r.data);
+        localStorage.setItem("hoop_user", JSON.stringify(r.data));
+      })
+      .catch(() => {
+        localStorage.removeItem("hoop_token");
+        localStorage.removeItem("hoop_user");
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const login = (token, userData) => {
     localStorage.setItem("hoop_token", token);
+    if (userData) {
+      localStorage.setItem("hoop_user", JSON.stringify(userData));
+    }
     setUser(userData);
   };
 
@@ -43,9 +60,13 @@ export function AuthProvider({ children }) {
     if (normalized) localStorage.setItem("hoop_active_ig", normalized);
     else localStorage.removeItem("hoop_active_ig");
     setActiveIgUsername(normalized);
-    setUser((current) =>
-      current ? { ...current, active_ig_username: normalized } : current,
-    );
+    setUser((current) => {
+      const updated = current ? { ...current, active_ig_username: normalized } : current;
+      if (updated) {
+        localStorage.setItem("hoop_user", JSON.stringify(updated));
+      }
+      return updated;
+    });
     // Clear ALL data caches - DMs list, any session caches, etc.
     // accountVersion bump causes every hook that depends on it to re-fetch.
     clearDMsCache();
@@ -55,6 +76,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem("hoop_token");
     localStorage.removeItem("hoop_active_ig");
+    localStorage.removeItem("hoop_user");
     clearDMsCache();
     setActiveIgUsername(null);
     setAccountVersion(0);

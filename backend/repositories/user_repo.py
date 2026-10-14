@@ -13,12 +13,12 @@ async def get_user_by_email(conn: asyncpg.Connection, email: str) -> Optional[as
 
 
 async def get_user_by_id(conn: asyncpg.Connection, user_id: int) -> Optional[asyncpg.Record]:
-    return await conn.fetchrow("SELECT id, email FROM users WHERE id = $1", user_id)
+    return await conn.fetchrow("SELECT id, email, role FROM users WHERE id = $1", user_id)
 
 
 async def create_user(conn: asyncpg.Connection, email: str, password_hash: str) -> asyncpg.Record:
     return await conn.fetchrow(
-        "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email",
+        "INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'user') RETURNING id, email, role",
         email.lower().strip(), password_hash,
     )
 
@@ -42,12 +42,13 @@ async def get_all_users_admin(conn: asyncpg.Connection) -> list:
     rows = await conn.fetch("""
         SELECT 
             u.id, 
-            u.email, 
+            u.email,
+            u.role, 
             u.created_at,
             COUNT(DISTINCT a.id) AS account_count
         FROM users u
         LEFT JOIN connected_ig_accounts a ON a.user_id = u.id
-        GROUP BY u.id, u.email, u.created_at
+        GROUP BY u.id, u.email, u.role, u.created_at
         ORDER BY u.created_at DESC
     """)
     return [dict(r) for r in rows]
