@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /sessions
+Disallow: /conversations
+
+Sitemap: https://hooop.tech/sitemap.xml

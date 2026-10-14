@@ -1,7 +1,7 @@
 {
   "name": "Hooop",
   "short_name": "Hooop",
-  "description": "Hooop",
+  "description": "Let your hb/hg help you out when you are out of words in that DM.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9f9f8",

@@ -277,9 +277,15 @@ export default function LandingPage() {
                       {/* Header with logo and handle pill */}
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-9 h-9 rounded-full bg-[#0b1c30] flex items-center justify-center text-white font-bold text-sm shadow-xs">
-                            H
-                          </div>
+                          <svg
+                            className="w-8 h-8 rounded-xl shadow-xs shrink-0"
+                            viewBox="0 0 32 32"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <rect width="32" height="32" rx="8" fill="#191918" />
+                            <path fill="#FFFFFF" d="M8 7h4v7h8V7h4v18h-4v-7H12v7H8V7z" />
+                          </svg>
                           <span className="text-base font-bold tracking-tight text-[#191918]">
                             Hooop
                           </span>
@@ -749,11 +755,15 @@ export default function LandingPage() {
       <footer className="w-full bg-white border-t border-[#dfdcd9] py-8">
         <div className="w-full px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-[#191918] flex items-center justify-center">
-              <span className="text-white text-xs font-bold leading-none">
-                H
-              </span>
-            </div>
+            <svg
+              className="w-6 h-6 rounded-md shadow-xs shrink-0"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect width="32" height="32" rx="8" fill="#191918" />
+              <path fill="#FFFFFF" d="M8 7h4v7h8V7h4v18h-4v-7H12v7H8V7z" />
+            </svg>
             <span className="text-sm font-bold tracking-tight text-[#191918]">
               Hooop
             </span>
