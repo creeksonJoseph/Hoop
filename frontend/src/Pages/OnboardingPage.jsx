@@ -4,6 +4,7 @@ import {
   Key,
   Loader as Loader2,
   ExternalLink,
+  ArrowRight,
   ShieldCheck,
 } from "lucide-react";
 import { useOnboarding } from "../hooks/useOnboarding";
