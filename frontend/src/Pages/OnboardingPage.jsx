@@ -152,15 +152,34 @@ export default function OnboardingPage() {
             </p>
           </div>
 
-          {/* Mobile-only Zernio CTA */}
-          <a
-            href="https://zernio.com/dashboard/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="md:hidden inline-flex items-center justify-center w-full rounded-[8px] bg-[#191918] px-4 py-3 text-[13px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
-          >
-            Get API key from Zernio
-          </a>
+          {/* Mobile steps */}
+          <ol className="md:hidden flex flex-col gap-4 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+            <li className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">1</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium leading-snug text-[#191918]">Get an API key from Zernio</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Get the API key from the button below.</p>
+                <div className="mt-3 flex justify-end">
+                  <a
+                    href="https://zernio.com/dashboard/api-keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-auto items-center gap-1.5 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
+                  >
+                    Get API key
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">2</span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium leading-snug text-[#191918]">Paste your API key below</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Paste below the API key you got from step one.</p>
+              </div>
+            </li>
+          </ol>
 
           {/* Desktop heading above form */}
           <div className="hidden md:block">
