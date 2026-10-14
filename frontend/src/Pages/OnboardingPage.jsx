@@ -4,7 +4,6 @@ import {
   Key,
   Loader as Loader2,
   ExternalLink,
-  ArrowRight,
   ShieldCheck,
 } from "lucide-react";
 import { useOnboarding } from "../hooks/useOnboarding";
@@ -196,13 +195,15 @@ export default function OnboardingPage() {
                       />
                     </div>
                     <p className="mt-1.5 text-[11px] text-[#a39e98] flex items-center gap-1"><ShieldCheck size={11} className="text-[#4c9f6f]" />Encrypted and never shared</p>
-                    <button
-                      type="submit"
-                      disabled={loading || !key.trim()}
-                      className="mt-3 inline-flex w-auto items-center justify-center gap-2 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white transition-all hover:bg-[#333] disabled:opacity-40"
-                    >
-                      {loading ? <><Loader2 size={14} className="animate-spin" /> Connecting…</> : <>Continue <ArrowRight size={14} /></>}
-                    </button>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={loading || !key.trim()}
+                        className="inline-flex w-auto items-center justify-center gap-2 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white transition-all hover:bg-[#333] disabled:opacity-40"
+                      >
+                        {loading ? <><Loader2 size={14} className="animate-spin" /> Connecting…</> : "Continue"}
+                      </button>
+                    </div>
                   </form>
                 </div>
               </div>
