@@ -153,30 +153,58 @@ export default function OnboardingPage() {
           </div>
 
           {/* Mobile steps */}
-          <ol className="md:hidden flex flex-col gap-4 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
-            <li className="flex gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">1</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium leading-snug text-[#191918]">Get an API key from Zernio</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Get the API key from the button below.</p>
-                <div className="mt-3 flex justify-end">
-                  <a
-                    href="https://zernio.com/dashboard/api-keys"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-auto items-center gap-1.5 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
-                  >
-                    Get API key
-                    <ExternalLink size={11} />
-                  </a>
+          <ol className="md:hidden relative flex flex-col gap-5">
+            <span aria-hidden="true" className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-[#191918]" />
+            <li className="relative z-10 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+              <div className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">1</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium leading-snug text-[#191918]">Get an API key from Zernio</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Get the API key from the button below.</p>
+                  <div className="mt-3 flex justify-end">
+                    <a
+                      href="https://zernio.com/dashboard/api-keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-auto items-center gap-1.5 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
+                    >
+                      Get API key
+                      <ExternalLink size={11} />
+                    </a>
+                  </div>
                 </div>
               </div>
             </li>
-            <li className="flex gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">2</span>
-              <div className="min-w-0">
-                <p className="text-[13px] font-medium leading-snug text-[#191918]">Paste your API key below</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Paste below the API key you got from step one.</p>
+            <li className="relative z-10 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+              <div className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">2</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium leading-snug text-[#191918]">Paste your API key below</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Paste below the API key you got from step one.</p>
+                  <form onSubmit={handleSubmit} className="mt-4">
+                    <label className="block text-[12px] font-medium text-[#494744] mb-1.5">Zernio API Key</label>
+                    <div className="relative">
+                      <Key size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a39e98]" strokeWidth={2} />
+                      <input
+                        type="text"
+                        required
+                        value={key}
+                        onChange={(e) => setKey(e.target.value)}
+                        className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all font-mono"
+                        placeholder="sk_live_..."
+                        autoFocus
+                      />
+                    </div>
+                    <p className="mt-1.5 text-[11px] text-[#a39e98] flex items-center gap-1"><ShieldCheck size={11} className="text-[#4c9f6f]" />Encrypted and never shared</p>
+                    <button
+                      type="submit"
+                      disabled={loading || !key.trim()}
+                      className="mt-3 inline-flex w-auto items-center justify-center gap-2 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white transition-all hover:bg-[#333] disabled:opacity-40"
+                    >
+                      {loading ? <><Loader2 size={14} className="animate-spin" /> Connecting…</> : <>Continue <ArrowRight size={14} /></>}
+                    </button>
+                  </form>
+                </div>
               </div>
             </li>
           </ol>
