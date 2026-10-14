@@ -145,31 +145,21 @@ export default function OnboardingPage() {
             <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">
               Connect Instagram
             </h1>
-            <p className="text-[12.5px] text-[#615d59] leading-relaxed max-w-[280px]">
+            <p className="text-[12.5px] text-[#615d59] leading-relaxed max-w-[300px]">
               Hooop uses <strong className="text-[#191918]">Zernio</strong> to
-              connect your Instagram DMs. Get a free API key first.
+              securely connect to Instagram. Get a Zernio API key before you
+              continue.
             </p>
           </div>
 
-          {/* Mobile-only Zernio link */}
+          {/* Mobile-only Zernio CTA */}
           <a
             href="https://zernio.com/dashboard/api-keys"
             target="_blank"
             rel="noopener noreferrer"
-            className="md:hidden flex items-center justify-between gap-3 w-full rounded-[10px] border border-[#dfdcd9] bg-white px-4 py-3 hover:bg-[#f6f5f4] transition-colors group"
+            className="md:hidden inline-flex items-center justify-center w-full rounded-[8px] bg-[#191918] px-4 py-3 text-[13px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
           >
-            <div>
-              <p className="text-[13px] font-semibold text-[#191918]">
-                Step 1 - Get your API key
-              </p>
-              <p className="text-[11.5px] text-[#615d59] mt-0.5">
-                zernio.com/dashboard/api-keys
-              </p>
-            </div>
-            <ExternalLink
-              size={15}
-              className="text-[#a39e98] group-hover:text-[#0075de] transition-colors shrink-0"
-            />
+            Get API key from Zernio
           </a>
 
           {/* Desktop heading above form */}
