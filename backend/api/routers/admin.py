@@ -96,35 +96,15 @@ async def delete_account(account_id: int, admin=Depends(require_admin)):
 async def get_all_sessions(admin=Depends(require_admin)):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await conn.fetch("""
-            SELECT 
-                s.id,
-                s.user_id,
-                s.ig_username,
-                s.wingman_name,
-                s.token,
-                s.access_level,
-                s.created_at,
-                COALESCE(u.email, 'Unknown') AS owner_email,
-                (
-                    SELECT a.ig_username 
-                    FROM connected_ig_accounts a 
-                    WHERE a.user_id = s.user_id 
-                    ORDER BY a.created_at DESC 
-                    LIMIT 1
-                ) AS owner_ig_username
-            FROM wingman_sessions s
-            LEFT JOIN users u ON u.id = s.user_id
-            ORDER BY s.created_at DESC
-        """)
-    return {"sessions": [dict(r) for r in rows]}
+        sessions = await session_repo.get_all_sessions_admin(conn)
+    return {"sessions": sessions}
 
 
 @router.delete("/sessions/{session_id}")
 async def delete_session(session_id: str, admin=Depends(require_admin)):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        deleted = await conn.fetchrow("DELETE FROM wingman_sessions WHERE id = $1 RETURNING id", session_id)
+        deleted = await session_repo.delete_session_admin(conn, session_id)
 
     if not deleted:
         raise NotFoundError("Wingman session token not found", code="SESSION_NOT_FOUND")

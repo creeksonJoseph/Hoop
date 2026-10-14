@@ -138,3 +138,38 @@ async def delete_all_sessions_for_ig(
     )
     return [r["token"] for r in rows]
 
+
+async def get_all_sessions_admin(conn: asyncpg.Connection) -> List[dict]:
+    rows = await conn.fetch("""
+        SELECT 
+            s.id,
+            s.user_id,
+            s.ig_username,
+            s.wingman_name,
+            s.token,
+            s.access_level,
+            s.created_at,
+            COALESCE(u.email, 'Unknown') AS owner_email,
+            (
+                SELECT a.ig_username 
+                FROM connected_ig_accounts a 
+                WHERE a.user_id = s.user_id 
+                  AND a.ig_username != ''
+                  AND a.ig_username != '__pending__'
+                ORDER BY a.added_at DESC 
+                LIMIT 1
+            ) AS owner_ig_username
+        FROM wingman_sessions s
+        LEFT JOIN users u ON u.id = s.user_id
+        ORDER BY s.created_at DESC
+    """)
+    return [dict(r) for r in rows]
+
+
+async def delete_session_admin(conn: asyncpg.Connection, session_id: str) -> bool:
+    row = await conn.fetchrow(
+        "DELETE FROM wingman_sessions WHERE id = $1 RETURNING id",
+        session_id,
+    )
+    return row is not None
+
