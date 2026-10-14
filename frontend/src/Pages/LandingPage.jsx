@@ -263,7 +263,7 @@ export default function LandingPage() {
                       lock
                     </span>
                     <span className="text-[#191918]">
-                      app.hooop.chat/conversations/chloe.vibes
+                      hooop.tech/conversations/chloe.vibes
                     </span>
                   </div>
                   <div className="w-[52px] hidden sm:block"></div>
