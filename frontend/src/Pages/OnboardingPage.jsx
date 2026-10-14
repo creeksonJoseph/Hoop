@@ -145,32 +145,41 @@ export default function OnboardingPage() {
             <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">
               Connect Instagram
             </h1>
-            <p className="text-[12.5px] text-[#615d59] leading-relaxed max-w-[280px]">
+            <p className="text-[12.5px] text-[#615d59] leading-relaxed max-w-[300px]">
               Hooop uses <strong className="text-[#191918]">Zernio</strong> to
-              connect your Instagram DMs. Get a free API key first.
+              securely connect to Instagram. Get a Zernio API key before you
+              continue.
             </p>
           </div>
 
-          {/* Mobile-only Zernio link */}
-          <a
-            href="https://zernio.com/dashboard/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="md:hidden flex items-center justify-between gap-3 w-full rounded-[10px] border border-[#dfdcd9] bg-white px-4 py-3 hover:bg-[#f6f5f4] transition-colors group"
-          >
-            <div>
-              <p className="text-[13px] font-semibold text-[#191918]">
-                Step 1 - Get your API key
-              </p>
-              <p className="text-[11.5px] text-[#615d59] mt-0.5">
-                zernio.com/dashboard/api-keys
-              </p>
-            </div>
-            <ExternalLink
-              size={15}
-              className="text-[#a39e98] group-hover:text-[#0075de] transition-colors shrink-0"
-            />
-          </a>
+          {/* Mobile steps */}
+          <ol className="md:hidden flex flex-col gap-4 rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+            <li className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">1</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium leading-snug text-[#191918]">Get an API key from Zernio</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Get the API key from the button below.</p>
+                <div className="mt-3 flex justify-end">
+                  <a
+                    href="https://zernio.com/dashboard/api-keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-auto items-center gap-1.5 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
+                  >
+                    Get API key
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">2</span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium leading-snug text-[#191918]">Paste your API key below</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Paste below the API key you got from step one.</p>
+              </div>
+            </li>
+          </ol>
 
           {/* Desktop heading above form */}
           <div className="hidden md:block">
