@@ -20,6 +20,7 @@ Hooop is a platform that lets your hb/hg help you out when you are out of words.
 | **Instagram Proxy API** | Zernio API Client | `httpx` `>=0.24.0` | `backend/services/zernio/client.py` |
 | **Credential Encryption** | Fernet AES-128-CBC | `cryptography` `>=41.0.0` | `backend/crypto.py` |
 | **Authentication** | JWT (JSON Web Tokens) | `pyjwt` `>=2.8.0`, `passlib` (bcrypt) | `backend/dependencies.py` |
+| **Error Monitoring & Tracing** | Sentry (FastAPI Integration) | `sentry-sdk[fastapi]` `>=2.0.0` | `backend/api/errors.py` |
 
 ---
 
@@ -29,6 +30,8 @@ Hooop is a platform that lets your hb/hg help you out when you are out of words.
 2. [**Architecture & Design Patterns**](architecture.md) - High-level system architecture diagram, 4-layer backend architecture, hook-driven frontend architecture, and key design decisions.
 3. [**Data & Message Flows**](data-flows.md) - Sequence diagrams for initial message load, scroll-up pagination, realtime updates, message sending, and wingman sessions.
 4. [**Security Architecture**](security.md) - Bring Your Own Key (BYOK) model, Fernet AES-128 encryption pipeline, and JWT authentication lifecycle.
-5. [**Frontend Guidelines**](frontend-guide.md) - Custom hook abstraction pattern, independent component rendering, isolated skeleton loaders, scroll restoration, and responsive UI rules.
-6. [**API Reference**](api-reference.md) - Complete list of REST API endpoints, request/response formats, and authentication rules.
-7. [**Developer & AI Agent Onboarding**](contributing.md) - Codebase directory tree, step-by-step feature additions, AI agent rules, and verification checklist.
+5. [**Error Handling & Monitoring**](error-handling.md) - Sentry configuration, 4xx graceful handling vs 5xx real-time alerting to `errorlogs@hooop.tech`, and Render setup.
+6. [**Frontend Guidelines**](frontend-guide.md) - Custom hook abstraction pattern, independent component rendering, isolated skeleton loaders, scroll restoration, and responsive UI rules.
+7. [**API Reference**](api-reference.md) - Complete list of REST API endpoints, request/response formats, and authentication rules.
+8. [**Developer & AI Agent Architecture**](../.agents/ARCHITECTURE.md) - Core architectural principles, layer boundaries, and performance rules for coding agents.
+9. [**Developer & AI Agent Onboarding**](contributing.md) - Codebase directory tree, step-by-step feature additions, AI agent rules, and verification checklist.

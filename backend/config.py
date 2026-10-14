@@ -53,6 +53,7 @@ RESEND_FROM_EMAIL: str    = os.getenv("RESEND_FROM_EMAIL", "Hooop <auth@hooop.te
 RESEND_FEATURE_FROM_EMAIL: str = os.getenv("RESEND_FEATURE_FROM_EMAIL", "Hooop <customersupport@hoop.tech>")
 ADMIN_EMAIL: str           = os.getenv("ADMIN_EMAIL", "")
 ADMIN_NOTIFICATION_EMAIL: str = os.getenv("ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_EMAIL", ""))
+SENTRY_DSN: str           = os.getenv("SENTRY_DSN", "")
 
 # ── Startup validation ────────────────────────────────────────────────────────
 if not DATABASE_URL:

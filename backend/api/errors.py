@@ -20,6 +20,12 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+import config
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 INSTAGRAM_24H_WINDOW_ERROR_MESSAGE = (
     "This message couldn't be sent. Instagram only allows messages within 24 hours of "
     "the person's last interaction with you, and that window has closed for now. "
@@ -64,6 +70,11 @@ class AppException(Exception):
 
 
 # ── Domain-Specific Exceptions ────────────────────────────────────────────────
+
+class BadRequestError(AppException):
+    def __init__(self, message: str = "Bad request", code: str = "BAD_REQUEST"):
+        super().__init__(message=message, status_code=400, code=code)
+
 
 class NotFoundError(AppException):
     def __init__(self, message: str = "Resource not found", code: str = "NOT_FOUND"):
@@ -125,6 +136,47 @@ def _error_response(
     )
 
 
+# ── Sentry Filtering & Initialization ─────────────────────────────────────────
+
+def sentry_before_send(event: Dict[str, Any], hint: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Ensure ONLY genuine 5xx server errors and unhandled exceptions are reported to Sentry.
+    All 4xx client errors (validation, auth, not found, bad request) are ignored.
+    """
+    if "exc_info" in hint:
+        _, exc_value, _ = hint["exc_info"]
+        if isinstance(exc_value, (HTTPException, StarletteHTTPException)):
+            if exc_value.status_code < 500:
+                return None
+        if isinstance(exc_value, RequestValidationError):
+            return None
+        if isinstance(exc_value, AppException) and exc_value.status_code < 500:
+            return None
+    return event
+
+
+def init_sentry() -> None:
+    """Initialize Sentry SDK if SENTRY_DSN is configured in environment."""
+    if not config.SENTRY_DSN:
+        logging.info("[Sentry] SENTRY_DSN not configured. Sentry error monitoring is inactive.")
+        return
+
+    sentry_sdk.init(
+        dsn=config.SENTRY_DSN,
+        send_default_pii=True,
+        enable_logs=True,
+        traces_sample_rate=1.0,
+        profile_session_sample_rate=1.0,
+        profile_lifecycle="trace",
+        before_send=sentry_before_send,
+        integrations=[
+            FastApiIntegration(transaction_style="endpoint"),
+            StarletteIntegration(transaction_style="endpoint"),
+        ],
+    )
+    logging.info("[Sentry] Sentry SDK initialized for production error monitoring.")
+
+
 # ── Exception Registration ───────────────────────────────────────────────────
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -132,28 +184,53 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):
-        logging.warning(
-            f"[AppException] {request.method} {request.url.path} -> {exc.status_code} [{exc.code}]: {exc.message}"
-        )
+        if exc.status_code < 500:
+            logging.warning(
+                f"[AppException] {request.method} {request.url.path} -> {exc.status_code} [{exc.code}]: {exc.message}"
+            )
+        else:
+            logging.error(
+                f"[AppException] {request.method} {request.url.path} -> {exc.status_code} [{exc.code}]: {exc.message}"
+            )
+            if config.SENTRY_DSN:
+                sentry_sdk.capture_exception(exc)
         return _error_response(request, exc.status_code, exc.message, exc.code)
 
-    @app.exception_handler(HTTPException)
-    async def http_exception_handler(request: Request, exc: HTTPException):
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         detail = str(exc.detail) if exc.detail else "An error occurred"
-        code = "HTTP_ERROR"
-        if exc.status_code == 401:
-            code = "UNAUTHORIZED"
-        elif exc.status_code == 403:
-            code = "FORBIDDEN"
-        elif exc.status_code == 404:
-            code = "NOT_FOUND"
-        elif exc.status_code == 409:
-            code = "CONFLICT"
+        status_to_code = {
+            400: "BAD_REQUEST",
+            401: "UNAUTHORIZED",
+            403: "FORBIDDEN",
+            404: "NOT_FOUND",
+            405: "METHOD_NOT_ALLOWED",
+            409: "CONFLICT",
+            422: "VALIDATION_ERROR",
+            429: "TOO_MANY_REQUESTS",
+        }
+        code = status_to_code.get(
+            exc.status_code,
+            "HTTP_CLIENT_ERROR" if exc.status_code < 500 else "INTERNAL_SERVER_ERROR"
+        )
 
-        logging.warning(
+        if exc.status_code < 500:
+            logging.warning(
+                f"[HTTPException] {request.method} {request.url.path} -> {exc.status_code} [{code}]: {detail}"
+            )
+            return _error_response(request, exc.status_code, detail, code)
+
+        logging.error(
             f"[HTTPException] {request.method} {request.url.path} -> {exc.status_code} [{code}]: {detail}"
         )
-        return _error_response(request, exc.status_code, detail, code)
+        if config.SENTRY_DSN:
+            sentry_sdk.capture_exception(exc)
+        return _error_response(
+            request,
+            exc.status_code,
+            "An unexpected server error occurred. Please try again in a moment.",
+            "INTERNAL_SERVER_ERROR",
+        )
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -175,9 +252,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         logging.error(
             f"[UnhandledException] {request.method} {request.url.path} -> 500:\n{traceback.format_exc()}"
         )
+        if config.SENTRY_DSN:
+            sentry_sdk.capture_exception(exc)
         return _error_response(
             request,
             500,
-            "An unexpected error occurred. Please try again in a moment.",
+            "An unexpected server error occurred. Please try again in a moment.",
             "INTERNAL_SERVER_ERROR",
         )

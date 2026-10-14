@@ -20,3 +20,8 @@ __pycache__/
 .vscode/
 tmp/
 backend/zerniollm.txt
+.venv/
+
+# Local Agent & MCP Config
+.agents/mcp_config.json
+.agents/*mcp*.json

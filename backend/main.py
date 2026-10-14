@@ -4,7 +4,7 @@ main.py - Hoop Application Entry Point
 FastAPI REST API - no WebSocket server, no poll loop.
 Real-time is handled by Supabase Realtime on the frontend.
 
-Architecture (see Architecture.md):
+Architecture (see .agents/ARCHITECTURE.md):
   Router → Service → Repository → DB (Supabase PostgreSQL)
 """
 
@@ -26,6 +26,10 @@ from config import FRONTEND_URL
 from db import get_pool, init_db
 
 from api.routers import auth, home, chat, sessions, wingman, onboarding, admin, settings, webhook, feedback
+from api.errors import init_sentry, register_exception_handlers
+
+# ── Sentry initialization (Must precede app creation) ─────────────────────────
+init_sentry()
 
 # ── App lifecycle ─────────────────────────────────────────────────────────────
 
@@ -72,8 +76,6 @@ app.add_middleware(
 )
 
 
-from api.errors import register_exception_handlers
-
 register_exception_handlers(app)
 
 # ── Routers ───────────────────────────────────────────────────────────────────
@@ -89,26 +91,33 @@ app.include_router(feedback.router,   prefix="/api")
 app.include_router(webhook.router)
 
 
-# ── Health & Ping ─────────────────────────────────────────────────────────────
+# ── Health, Ping & Sentry Verification ────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse, tags=["System"])
 async def root():
-        return """
-        <!doctype html>
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Hooop API</title>
-            </head>
-            <body>
-                <h1>Server is up and running</h1>
-            </body>
-        </html>
-        """
+    return """
+    <!doctype html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Hooop API</title>
+        </head>
+        <body>
+            <h1>Server is up and running</h1>
+        </body>
+    </html>
+    """
 
 @app.get("/health", tags=["System"])
 @app.get("/ping", tags=["System"])
 @app.get("/api/ping", tags=["System"])
 async def health_ping():
     return {"status": "ok", "message": "Server is up and running"}
+
+
+@app.get("/api/sentry-debug", tags=["System"])
+async def trigger_sentry_error():
+    """Debug route to verify that unhandled 500 server crashes are captured by Sentry."""
+    division_by_zero = 1 / 0
+    return {"result": division_by_zero}
 

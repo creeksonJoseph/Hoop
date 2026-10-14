@@ -253,3 +253,51 @@ FRONTEND_URL=     # e.g. https://hooop.tech
 7. **Independent Component Rendering & Perceived Speed**: Render static/non-data components immediately without waiting for API responses or blocking route guards. Decouple data fetching per component to maximize perceived speed.
 8. **Preserve Auth Contract**: The JWT payload contains `sub` (user_id) and `email`. Do not change this without updating `dependencies.py` and `AuthContext.jsx`.
 9. **Abstract Complex Views**: Avoid writing long inline code in page files. Extract tabs, forms, headers, and list views into dedicated components in `frontend/src/components/<feature>/`.
+10. **Strict Error Isolation**: Client-caused errors (4xx, validation, bad requests) must be handled gracefully with standardized JSON and never reported to Sentry. Only genuine server crashes (5xx) are escalated to Sentry.
+
+---
+
+## 8. Error Handling & Alerting Pipeline
+
+Hooop enforces a strict separation between client-side user errors (`4xx`) and server-side code crashes (`5xx`).
+
+### 1. Client-Side Errors (4xx) - Handled Gracefully
+- **Types**: `RequestValidationError` (Pydantic validation), `StarletteHTTPException` / `FastAPI HTTPException` with status `< 500` (e.g., 400, 401, 403, 404, 409, 422, 429), and custom domain exceptions (`BadRequestError`, `NotFoundError`, `AuthenticationError`, `ForbiddenError`, `ConflictError`, `ValidationError`).
+- **Response Format**: Every 4xx error returns a standardized JSON payload:
+  ```json
+  {
+    "success": false,
+    "message": "User-safe error explanation",
+    "detail": "User-safe error explanation",
+    "code": "ERROR_CODE"
+  }
+  ```
+- **Alert Suppression**: All 4xx errors are logged as warnings and explicitly dropped via Sentry's `before_send` filter. They never trigger Sentry issues or error alerts.
+
+### 2. Server-Side Crashes (5xx) - Sentry Alerting
+- **Types**: Unhandled exceptions (`ZeroDivisionError`, `KeyError`, database connectivity drops) and explicit 5xx HTTP exceptions.
+- **Pipeline**:
+  1. The global catch-all exception handler intercepts the failure.
+  2. The failure and full stack trace are logged at `ERROR` level.
+  3. The event is automatically captured and reported to Sentry using `sentry-sdk`.
+  4. Sentry routes real-time error notifications directly to `errorlogs@hooop.tech`.
+  5. The client receives a safe, generic 500 error response without leaking internal server details:
+     ```json
+     {
+       "success": false,
+       "message": "An unexpected server error occurred. Please try again in a moment.",
+       "detail": "An unexpected server error occurred. Please try again in a moment.",
+       "code": "INTERNAL_SERVER_ERROR"
+     }
+     ```
+
+### 3. Required Render Environment Variables
+- `SENTRY_DSN`: Sentry project DSN for capturing unhandled 5xx exceptions.
+- `DATABASE_URL`: PostgreSQL connection string (Supabase pooled connection with SSL).
+- `APP_MASTER_KEY`: 32-byte Fernet encryption key for encrypting user Zernio API credentials.
+- `JWT_SECRET`: Secret key used for signing authentication JWT tokens.
+- `WINGMAN_SECRET`: Secret key used for signing wingman session tokens.
+- `FRONTEND_URL`: URL of the deployed frontend application (e.g., `https://hooop.tech`).
+- `RESEND_API_KEY`: API key for sending transactional OTP authentication emails.
+- `RESEND_FROM_EMAIL`: Verified sender address for transactional emails (e.g., `Hooop <auth@hooop.tech>`).
+- `ADMIN_EMAIL`: Email address for administrative privileges.
