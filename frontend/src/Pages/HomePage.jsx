@@ -120,7 +120,7 @@ export default function HomePage() {
 
         {/* Right pane: ChatView if igUsername selected, else Empty canvas */}
         <div
-          className={`flex-1 h-full min-h-full min-w-0 ${igUsername ? "flex" : "hidden md:flex"}`}
+          className={`flex-1 h-full min-h-full min-w-0 overflow-hidden ${igUsername ? "flex" : "hidden md:flex"}`}
         >
           {igUsername ? (
             <ChatView igUsername={igUsername} />

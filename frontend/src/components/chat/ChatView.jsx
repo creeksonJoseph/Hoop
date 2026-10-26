@@ -190,7 +190,7 @@ export default function ChatView({ igUsername }) {
           <main
             ref={mainRef}
             onScroll={handleScroll}
-            className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]"
+            className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-[clamp(.75rem,3vw,1rem)] flex flex-col gap-2.5 pb-24 bg-[#f9f9f8]"
             onClick={() => setCtxMenu(null)}
           >
             {loadingMore && (

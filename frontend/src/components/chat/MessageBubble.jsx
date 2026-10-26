@@ -41,7 +41,7 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
   const hasRenderableContent = Boolean(text || isReel || isStory || hasImage || hasGenericUrl)
 
   return (
-    <div className={`flex gap-2.5 max-w-[92%] sm:max-w-[85%] fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
+    <div className={`flex gap-2.5 max-w-[92%] sm:max-w-[85%] min-w-0 fade-up font-sans ${isOut ? 'self-end flex-row-reverse' : 'self-start'}`}>
       {!isOut && avatarUrl && !imgError ? (
         <img
           src={avatarUrl}
@@ -56,15 +56,15 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
         </div>
       )}
 
-      <div className={`flex flex-col gap-0.5 ${isOut ? 'items-end' : ''}`}>
-        <div className={`flex items-baseline gap-2 text-[10px] text-[#615d59] ${isOut ? 'mr-1 flex-row-reverse' : 'ml-1'}`}>
-          <span className="font-semibold text-[#191918]">{isOut ? 'You' : `@${igUsername}`}</span>
-          {msg.created_at && <span>{fmt(msg.created_at)}</span>}
+      <div className={`flex flex-col gap-0.5 min-w-0 max-w-full ${isOut ? 'items-end' : ''}`}>
+        <div className={`flex items-baseline gap-2 text-[10px] text-[#615d59] min-w-0 max-w-full ${isOut ? 'mr-1 flex-row-reverse' : 'ml-1'}`}>
+          <span className="font-semibold text-[#191918] truncate max-w-[140px] sm:max-w-[200px]">{isOut ? 'You' : `@${igUsername}`}</span>
+          {msg.created_at && <span className="shrink-0">{fmt(msg.created_at)}</span>}
         </div>
 
         <div
           onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, msg.id) }}
-          className={`overflow-hidden text-[13px] leading-relaxed shadow-sm cursor-context-menu transition-colors
+          className={`overflow-hidden text-[13px] leading-relaxed shadow-sm cursor-context-menu transition-colors min-w-0 max-w-full break-words [overflow-wrap:anywhere] [word-break:break-word]
             ${isOut
               ? 'bg-[#0075de] text-white border border-[#0075de] rounded-[12px] rounded-tr-[4px]'
               : 'bg-white border border-[#dfdcd9] text-[#191918] rounded-[12px] rounded-tl-[4px]'
@@ -75,29 +75,29 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
               href={primaryUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block p-3 transition-colors ${
+              className={`block p-3 transition-colors min-w-0 max-w-full ${
                 isOut ? 'hover:bg-[#0068c7] text-white' : 'hover:bg-[#f6f5f4] text-[#191918]'
               }`}
             >
-              <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1">
-                <Film size={14} strokeWidth={2} />
-                <span>Instagram Reel</span>
-                <ExternalLink size={12} strokeWidth={2} />
+              <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1 min-w-0">
+                <Film size={14} strokeWidth={2} className="shrink-0" />
+                <span className="truncate">Instagram Reel</span>
+                <ExternalLink size={12} strokeWidth={2} className="shrink-0" />
               </div>
               {text && !text.startsWith('http') && (
-                <p className="text-[12px] opacity-90 mb-1 line-clamp-2">{text}</p>
+                <p className="text-[12px] opacity-90 mb-1 line-clamp-2 break-words [overflow-wrap:anywhere]">{text}</p>
               )}
-              <span className={`text-[11px] underline font-mono opacity-85 block truncate ${isOut ? 'text-white' : 'text-[#0075de]'}`}>
+              <span className={`text-[11px] underline font-mono opacity-85 block truncate min-w-0 max-w-full ${isOut ? 'text-white' : 'text-[#0075de]'}`}>
                 {primaryUrl}
               </span>
             </a>
           ) : isStory ? (
-            <div className={`p-3 min-w-[180px] ${isOut ? 'bg-[#0075de] text-white' : 'bg-white text-[#191918]'}`}>
-              <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1">
-                <Sparkles size={14} strokeWidth={2} className={isOut ? 'text-white' : 'text-[#e1306c]'} />
+            <div className={`p-3 min-w-0 max-w-full ${isOut ? 'bg-[#0075de] text-white' : 'bg-white text-[#191918]'}`}>
+              <div className="flex items-center gap-1.5 font-semibold text-[12px] mb-1 min-w-0">
+                <Sparkles size={14} strokeWidth={2} className={isOut ? 'text-white shrink-0' : 'text-[#e1306c] shrink-0'} />
                 <span className={isOut ? 'text-white' : 'text-[#e1306c]'}>Instagram Story</span>
               </div>
-              <p className="text-[12px] font-medium opacity-90">
+              <p className="text-[12px] font-medium opacity-90 break-words [overflow-wrap:anywhere]">
                 {text || 'Shared an Instagram Story'}
               </p>
               <span className={`text-[10px] block mt-1 opacity-75 ${isOut ? 'text-white/80' : 'text-[#615d59]'}`}>
@@ -105,29 +105,39 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
               </span>
             </div>
           ) : !hasRenderableContent ? (
-            <div className={`px-3.5 py-2.5 flex items-center gap-2 text-[12px] font-medium ${isOut ? 'text-white' : 'text-[#615d59]'}`}>
-              {msg.type === 'voice' || msg.type === 'audio' ? <Mic size={14} strokeWidth={2} /> : msg.type === 'sticker' ? <Smile size={14} strokeWidth={2} /> : <Paperclip size={14} strokeWidth={2} />}
-              <span>{msg.type === 'voice' || msg.type === 'audio' ? 'Voice message' : msg.type === 'sticker' ? 'Sent a sticker' : 'Shared media / attachment'}</span>
+            <div className={`px-3.5 py-2.5 flex items-center gap-2 text-[12px] font-medium min-w-0 max-w-full ${isOut ? 'text-white' : 'text-[#615d59]'}`}>
+              {msg.type === 'voice' || msg.type === 'audio' ? <Mic size={14} strokeWidth={2} className="shrink-0" /> : msg.type === 'sticker' ? <Smile size={14} strokeWidth={2} className="shrink-0" /> : <Paperclip size={14} strokeWidth={2} className="shrink-0" />}
+              <span className="truncate">{msg.type === 'voice' || msg.type === 'audio' ? 'Voice message' : msg.type === 'sticker' ? 'Sent a sticker' : 'Shared media / attachment'}</span>
             </div>
           ) : (
-            <div className="px-3.5 py-2">
+            <div className="px-3.5 py-2 min-w-0 max-w-full">
               {text && (
-                <p className="whitespace-pre-wrap break-words">
-                  {text.split(URL_REGEX).map((part, i) =>
-                    URL_REGEX.test(part) ? (
-                      <a
-                        key={i}
-                        href={part}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`underline font-medium ${isOut ? 'text-white' : 'text-[#0075de]'}`}
-                      >
-                        {part}
-                      </a>
-                    ) : (
-                      part
-                    )
-                  )}
+                <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] [word-break:break-word] min-w-0 max-w-full">
+                  {text.split(URL_REGEX).map((part, i) => {
+                    if (URL_REGEX.test(part)) {
+                      const trailingMatch = part.match(/[.,!?:;)]+$/)
+                      const trailingPunct = trailingMatch ? trailingMatch[0] : ''
+                      const cleanUrl = trailingPunct ? part.slice(0, -trailingPunct.length) : part
+
+                      return (
+                        <span key={i} className="inline break-all [overflow-wrap:anywhere]">
+                          <a
+                            href={cleanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`underline font-medium break-all [overflow-wrap:anywhere] hover:opacity-80 transition-opacity inline ${
+                              isOut ? 'text-white' : 'text-[#0075de]'
+                            }`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {cleanUrl}
+                          </a>
+                          {trailingPunct}
+                        </span>
+                      )
+                    }
+                    return part
+                  })}
                 </p>
               )}
 
@@ -136,7 +146,7 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
                   <img
                     key={i}
                     src={att.url}
-                    className="max-w-[240px] rounded-[8px] mt-1.5 border border-black/10"
+                    className="max-w-full sm:max-w-[240px] rounded-[8px] mt-1.5 border border-black/10 object-cover"
                     alt="Attachment"
                   />
                 ) : att.url && !isReel ? (
@@ -145,13 +155,13 @@ export default function MessageBubble({ msg, igUsername, avatarUrl, onContextMen
                     href={att.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-1.5 mt-1.5 text-[11px] font-medium underline ${
+                    className={`inline-flex items-center gap-1.5 mt-1.5 text-[11px] font-medium underline min-w-0 max-w-full ${
                       isOut ? 'text-white' : 'text-[#0075de]'
                     }`}
                   >
-                    <Paperclip size={12} strokeWidth={2} />
-                    {att.payload?.title || att.type || 'View Attachment'}
-                    <ExternalLink size={10} strokeWidth={2} />
+                    <Paperclip size={12} strokeWidth={2} className="shrink-0" />
+                    <span className="truncate flex-1 min-w-0">{att.payload?.title || att.type || 'View Attachment'}</span>
+                    <ExternalLink size={10} strokeWidth={2} className="shrink-0" />
                   </a>
                 ) : null
               )}
