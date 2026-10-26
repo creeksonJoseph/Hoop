@@ -121,16 +121,8 @@ export default function OnboardingPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-[11.5px] text-[#4a4744]">
-          Hooop is not affiliated with Zernio.{" "}
-          <a
-            href="https://zernio.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-[#6b6662] transition-colors"
-          >
-            Learn more
-          </a>
+          <p className="text-[11.5px] text-[#4a4744]">
+          Hooop is not affiliated with Zernio.
         </p>
       </div>
 
@@ -145,32 +137,71 @@ export default function OnboardingPage() {
             <h1 className="text-[18px] font-semibold text-[#191918] tracking-tight">
               Connect Instagram
             </h1>
-            <p className="text-[12.5px] text-[#615d59] leading-relaxed max-w-[280px]">
+            <p className="text-[12.5px] text-[#615d59] leading-relaxed max-w-[300px]">
               Hooop uses <strong className="text-[#191918]">Zernio</strong> to
-              connect your Instagram DMs. Get a free API key first.
+              securely connect to Instagram. Get a Zernio API key before you
+              continue.
             </p>
           </div>
 
-          {/* Mobile-only Zernio link */}
-          <a
-            href="https://zernio.com/dashboard/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="md:hidden flex items-center justify-between gap-3 w-full rounded-[10px] border border-[#dfdcd9] bg-white px-4 py-3 hover:bg-[#f6f5f4] transition-colors group"
-          >
-            <div>
-              <p className="text-[13px] font-semibold text-[#191918]">
-                Step 1 - Get your API key
-              </p>
-              <p className="text-[11.5px] text-[#615d59] mt-0.5">
-                zernio.com/dashboard/api-keys
-              </p>
-            </div>
-            <ExternalLink
-              size={15}
-              className="text-[#a39e98] group-hover:text-[#0075de] transition-colors shrink-0"
-            />
-          </a>
+          {/* Mobile steps */}
+          <ol className="md:hidden flex flex-col items-center">
+            <li className="w-full rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+              <div className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">1</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium leading-snug text-[#191918]">Get an API key from Zernio</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Get the API key from the button below.</p>
+                  <div className="mt-3 flex justify-end">
+                    <a
+                      href="https://zernio.com/dashboard/api-keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-auto items-center gap-1.5 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-[#191918]/25 focus:ring-offset-2"
+                    >
+                      Get API key
+                      <ExternalLink size={11} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li aria-hidden="true" className="h-5 w-px bg-[#191918]" />
+            <li className="w-full rounded-[12px] border border-[#dfdcd9] bg-white p-4 shadow-[0px_1px_3px_rgba(0,0,0,0.04)]">
+              <div className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#191918] text-[11px] font-bold text-white">2</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium leading-snug text-[#191918]">Paste your API key below</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-[#615d59]">Paste below the API key you got from step one.</p>
+                  <form onSubmit={handleSubmit} className="mt-4">
+                    <label className="block text-[12px] font-medium text-[#494744] mb-1.5">Zernio API Key</label>
+                    <div className="relative">
+                      <Key size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a39e98]" strokeWidth={2} />
+                      <input
+                        type="text"
+                        required
+                        value={key}
+                        onChange={(e) => setKey(e.target.value)}
+                        className="w-full bg-white border border-[#dfdcd9] rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] text-[#191918] placeholder:text-[#a39e98] focus:outline-none focus:border-[#0075de] focus:ring-2 focus:ring-[#0075de]/15 transition-all font-mono"
+                        placeholder="sk_live_..."
+                        autoFocus
+                      />
+                    </div>
+                    <p className="mt-1.5 text-[11px] text-[#a39e98] flex items-center gap-1"><ShieldCheck size={11} className="text-[#4c9f6f]" />Encrypted and never shared</p>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={loading || !key.trim()}
+                        className="inline-flex w-auto items-center justify-center gap-2 rounded-[8px] bg-[#191918] px-3 py-2 text-[12px] font-medium text-white transition-all hover:bg-[#333] disabled:opacity-40"
+                      >
+                        {loading ? <><Loader2 size={14} className="animate-spin" /> Connecting…</> : "Continue"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </li>
+          </ol>
 
           {/* Desktop heading above form */}
           <div className="hidden md:block">
@@ -192,7 +223,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* Form card */}
-          <div className="bg-white border border-[#dfdcd9] rounded-[12px] p-5 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
+          <div className="hidden md:block bg-white border border-[#dfdcd9] rounded-[12px] p-5 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-[12px] font-medium text-[#494744] mb-1.5">
@@ -240,15 +271,7 @@ export default function OnboardingPage() {
 
           {/* Mobile footer */}
           <p className="text-center text-[11px] text-[#b8b4b0] md:hidden">
-            Not affiliated with Zernio.{" "}
-            <a
-              href="https://zernio.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-[#615d59]"
-            >
-              Learn more
-            </a>
+            Not affiliated with Zernio.
           </p>
         </div>
       </div>
