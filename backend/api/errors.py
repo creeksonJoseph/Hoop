@@ -123,7 +123,11 @@ def _error_response(
     status_code: int,
     message: str,
     code: str,
+    headers: Optional[Dict[str, str]] = None,
 ) -> JSONResponse:
+    final_headers = _cors_headers(request)
+    if headers:
+        final_headers.update(headers)
     return JSONResponse(
         status_code=status_code,
         content={
@@ -132,7 +136,7 @@ def _error_response(
             "detail": message,  # Backward compatibility for frontend toasts
             "code": code,
         },
-        headers=_cors_headers(request),
+        headers=final_headers,
     )
 
 
@@ -218,7 +222,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             logging.warning(
                 f"[HTTPException] {request.method} {request.url.path} -> {exc.status_code} [{code}]: {detail}"
             )
-            return _error_response(request, exc.status_code, detail, code)
+            return _error_response(request, exc.status_code, detail, code, headers=getattr(exc, "headers", None))
 
         logging.error(
             f"[HTTPException] {request.method} {request.url.path} -> {exc.status_code} [{code}]: {detail}"

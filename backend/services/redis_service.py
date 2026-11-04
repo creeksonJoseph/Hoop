@@ -83,3 +83,32 @@ async def get_json(key: str) -> Optional[Any]:
         return json.loads(val)
     except Exception:
         return val
+
+async def increment(key: str) -> int:
+    """Increment a key by 1. Returns the new value. If Redis isn't configured, returns 0."""
+    if not is_redis_configured():
+        return 0
+    try:
+        url = f"{config.UPSTASH_REDIS_REST_URL.rstrip('/')}/incr/{key}"
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(url, headers=_headers())
+            if resp.status_code == 200:
+                data = resp.json()
+                return int(data.get("result", 0))
+            return 0
+    except Exception as exc:
+        logging.error(f"[Redis] increment failed for key={key}: {exc}")
+        return 0
+
+async def expire(key: str, ttl_seconds: int) -> bool:
+    """Set a timeout on key. Returns True if timeout was set."""
+    if not is_redis_configured():
+        return False
+    try:
+        url = f"{config.UPSTASH_REDIS_REST_URL.rstrip('/')}/expire/{key}/{ttl_seconds}"
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(url, headers=_headers())
+            return resp.status_code == 200
+    except Exception as exc:
+        logging.error(f"[Redis] expire failed for key={key}: {exc}")
+        return False

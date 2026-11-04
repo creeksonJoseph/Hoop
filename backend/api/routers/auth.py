@@ -37,7 +37,8 @@ from api.errors import AuthenticationError, ValidationError, ConflictError
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/login")
+from dependencies import rate_limit
+@router.post("/login", dependencies=[Depends(rate_limit)])
 async def login(body: LoginBody):
     pool = await get_pool()
     async with pool.acquire() as conn:
@@ -45,10 +46,12 @@ async def login(body: LoginBody):
         cnt = await account_repo.count_accounts_for_user(conn, user["id"]) if user else 0
 
     if not user:
-        raise AuthenticationError("User does not exist. Please check your email or sign up.", code="USER_NOT_FOUND")
+        # Prevent timing attacks by hashing a dummy password
+        hash_password(body.password)
+        raise AuthenticationError("Incorrect email or password.", code="INVALID_CREDENTIALS")
 
     if not verify_password(body.password, user["password_hash"]):
-        raise AuthenticationError("Incorrect password. Please try again.", code="INVALID_PASSWORD")
+        raise AuthenticationError("Incorrect email or password.", code="INVALID_CREDENTIALS")
 
     token = create_jwt(user["id"], user["email"])
     user_role = user.get("role", "user")
@@ -65,7 +68,7 @@ async def login(body: LoginBody):
     }
 
 
-@router.post("/google")
+@router.post("/google", dependencies=[Depends(rate_limit)])
 async def google_login(body: GoogleLoginBody):
     if not body.credential:
         raise ValidationError("Missing Google credential token", code="MISSING_CREDENTIAL")
@@ -98,8 +101,8 @@ async def google_login(body: GoogleLoginBody):
     }
 
 
-@router.post("/send-otp")
-@router.post("/signup/send-otp")
+@router.post("/send-otp", dependencies=[Depends(rate_limit)])
+@router.post("/signup/send-otp", dependencies=[Depends(rate_limit)])
 async def send_otp(body: SignupSendOtpBody):
     email = body.email.strip().lower()
     if not email:
@@ -116,7 +119,7 @@ async def send_otp(body: SignupSendOtpBody):
     return {"success": success, "message": message}
 
 
-@router.post("/signup/verify-otp")
+@router.post("/signup/verify-otp", dependencies=[Depends(rate_limit)])
 async def signup_verify_otp(body: SignupVerifyOtpBody):
     email = body.email.strip().lower()
     valid = await otp_service.verify_signup_otp(email, body.otp)
@@ -127,7 +130,7 @@ async def signup_verify_otp(body: SignupVerifyOtpBody):
     return {"signup_token": signup_token}
 
 
-@router.post("/signup/complete", status_code=201)
+@router.post("/signup/complete", status_code=201, dependencies=[Depends(rate_limit)])
 async def signup_complete(body: SignupCompleteBody):
     if body.password != body.confirm_password:
         raise ValidationError("Passwords do not match", code="PASSWORD_MISMATCH")
@@ -155,7 +158,7 @@ async def signup_complete(body: SignupCompleteBody):
     }
 
 
-@router.post("/verify-otp", status_code=201)
+@router.post("/verify-otp", status_code=201, dependencies=[Depends(rate_limit)])
 async def verify_otp(body: VerifyOTPBody):
     if body.password != body.confirm_password:
         raise ValidationError("Passwords do not match", code="PASSWORD_MISMATCH")
@@ -181,8 +184,10 @@ async def verify_otp(body: VerifyOTPBody):
     }
 
 
-@router.post("/forgot-password")
-async def forgot_password(body: ForgotPasswordBody):
+from fastapi import BackgroundTasks
+
+@router.post("/forgot-password", dependencies=[Depends(rate_limit)])
+async def forgot_password(body: ForgotPasswordBody, background_tasks: BackgroundTasks):
     email = body.email.strip().lower()
     if not email:
         raise ValidationError("Email is required", code="MISSING_EMAIL")
@@ -191,14 +196,13 @@ async def forgot_password(body: ForgotPasswordBody):
     async with pool.acquire() as conn:
         user = await user_repo.get_user_by_email(conn, email)
 
-    if not user:
-        return {"message": "If that email exists, a 6-digit verification code has been sent."}
+    if user:
+        background_tasks.add_task(otp_service.send_reset_otp, email)
 
-    await otp_service.send_reset_otp(email)
     return {"message": "If that email exists, a 6-digit verification code has been sent."}
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(rate_limit)])
 async def reset_password(body: ResetPasswordBody):
     if body.new_password != body.confirm_password:
         raise ValidationError("Passwords do not match", code="PASSWORD_MISMATCH")
@@ -218,7 +222,7 @@ async def reset_password(body: ResetPasswordBody):
     return {"message": "Password updated successfully"}
 
 
-@router.post("/send-change-otp")
+@router.post("/send-change-otp", dependencies=[Depends(rate_limit)])
 async def send_change_otp(user=Depends(require_user)):
     user_id = user["id"]
     email = user["email"]
@@ -227,7 +231,7 @@ async def send_change_otp(user=Depends(require_user)):
     return {"success": success, "message": msg}
 
 
-@router.post("/change-password")
+@router.post("/change-password", dependencies=[Depends(rate_limit)])
 async def change_password(body: ChangePasswordBody, user=Depends(require_user)):
     if body.new_password != body.confirm_password:
         raise ValidationError("Passwords do not match", code="PASSWORD_MISMATCH")
@@ -244,7 +248,7 @@ async def change_password(body: ChangePasswordBody, user=Depends(require_user)):
     return {"message": "Password changed successfully"}
 
 
-@router.post("/signup", status_code=201)
+@router.post("/signup", status_code=201, dependencies=[Depends(rate_limit)])
 async def signup(body: SignupBody):
     if body.password != body.confirm_password:
         raise ValidationError("Passwords do not match", code="PASSWORD_MISMATCH")
