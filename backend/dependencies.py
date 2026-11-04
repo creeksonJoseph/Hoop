@@ -45,3 +45,43 @@ async def require_admin(user=Depends(require_user)) -> dict:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+
+from fastapi import Request, Response
+from services import redis_service
+import time
+
+async def rate_limit(request: Request, response: Response):
+    """
+    Rate limiting dependency.
+    Limits clients to 10 requests per 1 minute window based on IP.
+    """
+    # Resolve the true client IP if behind a proxy
+    client_ip = request.headers.get("x-forwarded-for") or request.headers.get("x-real-ip")
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    if not client_ip:
+        client_ip = request.client.host if request.client else "unknown"
+    if client_ip == "unknown":
+        return
+
+    # We use a 1 minute window
+    window = int(time.time()) // 60
+    key = f"ratelimit:auth:{client_ip}:{window}"
+
+    # Very basic in-memory fallback if Redis is not configured
+    # To keep things simple we just rely on Redis for real rate limiting
+    if not redis_service.is_redis_configured():
+        return
+
+    count = await redis_service.increment(key)
+    if count == 1:
+        # Set expiry for 2 minutes to be safe
+        await redis_service.expire(key, 120)
+
+    if count > 10:
+        # 429 Too Many Requests
+        raise HTTPException(
+            status_code=429,
+            detail="Too many requests. Please try again later.",
+            headers={"Retry-After": "60"}
+        )

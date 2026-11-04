@@ -45,7 +45,16 @@ async def wingman_reply(token: str, body: ReplyBody):
 
     ig_username = session["ig_username"]
     async with pool.acquire() as conn:
-        acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
+        tracked_dm = await conn.fetchrow(
+            "SELECT account_username FROM tracked_dms WHERE user_id = $1 AND LOWER(ig_username) = $2 LIMIT 1",
+            session["user_id"], ig_username.lower().strip()
+        )
+        account_username = tracked_dm["account_username"] if tracked_dm else ""
+
+        if account_username:
+            acc = await account_repo.get_account(conn, session["user_id"], account_username)
+        else:
+            acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
 
     if not acc or not acc["zernio_api_key_enc"]:
         raise NotFoundError("Account not configured", code="ACCOUNT_NOT_CONFIGURED")

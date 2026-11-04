@@ -73,7 +73,7 @@ async def add_dm(
             )
 
         # 1. Check if DM already exists in DB
-        db_messages = await message_repo.get_messages_for_participant(conn, ig_username)
+        db_messages = await message_repo.get_messages_for_participant(conn, ig_username, account_username=acc["ig_username"])
         
         # 2. If not in DB, verify that the DM/conversation exists on Zernio / Instagram
         if not db_messages:

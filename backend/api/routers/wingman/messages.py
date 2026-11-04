@@ -56,10 +56,18 @@ async def wingman_messages(token: str):
 
     ig_username = session["ig_username"]
 
+    # Determine the account associated with this session via tracked_dms
+    async with pool.acquire() as conn:
+        tracked_dm = await conn.fetchrow(
+            "SELECT account_username FROM tracked_dms WHERE user_id = $1 AND LOWER(ig_username) = $2 LIMIT 1",
+            session["user_id"], ig_username.lower().strip()
+        )
+        account_username = tracked_dm["account_username"] if tracked_dm else ""
+
     # 1. Try local database first (fast path)
     async with pool.acquire() as conn:
-        db_messages = await message_repo.get_messages_for_participant(conn, ig_username)
-        conv_rec = await message_repo.get_conversation_by_participant(conn, ig_username)
+        db_messages = await message_repo.get_messages_for_participant(conn, ig_username, account_username=account_username)
+        conv_rec = await message_repo.get_conversation_by_participant(conn, ig_username, account_username=account_username)
 
     if db_messages:
         conv_id = conv_rec["conversation_id"] if conv_rec else (db_messages[0].get("conversation_id") or "db_conv")
@@ -74,7 +82,10 @@ async def wingman_messages(token: str):
 
     # 2. Fallback to Zernio API if DB is empty (first-time access)
     async with pool.acquire() as conn:
-        acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
+        if account_username:
+            acc = await account_repo.get_account(conn, session["user_id"], account_username)
+        else:
+            acc = await account_repo.get_any_account_for_user(conn, session["user_id"])
 
     if not acc or not acc.get("zernio_api_key_enc"):
         raise NotFoundError("Account not configured", code="ACCOUNT_NOT_CONFIGURED")
@@ -104,8 +115,8 @@ async def wingman_messages(token: str):
     display_name, avatar_url = _extract_profile(conv, ig_username)
 
     async with pool.acquire() as conn:
-        await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url)
-        await message_repo.upsert_messages_batch(conn, raw_messages, conv["id"])
+        await message_repo.upsert_conversation(conn, conv["id"], ig_username, display_name, avatar_url, account_username=account_username)
+        await message_repo.upsert_messages_batch(conn, raw_messages, conv["id"], account_username=account_username)
 
 
     return {

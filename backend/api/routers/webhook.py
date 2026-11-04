@@ -25,6 +25,8 @@ async def zernio_webhook(request: Request):
     """
     Receives inbound events (messages, account.connected, message echoes) from Zernio.
     """
+    import hmac
+
     # Validate webhook secret if configured
     if ZERNIO_WEBHOOK_SECRET:
         token = (
@@ -32,7 +34,7 @@ async def zernio_webhook(request: Request):
             or request.headers.get("x-webhook-secret")
             or request.headers.get("authorization", "").removeprefix("Bearer ")
         )
-        if token != ZERNIO_WEBHOOK_SECRET:
+        if not token or not hmac.compare_digest(token, ZERNIO_WEBHOOK_SECRET):
             raise AuthenticationError("Invalid webhook secret", code="INVALID_WEBHOOK_SECRET")
 
     try:
@@ -49,23 +51,29 @@ async def zernio_webhook(request: Request):
         # Also try to get the api key from the payload to narrow the __pending__ match
         api_key_hint = acc_data.get("apiKey") or acc_data.get("api_key") or payload.get("apiKey")
         if username and account_id:
+            from crypto import decrypt_api_key
             pool = await get_pool()
             async with pool.acquire() as conn:
                 # Flaw 4 fix: scope __pending__ lookup by api key if available
                 # to prevent race conditions between simultaneous users connecting.
+                pending = None
                 if api_key_hint:
-                    pending = await conn.fetchrow(
+                    rows = await conn.fetch(
                         """
                         SELECT user_id, zernio_api_key_enc FROM connected_ig_accounts
                         WHERE ig_username = '__pending__'
-                        ORDER BY added_at DESC LIMIT 1
+                        ORDER BY added_at DESC
                         """
-                        # Note: we compare by decrypted key if possible, otherwise fall back to recency.
-                        # A fully secure fix requires passing a signed state token through Zernio's
-                        # webhook payload - which Zernio doesn't support yet. Recency + account_id
-                        # uniqueness provides sufficient protection for single-user tenants.
                     )
-                else:
+                    for row in rows:
+                        try:
+                            if decrypt_api_key(row["zernio_api_key_enc"]) == api_key_hint:
+                                pending = row
+                                break
+                        except Exception:
+                            continue
+
+                if not pending:
                     pending = await conn.fetchrow(
                         "SELECT user_id, zernio_api_key_enc FROM connected_ig_accounts WHERE ig_username = '__pending__' ORDER BY added_at DESC LIMIT 1"
                     )

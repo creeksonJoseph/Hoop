@@ -61,7 +61,6 @@ _ALLOWED_ORIGINS = list(dict.fromkeys(filter(None, [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*(vercel\.app|hooop\.tech)",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
