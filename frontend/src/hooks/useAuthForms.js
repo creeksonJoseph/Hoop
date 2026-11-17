@@ -103,6 +103,8 @@ export function useGoogleAuth() {
         "Google authentication failed.";
       setError(msg);
       toast(msg, "error");
+      // Re-throw so the Google button can clear its "Connecting…" state.
+      throw err;
     } finally {
       setLoading(false);
     }

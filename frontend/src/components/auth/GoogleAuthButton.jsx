@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
+
+const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
 export default function GoogleAuthButton({
   onSuccess,
   disabled = false,
   text = "continue_with",
-  onConnectStart,
-  onConnectComplete,
+  theme = "outline",
+  width = 320,
 }) {
   const buttonRef = useRef(null);
   const [error, setError] = useState("");
@@ -21,11 +24,11 @@ export default function GoogleAuthButton({
     const clientId =
       import.meta.env.VITE_GOOGLE_CLIENT_ID ||
       "288617280571-9ks7uahnh1a2q6ovicor36ftcf4rnm8h.apps.googleusercontent.com";
+    let cancelled = false;
 
     const initialize = () => {
       if (!window.google?.accounts?.id) {
         setError("Google sign-in script could not be loaded.");
-        setIsConnecting(false);
         return;
       }
 
@@ -38,10 +41,10 @@ export default function GoogleAuthButton({
               setIsConnecting(false);
               return;
             }
+            setError("");
+            setIsConnecting(true);
             try {
-              setIsConnecting(false);
               await onSuccessRef.current(response.credential);
-              if (onConnectComplete) onConnectComplete();
             } catch (err) {
               setError(err?.message || "Google sign-in failed.");
               setIsConnecting(false);
@@ -50,20 +53,20 @@ export default function GoogleAuthButton({
           ux_mode: "popup",
         });
 
-        if (buttonRef.current) {
-          buttonRef.current.innerHTML = "";
-          window.google.accounts.id.renderButton(buttonRef.current, {
-            theme: "outline",
-            size: "large",
-            text: text, // "continue_with" or "signup_with" or "signin_with"
-            shape: "pill",
-            width: 320,
-          });
-          setTimeout(() => setRendered(true), 40);
-        }
-      } catch (e) {
+        if (cancelled || !buttonRef.current) return;
+        buttonRef.current.innerHTML = "";
+        window.google.accounts.id.renderButton(buttonRef.current, {
+          theme,
+          size: "large",
+          text, // "continue_with" | "signup_with" | "signin_with"
+          shape: "pill",
+          width,
+        });
+        setTimeout(() => {
+          if (!cancelled) setRendered(true);
+        }, 40);
+      } catch {
         setError("Failed to initialize Google sign-in.");
-        setIsConnecting(false);
       }
     };
 
@@ -73,7 +76,7 @@ export default function GoogleAuthButton({
     }
 
     const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
+    script.src = GOOGLE_SCRIPT_SRC;
     script.async = true;
     script.defer = true;
     script.onload = initialize;
@@ -81,30 +84,38 @@ export default function GoogleAuthButton({
     document.head.appendChild(script);
 
     return () => {
-      // script cleanup if unmounted before onload
+      cancelled = true;
     };
-  }, [text]);
+  }, [text, theme, width]);
 
   return (
     <div
-      className={`w-full flex flex-col items-center justify-center ${disabled ? "opacity-50 pointer-events-none" : isConnecting ? "opacity-80 pointer-events-none" : ""}`}
-      onClick={() => setIsConnecting(true)}
+      className={`w-full flex flex-col items-center justify-center ${
+        disabled ? "opacity-50 pointer-events-none" : ""
+      }`}
     >
-      {error && <p className="mb-2 text-[12px] text-[#e32d14] font-medium">{error}</p>}
-      {isConnecting ? (
-        <div
-          className="w-full flex flex-col items-center justify-center gap-3 min-h-[44px]"
-        >
-          <span className="text-sm text-[#191918] font-medium">Connecting to Google…</span>
-          <div
-            className="w-8 h-8 rounded-full border-2 border-[#191918] flex items-center justify-center"
-          >
-            <Loader2 size={16} className="animate-spin" />
-          </div>
-        </div>
-      ) : (
-        <div ref={buttonRef} className={rendered ? "w-full flex justify-center" : "min-h-[44px] w-[280px] bg-[#f6f5f4] rounded-full animate-pulse"} />
+      {error && (
+        <p className="mb-2 text-[12px] text-[#e32d14] font-medium">{error}</p>
       )}
+
+      {/* Keep the Google button mounted so it can be shown again if a
+          sign-in attempt fails; only visually swap in the spinner. */}
+      <div className="relative w-full min-h-[44px] flex items-center justify-center">
+        <div
+          ref={buttonRef}
+          className={`flex justify-center ${isConnecting ? "invisible" : ""} ${
+            rendered ? "" : "min-h-[44px] w-[280px] bg-[#f6f5f4] rounded-full animate-pulse"
+          }`}
+        />
+        {isConnecting && (
+          <div className="absolute inset-0 flex items-center justify-center gap-2.5">
+            <Loader2 size={16} className="animate-spin text-[#191918]" />
+            <span className="text-sm text-[#191918] font-medium">
+              Connecting to Google…
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
