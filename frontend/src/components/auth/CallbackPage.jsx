@@ -1,33 +1,65 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
-const SPINNER_DURATION = 2000;
+// Keep the loading view visible just long enough to avoid an abrupt flash,
+// while still feeling like an automatic redirect.
+const MIN_DISPLAY_MS = 700;
 
 export default function CallbackPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Delay routing to show the loading view
-    const timer = setTimeout(() => {
-      if (user) {
-        // User already logged in, determine routing
-        const onboarded = user.onboarded !== false && user.onboarded !== undefined;
-        if (onboarded) {
-          navigate("/home", { replace: true });
-        } else {
-          navigate("/onboarding", { replace: true });
-        }
-      } else {
-        // No user, go to login
-        navigate("/login", { replace: true });
-      }
-    }, SPINNER_DURATION);
+    // Wait until the auth state has resolved before routing.
+    if (loading) return;
 
-    return () => clearTimeout(timer);
-  }, [user, navigate]);
+    let cancelled = false;
+
+    const resolveTarget = async () => {
+      if (!user) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      // Target decided earlier in the auth flow (Google new vs returning user).
+      const storedTarget = sessionStorage.getItem("hoop_post_auth_target");
+      const redirectAfterLogin = sessionStorage.getItem(
+        "hoop_redirect_after_login",
+      );
+
+      let onboarded = user.onboarded;
+      // Fall back to the backend if we don't yet know the onboarding state
+      // (e.g. a session restored from an older localStorage payload).
+      if (typeof onboarded !== "boolean") {
+        try {
+          const { data } = await api.get("/auth/me");
+          onboarded = data?.onboarded === true;
+        } catch {
+          onboarded = false;
+        }
+      }
+
+      if (cancelled) return;
+
+      const target =
+        redirectAfterLogin ||
+        storedTarget ||
+        (onboarded ? "/home" : "/onboarding");
+
+      sessionStorage.removeItem("hoop_post_auth_target");
+      sessionStorage.removeItem("hoop_redirect_after_login");
+      navigate(target, { replace: true });
+    };
+
+    const timer = setTimeout(resolveTarget, MIN_DISPLAY_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen bg-[#f9f9f8] text-[#191918] flex items-center justify-center p-4">

@@ -83,9 +83,18 @@ export function useGoogleAuth() {
     setError(null);
     try {
       const { data } = await api.post("/auth/google", { credential });
-      login(data.access_token, data.user);
-      // Navigate to callback page which will show loading view
-      // before final routing based on onboarded status
+      // Returning users go straight to the dashboard; only brand-new
+      // Google sign-ups are sent through onboarding. Falls back to the
+      // `onboarded` flag when talking to an older backend.
+      const isNewUser =
+        typeof data.is_new_user === "boolean"
+          ? data.is_new_user
+          : !data.onboarded;
+      const target = isNewUser ? "/onboarding" : "/home";
+      sessionStorage.setItem("hoop_post_auth_target", target);
+      login(data.access_token, { ...data.user, onboarded: data.onboarded });
+      // Navigate to the callback page which shows a brief loading view
+      // before routing to the final destination.
       navigate("/auth/callback");
     } catch (err) {
       const msg =

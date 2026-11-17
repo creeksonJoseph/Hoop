@@ -23,12 +23,18 @@ async def create_user(conn: asyncpg.Connection, email: str, password_hash: str) 
     )
 
 
-async def get_or_create_google_user(conn: asyncpg.Connection, email: str, default_password_hash: str) -> asyncpg.Record:
+async def get_or_create_google_user(conn: asyncpg.Connection, email: str, default_password_hash: str):
+    """Return (user, created) for a Google-authenticated email.
+
+    `created` is True only when this login just inserted a brand-new user row,
+    which lets callers distinguish first-time sign-ups from returning users.
+    """
     normalized = email.lower().strip()
     user = await get_user_by_email(conn, normalized)
     if user:
-        return user
-    return await create_user(conn, normalized, default_password_hash)
+        return user, False
+    created = await create_user(conn, normalized, default_password_hash)
+    return created, True
 
 
 async def update_user_password(conn: asyncpg.Connection, user_id: int, password_hash: str) -> None:

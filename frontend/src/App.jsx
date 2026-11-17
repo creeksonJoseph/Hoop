@@ -16,6 +16,7 @@ import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
 import PwaInstallPrompt from "./components/common/PwaInstallPrompt";
 import AdminPage from "./Pages/AdminPage";
 import LandingPage from "./Pages/LandingPage";
+import CallbackPage from "./components/auth/CallbackPage";
 import { lazy, Suspense } from "react";
 
 const SentryTestPage = lazy(() => import("./Pages/SentryTestPage"));

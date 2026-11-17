@@ -80,7 +80,7 @@ async def google_login(body: GoogleLoginBody):
 
     pool = await get_pool()
     async with pool.acquire() as conn:
-        user = await user_repo.get_or_create_google_user(conn, email, random_hash)
+        user, is_new_user = await user_repo.get_or_create_google_user(conn, email, random_hash)
         cnt = await account_repo.count_accounts_for_user(conn, user["id"])
 
     token = create_jwt(user["id"], user["email"])
@@ -88,7 +88,11 @@ async def google_login(body: GoogleLoginBody):
     return {
         "access_token": token,
         "token_type": "bearer",
+        # `onboarded` reflects whether an Instagram account is connected,
+        # while `is_new_user` tells the client whether this was a brand-new
+        # sign-up (so returning users go straight to the dashboard).
         "onboarded": cnt > 0,
+        "is_new_user": is_new_user,
         "user": {
             "id": user["id"],
             "email": user["email"],
