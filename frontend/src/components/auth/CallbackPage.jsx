@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const SPINNER_DURATION = 2000;
 
@@ -41,7 +41,7 @@ export default function CallbackPage() {
           >
             <rect width="32" height="32" rx="8" fill="#191918" />
             <path fill="#FFFFFF" d="M8 7h4v7h8V7h4v18h-4v-7H12v7H8V7z" />
-          </div>
+          </svg>
         </div>
 
         <div className="text-xl font-bold text-[#191918] mb-4">Hooop</div>
