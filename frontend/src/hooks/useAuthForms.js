@@ -84,12 +84,9 @@ export function useGoogleAuth() {
     try {
       const { data } = await api.post("/auth/google", { credential });
       login(data.access_token, data.user);
-      const redirectTarget =
-        sessionStorage.getItem("hoop_redirect_after_login") ||
-        (data.onboarded ? "/home" : "/onboarding");
-      sessionStorage.removeItem("hoop_redirect_after_login");
-      toast("Signed in with Google", "success");
-      navigate(redirectTarget);
+      // Navigate to callback page which will show loading view
+      // before final routing based on onboarded status
+      navigate("/auth/callback");
     } catch (err) {
       const msg =
         err.response?.data?.detail ||

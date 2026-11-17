@@ -16,6 +16,9 @@ import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
 import PwaInstallPrompt from "./components/common/PwaInstallPrompt";
 import AdminPage from "./Pages/AdminPage";
 import LandingPage from "./Pages/LandingPage";
+import { lazy, Suspense } from "react";
+
+const SentryTestPage = lazy(() => import("./Pages/SentryTestPage"));
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -120,7 +123,9 @@ export default function App() {
             </Protected>
           }
         />
+        <Route path="/auth/callback" element={<CallbackPage />} />
         <Route path="/" element={<LandingPage />} />
+        <Route path="/sentry-test" element={<Suspense fallback={<div>Loading...</div>}><SentryTestPage /></Suspense>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <PwaInstallPrompt />

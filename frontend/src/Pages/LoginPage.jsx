@@ -8,11 +8,12 @@ import {
 } from "lucide-react";
 import { useLogin, useGoogleAuth } from "../hooks/useAuthForms";
 import GoogleAuthButton from "../components/auth/GoogleAuthButton";
+import CallbackPage from "../components/auth/CallbackPage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { submit, loading, error: loginError } = useLogin();
+  const { submit, loading: loginLoading, error: loginError } = useLogin();
   const {
     submitGoogleToken,
     loading: googleLoading,
@@ -58,7 +59,7 @@ export default function LoginPage() {
           <div className="space-y-3">
             <GoogleAuthButton
               onSuccess={submitGoogleToken}
-              disabled={loading || googleLoading}
+              disabled={loginLoading || googleLoading}
               text="signin_with"
             />
             <div className="relative flex items-center justify-center">
@@ -122,10 +123,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loginLoading}
               className="w-full bg-[#191918] hover:bg-[#333] active:bg-[#0f0f0f] text-white font-medium py-2.5 rounded-[8px] text-[13px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm mt-2 cursor-pointer"
             >
-              {loading ? (
+              {loginLoading ? (
                 <>
                   <Loader2 size={15} className="animate-spin" /> Signing in…
                 </>
@@ -153,6 +154,9 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
+
+        {/* Callback Page after Google sign-in */}
+        <CallbackPage />
       </div>
     </div>
   );

@@ -1,9 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 
-export default function GoogleAuthButton({ onSuccess, disabled = false, text = "continue_with" }) {
+export default function GoogleAuthButton({
+  onSuccess,
+  disabled = false,
+  text = "continue_with",
+  onConnectStart,
+  onConnectComplete,
+}) {
   const buttonRef = useRef(null);
   const [error, setError] = useState("");
   const [rendered, setRendered] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const onSuccessRef = useRef(onSuccess);
   useEffect(() => {
@@ -18,6 +25,7 @@ export default function GoogleAuthButton({ onSuccess, disabled = false, text = "
     const initialize = () => {
       if (!window.google?.accounts?.id) {
         setError("Google sign-in script could not be loaded.");
+        setIsConnecting(false);
         return;
       }
 
@@ -27,12 +35,16 @@ export default function GoogleAuthButton({ onSuccess, disabled = false, text = "
           callback: async (response) => {
             if (!response?.credential) {
               setError("Google sign-in was canceled.");
+              setIsConnecting(false);
               return;
             }
             try {
+              setIsConnecting(false);
               await onSuccessRef.current(response.credential);
+              if (onConnectComplete) onConnectComplete();
             } catch (err) {
               setError(err?.message || "Google sign-in failed.");
+              setIsConnecting(false);
             }
           },
           ux_mode: "popup",
@@ -51,6 +63,7 @@ export default function GoogleAuthButton({ onSuccess, disabled = false, text = "
         }
       } catch (e) {
         setError("Failed to initialize Google sign-in.");
+        setIsConnecting(false);
       }
     };
 
@@ -73,9 +86,25 @@ export default function GoogleAuthButton({ onSuccess, disabled = false, text = "
   }, [text]);
 
   return (
-    <div className={`w-full flex flex-col items-center justify-center ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
+    <div
+      className={`w-full flex flex-col items-center justify-center ${disabled ? "opacity-50 pointer-events-none" : isConnecting ? "opacity-80 pointer-events-none" : ""}`}
+      onClick={() => setIsConnecting(true)}
+    >
       {error && <p className="mb-2 text-[12px] text-[#e32d14] font-medium">{error}</p>}
-      <div ref={buttonRef} className={rendered ? "w-full flex justify-center" : "min-h-[44px] w-[280px] bg-[#f6f5f4] rounded-full animate-pulse"} />
+      {isConnecting ? (
+        <div
+          className="w-full flex flex-col items-center justify-center gap-3 min-h-[44px]"
+        >
+          <span className="text-sm text-[#191918] font-medium">Connecting to Google…</span>
+          <div
+            className="w-8 h-8 rounded-full border-2 border-[#191918] flex items-center justify-center"
+          >
+            <Loader2 size={16} className="animate-spin" />
+          </div>
+        </div>
+      ) : (
+        <div ref={buttonRef} className={rendered ? "w-full flex justify-center" : "min-h-[44px] w-[280px] bg-[#f6f5f4] rounded-full animate-pulse"} />
+      )}
     </div>
   );
 }
