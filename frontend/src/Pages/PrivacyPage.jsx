@@ -100,6 +100,9 @@ export default function PrivacyPage() {
             How Hooop handles your data, how to delete it, and the rules for
             using the service responsibly.
           </p>
+          <p className="mt-2 text-[12px] text-[#8c8782]">
+            Last updated: November 18, 2026
+          </p>
         </header>
 
         <div className="space-y-10">

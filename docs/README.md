@@ -35,3 +35,4 @@ Hooop is a platform that lets your hb/hg help you out when you are out of words.
 7. [**API Reference**](api-reference.md) - Complete list of REST API endpoints, request/response formats, and authentication rules.
 8. [**Developer & AI Agent Architecture**](../.agents/ARCHITECTURE.md) - Core architectural principles, layer boundaries, and performance rules for coding agents.
 9. [**Developer & AI Agent Onboarding**](contributing.md) - Codebase directory tree, step-by-step feature additions, AI agent rules, and verification checklist.
+10. [**SEO & Search Console**](seo.md) - Indexable routes, metadata, sitemap/robots rules, structured data, and the Google Search Console launch checklist.

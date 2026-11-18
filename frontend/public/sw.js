@@ -1,7 +1,6 @@
-const CACHE_NAME = "hoop-pwa-v1";
+const CACHE_NAME = "hoop-pwa-v2";
 const STATIC_ASSETS = [
   "/",
-  "/index.html",
   "/manifest.webmanifest",
   "/pwa-192x192.png",
   "/pwa-512x512.png",
@@ -71,7 +70,7 @@ self.addEventListener("fetch", (event) => {
           return cachedResponse;
         }
         if (event.request.mode === "navigate") {
-          return cache.match("/index.html");
+          return cache.match("/");
         }
         throw err;
       }

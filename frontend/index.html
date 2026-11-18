@@ -2,86 +2,117 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="canonical" href="https://hooop.tech/" />
-
-    <title>Hooop</title>
-    <meta
-      name="description"
-      content="Let your hb/hg help you out when you are out of words in that DM."
-    />
-    <meta
-      name="robots"
-      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
-    />
-
-    <!-- Open Graph / Facebook / WhatsApp -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Hooop" />
-    <meta property="og:title" content="Hooop" />
-    <meta
-      property="og:description"
-      content="Let your hb/hg help you out when you are out of words in that DM."
-    />
-    <meta property="og:url" content="https://hooop.tech/" />
-    <meta property="og:image" content="https://hooop.tech/pwa-512x512.png" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <meta property="og:image:alt" content="Hooop Logo" />
-    <meta property="og:locale" content="en_US" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Hooop" />
-    <meta
-      name="twitter:description"
-      content="Let your hb/hg help you out when you are out of words in that DM."
-    />
-    <meta name="twitter:image" content="https://hooop.tech/pwa-512x512.png" />
-
-    <!-- Mobile & PWA Theme -->
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#191918" media="(prefers-color-scheme: dark)" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Hooop" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
 
-    <!-- Google Fonts & Icons -->
+    <title>Hooop — Your Instagram DM Wingman</title>
+    <meta
+      name="description"
+      content="Out of words in a DM? Hooop lets a trusted wingman help you reply to Instagram DMs in real time. No password sharing, no app installs."
+    />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <link rel="canonical" href="https://hooop.tech/" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/pwa-192x192.png"
+    />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="Hooop" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Hooop" />
+    <meta property="og:title" content="Hooop — Your Instagram DM Wingman" />
+    <meta
+      property="og:description"
+      content="Out of words in a DM? Hooop lets a trusted wingman help you reply to Instagram DMs in real time. No password sharing, no app installs."
+    />
+    <meta property="og:url" content="https://hooop.tech/" />
+    <meta property="og:image" content="https://hooop.tech/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hooop — Instagram DM wingman app" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Hooop — Your Instagram DM Wingman" />
+    <meta
+      name="twitter:description"
+      content="Out of words in a DM? Hooop lets a trusted wingman help you reply to Instagram DMs in real time. No password sharing, no app installs."
+    />
+    <meta name="twitter:image" content="https://hooop.tech/og-image.png" />
+    <meta name="twitter:image:alt" content="Hooop — Instagram DM wingman app" />
+
+    <!-- Mobile & PWA Theme -->
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#191918"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Hooop" />
+
+    <!-- Google Fonts & Icons (single request to reduce render-blocking work) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
       rel="stylesheet"
     />
 
-    <!-- JSON-LD Structured Data: WebApplication & FAQPage -->
+    <!-- JSON-LD Structured Data: WebSite, WebApplication, Organization & FAQPage -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@graph": [
           {
+            "@type": "WebSite",
+            "@id": "https://hooop.tech/#website",
+            "url": "https://hooop.tech/",
+            "name": "Hooop",
+            "description": "A collaborative Instagram DM workspace that lets a trusted wingman help you reply when you run out of words.",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://hooop.tech/#organization" }
+          },
+          {
             "@type": "WebApplication",
             "@id": "https://hooop.tech/#webapp",
             "name": "Hooop",
             "url": "https://hooop.tech/",
-            "applicationCategory": "CommunicationApplication",
-            "operatingSystem": "All",
-            "description": "Real-time collaborative co-op workstation for Instagram direct messages.",
+            "description": "Hooop lets a trusted wingman help you reply to Instagram DMs in real time, with per-thread access and no password sharing.",
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "en",
+            "browserRequirements": "Requires JavaScript. Works in modern browsers.",
+            "isPartOf": { "@id": "https://hooop.tech/#website" },
+            "publisher": { "@id": "https://hooop.tech/#organization" },
+            "featureList": [
+              "Thread-scoped wingman access",
+              "Real-time collaborative replies",
+              "No wingman app install",
+              "No Instagram password sharing",
+              "Revoke access at any time"
+            ],
             "offers": {
               "@type": "Offer",
               "price": "0",
@@ -92,8 +123,14 @@
             "@type": "Organization",
             "@id": "https://hooop.tech/#organization",
             "name": "Hooop",
+            "legalName": "Hooop Inc.",
             "url": "https://hooop.tech/",
-            "logo": "https://hooop.tech/favicon.svg"
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://hooop.tech/pwa-512x512.png",
+              "width": 512,
+              "height": 512
+            }
           },
           {
             "@type": "FAQPage",
@@ -128,7 +165,7 @@
                 "name": "How do I end the wingman session?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "You can click the Revoke Access button inside your Hooop dashboard at any moment. Your friend's session instantly terminates and they are redirected to a closed screen."
+                  "text": "You can click the “Revoke Access” button inside your Hooop dashboard at any moment. Your friend's session instantly terminates and they are redirected to a closed screen."
                 }
               }
             ]
@@ -139,6 +176,67 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main
+        style="
+          max-width: 42rem;
+          margin: 0 auto;
+          padding: 3rem 1.25rem;
+          font-family: system-ui, -apple-system, sans-serif;
+          line-height: 1.65;
+          color: #191918;
+        "
+      >
+        <h1>Hooop — your Instagram DM wingman</h1>
+        <p>
+          When you run out of words in an Instagram DM, Hooop lets a trusted
+          friend step in and help you reply. No password sharing, no app install,
+          and no screenshots.
+        </p>
+        <h2>How Hooop works</h2>
+        <ol>
+          <li>Connect your Instagram account securely.</li>
+          <li>Pick the one DM thread you want help with and share an invite link.</li>
+          <li>
+            Your wingman opens the link in any browser and helps you reply in
+            real time.
+          </li>
+        </ol>
+        <h2>Private by design</h2>
+        <p>
+          A wingman only sees the exact thread you invite them into. You can
+          revoke their access at any time.
+        </p>
+        <h2>Frequently asked questions</h2>
+        <h3>Does the other person know my wingman is typing?</h3>
+        <p>
+          No. The recipient only sees messages coming directly from your regular
+          Instagram account. Hooop does not add badges, signatures, or metadata
+          to outgoing messages.
+        </p>
+        <h3>Does my friend have to install anything?</h3>
+        <p>
+          Not at all. You generate an invite link and send it via text or
+          WhatsApp. They open the link in any mobile or desktop web browser and
+          immediately enter co-op mode.
+        </p>
+        <h3>Can my wingman read all my other conversations?</h3>
+        <p>
+          Absolutely not. Access is sandboxed on a strict, per-thread basis.
+          When you invite a wingman, they only gain view and reply permissions
+          for the exact thread you selected.
+        </p>
+        <h3>How do I end the wingman session?</h3>
+        <p>
+          You can click the “Revoke Access” button inside your Hooop dashboard
+          at any moment. Your friend's session instantly terminates and they
+          are redirected to a closed screen.
+        </p>
+        <p>
+          <a href="https://hooop.tech/privacy">Privacy and policies</a>
+        </p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

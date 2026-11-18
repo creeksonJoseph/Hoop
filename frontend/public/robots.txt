@@ -1,8 +1,20 @@
 User-agent: *
 Allow: /
-Disallow: /admin
+
+# Authenticated app screens and private wingman sessions
+Disallow: /onboarding
+Disallow: /home
+Disallow: /chat/
+Disallow: /wingmen
+Disallow: /wingman/
+Disallow: /sessions/
 Disallow: /settings
-Disallow: /sessions
-Disallow: /conversations
+Disallow: /admin
+Disallow: /auth/
+Disallow: /sentry-test
+Disallow: /api/
+
+# Login, signup and password reset are crawlable so search engines can see
+# their X-Robots-Tag: noindex response header.
 
 Sitemap: https://hooop.tech/sitemap.xml

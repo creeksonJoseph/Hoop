@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useGoogleAuth } from "../hooks/useAuthForms";
-import GoogleAuthButton from "../components/auth/GoogleAuthButton";
+import LandingGoogleButton from "../components/auth/LandingGoogleButton";
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -52,7 +52,6 @@ export default function LandingPage() {
       type: "incoming",
     },
   ]);
-  const [activeFaq, setActiveFaq] = useState(null);
   const [orbitStep, setOrbitStep] = useState(0);
   const [isOrbitHovered, setIsOrbitHovered] = useState(false);
 
@@ -103,10 +102,6 @@ export default function LandingPage() {
     setDemoInput("");
   };
 
-  const toggleFaq = (index) => {
-    setActiveFaq(activeFaq === index ? null : index);
-  };
-
   const displayName =
     user?.active_ig_username
       ? `@${user.active_ig_username}`
@@ -134,6 +129,8 @@ export default function LandingPage() {
             className="flex items-center gap-2.5 group"
           >
             <svg
+              aria-hidden="true"
+              focusable="false"
               className="w-8 h-8 md:w-9 md:h-9 rounded-xl shadow-xs transition-transform group-hover:scale-105 shrink-0"
               viewBox="0 0 32 32"
               fill="none"
@@ -148,7 +145,7 @@ export default function LandingPage() {
           </Link>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-3">
+          <nav aria-label="Primary" className="flex items-center gap-3">
             {user ? (
               <Link
                 to="/home"
@@ -159,6 +156,9 @@ export default function LandingPage() {
                   <img
                     src={avatarUrl}
                     alt={displayName}
+                    width="28"
+                    height="28"
+                    decoding="async"
                     className="w-7 h-7 rounded-full object-cover ring-1 ring-[#dfdcd9] shrink-0"
                   />
                 ) : (
@@ -189,7 +189,7 @@ export default function LandingPage() {
                 </Link>
               </div>
             )}
-          </div>
+          </nav>
         </div>
       </header>
 
@@ -214,33 +214,19 @@ export default function LandingPage() {
 
                   {/* Subheadline */}
                   <p className="text-base sm:text-lg text-[#615d59] mt-4 leading-relaxed">
-                    Let your hb/hg help you out when you are out of words. No
-                    password sharing. Zero screenshot spam. Pure co-op banter.
+                    Let your hb/hg help you reply to Instagram DMs when you are
+                    out of words. No password sharing. Zero screenshot spam.
+                    Pure co-op banter.
                   </p>
 
                 </div>
 
                 {/* Right Side: Sign in with Google */}
                 <div className="w-full lg:w-auto shrink-0 flex items-center justify-start lg:justify-end">
-                  {user ? (
-                    <Link
-                      to="/home"
-                      className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-[#191918] text-white text-sm font-semibold hover:bg-[#2b2a28] transition-all shadow-md active:scale-[0.98]"
-                    >
-                      <span>Go to dashboard</span>
-                      <span className="material-symbols-outlined text-[18px]">
-                        arrow_forward
-                      </span>
-                    </Link>
-                  ) : (
-                    <GoogleAuthButton
-                      onSuccess={submitGoogleToken}
-                      disabled={googleLoading}
-                      text="signin_with"
-                      theme="filled_black"
-                      width={260}
-                    />
-                  )}
+                  <LandingGoogleButton
+                    onSuccess={submitGoogleToken}
+                    disabled={googleLoading}
+                  />
                 </div>
               </div>
 
@@ -346,6 +332,7 @@ export default function LandingPage() {
                         className="w-full bg-[#f8f9ff] text-[#191918] placeholder:text-[#8c8782] text-xs pl-9 pr-3 py-2 rounded-xl border border-[#dfdcd9]/60 focus:outline-none"
                         readOnly
                         type="text"
+                        aria-label="Search demo conversations"
                         defaultValue="Search conversations..."
                       />
                     </div>
@@ -470,6 +457,7 @@ export default function LandingPage() {
                           className="flex-1 bg-transparent text-[#191918] placeholder:text-[#8c8782] text-xs focus:outline-none"
                           placeholder="Type a reply... (Enter to send, Shift+Enter for newline)"
                           type="text"
+                          aria-label="Type a demo reply"
                           value={demoInput}
                           onChange={(e) => setDemoInput(e.target.value)}
                         />
@@ -477,6 +465,7 @@ export default function LandingPage() {
                           type="submit"
                           className="w-8 h-8 rounded-full bg-[#0075de] text-white flex items-center justify-center shadow-xs hover:bg-[#0060b8] transition-all font-bold active:scale-95"
                           title="Send message"
+                          aria-label="Send demo message"
                         >
                           <span className="material-symbols-outlined text-[17px]">
                             send
@@ -719,25 +708,25 @@ export default function LandingPage() {
                     a: "You can click the “Revoke Access” button inside your Hooop dashboard at any moment. Your friend's session instantly terminates and they are redirected to a closed screen.",
                   },
                 ].map((item, i) => (
-                  <div
+                  <details
                     key={i}
-                    onClick={() => toggleFaq(i)}
-                    className="p-5 rounded-2xl bg-white border border-[#dfdcd9] shadow-xs cursor-pointer hover:border-[#191918]/30 transition-all"
+                    className="group p-5 rounded-2xl bg-white border border-[#dfdcd9] shadow-xs hover:border-[#191918]/30 transition-all"
                   >
-                    <div className="flex items-center justify-between">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
                       <h3 className="text-sm md:text-base font-bold text-[#191918]">
                         {item.q}
                       </h3>
-                      <span className="material-symbols-outlined text-[#8c8782] text-[18px] transition-transform duration-200">
-                        {activeFaq === i ? "expand_less" : "expand_more"}
+                      <span
+                        aria-hidden="true"
+                        className="material-symbols-outlined text-[#8c8782] text-[18px] transition-transform duration-200 group-open:rotate-180"
+                      >
+                        expand_more
                       </span>
-                    </div>
-                    {activeFaq === i && (
-                      <p className="text-xs md:text-sm text-[#615d59] mt-2.5 leading-relaxed">
-                        {item.a}
-                      </p>
-                    )}
-                  </div>
+                    </summary>
+                    <p className="text-xs md:text-sm text-[#615d59] mt-2.5 leading-relaxed">
+                      {item.a}
+                    </p>
+                  </details>
                 ))}
               </div>
             </div>
@@ -751,6 +740,8 @@ export default function LandingPage() {
         <div className="w-full px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <svg
+              aria-hidden="true"
+              focusable="false"
               className="w-6 h-6 rounded-md shadow-xs shrink-0"
               viewBox="0 0 32 32"
               fill="none"
@@ -767,14 +758,26 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-5 text-xs text-[#736f6b]">
+          <nav
+            aria-label="Footer"
+            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[#736f6b]"
+          >
+            <a href="#how-it-works" className="hover:text-[#191918] transition-colors">
+              How it works
+            </a>
+            <a href="#features" className="hover:text-[#191918] transition-colors">
+              Features
+            </a>
+            <a href="#faq" className="hover:text-[#191918] transition-colors">
+              FAQ
+            </a>
             <Link
               to="/privacy"
               className="hover:text-[#191918] transition-colors"
             >
               Privacy Policy
             </Link>
-          </div>
+          </nav>
         </div>
       </footer>
     </div>
