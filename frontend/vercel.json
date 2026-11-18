@@ -2,12 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "trailingSlash": false,
   "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.hooop.tech" }],
-      "destination": "https://hooop.tech/:path*",
-      "permanent": true
-    },
     { "source": "/index.html", "destination": "/", "permanent": true },
     { "source": "/privacy.html", "destination": "/privacy", "permanent": true }
   ],
