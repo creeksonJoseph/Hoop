@@ -1,7 +1,6 @@
 const CACHE_NAME = "hoop-pwa-v2";
 const STATIC_ASSETS = [
   "/",
-  "/manifest.webmanifest",
   "/pwa-192x192.png",
   "/pwa-512x512.png",
   "/apple-touch-icon.png",
