@@ -20,18 +20,18 @@ const NOINDEX_ROBOTS = "noindex, nofollow";
  */
 const PAGES = {
   "/": {
-    title: "Hooop — Your Instagram DM Wingman",
+    title: "Hooop  -  Your Instagram DM Wingman",
     description: DEFAULT_DESCRIPTION,
     index: true,
   },
   "/privacy": {
-    title: "Privacy & Data Policy — Hooop",
+    title: "Privacy & Data Policy  -  Hooop",
     description:
       "How Hooop handles your Instagram messages, what data is stored, how to delete it, and the rules for using the service responsibly.",
     index: true,
   },
   "/login": {
-    title: "Sign in — Hooop",
+    title: "Sign in  -  Hooop",
     description:
       "Sign in to Hooop and invite a trusted wingman into your Instagram DMs.",
     index: false,
@@ -43,62 +43,62 @@ const PAGES = {
     index: false,
   },
   "/forgot-password": {
-    title: "Reset your password — Hooop",
+    title: "Reset your password  -  Hooop",
     description:
       "Reset the password for your Hooop account with a one-time email code.",
     index: false,
   },
   "/onboarding": {
-    title: "Set up your account — Hooop",
+    title: "Set up your account  -  Hooop",
     description: "Connect Instagram and finish setting up your Hooop account.",
     index: false,
   },
   "/home": {
-    title: "Your conversations — Hooop",
+    title: "Your conversations  -  Hooop",
     description: "Your private Hooop conversation workspace.",
     index: false,
   },
   "/wingmen": {
-    title: "Wingman sessions — Hooop",
+    title: "Wingman sessions  -  Hooop",
     description: "Manage the wingmen helping you with your conversations.",
     index: false,
   },
   "/settings": {
-    title: "Settings — Hooop",
+    title: "Settings  -  Hooop",
     description: "Manage your Hooop account settings.",
     index: false,
   },
   "/settings/security": {
-    title: "Security settings — Hooop",
+    title: "Security settings  -  Hooop",
     description: "Manage your Hooop security settings.",
     index: false,
   },
   "/settings/accounts": {
-    title: "Connected accounts — Hooop",
+    title: "Connected accounts  -  Hooop",
     description: "Manage the accounts connected to Hooop.",
     index: false,
   },
   "/admin": {
-    title: "Admin — Hooop",
+    title: "Admin  -  Hooop",
     description: "Hooop administration.",
     index: false,
   },
   "/auth/callback": {
-    title: "Signing you in — Hooop",
+    title: "Signing you in  -  Hooop",
     description: "Completing your Hooop sign-in.",
     index: false,
   },
   "/sentry-test": {
-    title: "Diagnostics — Hooop",
+    title: "Diagnostics  -  Hooop",
     description: "Hooop diagnostics page.",
     index: false,
   },
 };
 
 const PRIVATE_PREFIXES = [
-  ["/chat/", "Chat — Hooop"],
-  ["/sessions/", "Wingman sessions — Hooop"],
-  ["/wingman/", "Wingman session — Hooop"],
+  ["/chat/", "Chat  -  Hooop"],
+  ["/sessions/", "Wingman sessions  -  Hooop"],
+  ["/wingman/", "Wingman session  -  Hooop"],
 ];
 
 function normalisePath(pathname) {
@@ -125,7 +125,7 @@ function resolvePage(pathname) {
   }
 
   return {
-    title: "Page not found — Hooop",
+    title: "Page not found  -  Hooop",
     description: "The page you were looking for could not be found.",
     index: false,
     path: "/",
@@ -167,7 +167,7 @@ function setCanonical(href) {
 function applyPageMeta(page) {
   const url = `${SITE_URL}${page.path === "/" ? "/" : page.path}`;
   const socialUrl = page.notFound ? `${SITE_URL}/` : url;
-  const imageAlt = `${SITE_NAME} — Instagram DM wingman app`;
+  const imageAlt = `${SITE_NAME}  -  Instagram DM wingman app`;
 
   document.title = page.title;
 
