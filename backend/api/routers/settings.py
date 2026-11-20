@@ -35,7 +35,7 @@ async def get_settings(request: Request, user=Depends(require_user)):
     # Find any account with an encrypted key (first one is enough for key display).
     # __key_only__ sentinels are created by delete_api_key to preserve the key after
     # disconnecting all IG accounts, so users can reconnect without re-entering the key.
-    SENTINEL_USERNAMES = {"__pending__", "__key_only__"}
+    SENTINEL_USERNAMES = account_repo.SENTINEL_USERNAMES
     first_keyed_acc = next((a for a in accounts if a.get("zernio_api_key_enc")), None)
     if not first_keyed_acc:
         return {

@@ -36,7 +36,8 @@ async def list_dms(
         )
         accounts = await account_repo.get_accounts_for_user(conn, user["id"])
     has_real_account = any(
-        a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts
+        a["ig_username"] and a["ig_username"] not in account_repo.SENTINEL_USERNAMES
+        for a in accounts
     )
     return {"dms": [dict(r) for r in rows], "has_real_account": has_real_account}
 
@@ -58,7 +59,8 @@ async def add_dm(
         if x_hoop_instagram_account and not acc:
             raise ValidationError("Selected Instagram account is not connected", code="ACCOUNT_NOT_CONNECTED")
         has_real_account = any(
-            a["ig_username"] and a["ig_username"] != "__pending__" for a in accounts
+            a["ig_username"] and a["ig_username"] not in account_repo.SENTINEL_USERNAMES
+            for a in accounts
         )
         if not has_real_account or not acc or not acc.get("zernio_api_key_enc"):
             raise ValidationError("Connect an Instagram account first in Settings", code="NO_CONNECTED_ACCOUNT")

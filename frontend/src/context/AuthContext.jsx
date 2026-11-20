@@ -12,6 +12,9 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
+    // Never restore a user without a session token - that would allow a stale
+    // localStorage profile to render protected routes after logout.
+    if (!localStorage.getItem("hoop_token")) return null;
     try {
       const saved = localStorage.getItem("hoop_user");
       return saved ? JSON.parse(saved) : null;
@@ -19,7 +22,9 @@ export function AuthProvider({ children }) {
       return null;
     }
   });
-  const [loading, setLoading] = useState(() => !localStorage.getItem("hoop_token"));
+  // When a token exists we must confirm the session via /auth/me before
+  // trusting a cached profile, so start in a loading/restoring state.
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem("hoop_token")));
   const [activeIgUsername, setActiveIgUsername] = useState(
     () => localStorage.getItem("hoop_active_ig") || null,
   );
@@ -54,6 +59,29 @@ export function AuthProvider({ children }) {
     }
     setUser(userData);
   };
+
+  const refreshUser = useCallback(async () => {
+    const { data } = await api.get("/auth/me");
+    setUser(data);
+    localStorage.setItem("hoop_user", JSON.stringify(data));
+    return data;
+  }, []);
+
+  // Optimistic local update used right after the backend confirms a key was
+  // saved, so route guards do not bounce the user back to onboarding while a
+  // /auth/me refresh is in flight (or temporarily unavailable).
+  const markOnboarded = useCallback(() => {
+    setUser((current) => {
+      if (!current) return current;
+      const updated = {
+        ...current,
+        onboarded: true,
+        has_api_key: true,
+      };
+      localStorage.setItem("hoop_user", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   const setActiveAccount = useCallback((username) => {
     const normalized = username?.replace(/^@/, "").toLowerCase() || null;
@@ -90,6 +118,8 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+        refreshUser,
+        markOnboarded,
         setActiveAccount,
         accountVersion,
       }}

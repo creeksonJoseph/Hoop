@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import {
+  resolvePostAuthTarget,
+  withOnboardingStatus,
+} from "../lib/authRouting";
 
 export function useLogin() {
   const [loading, setLoading] = useState(false);
@@ -16,12 +20,14 @@ export function useLogin() {
     setError(null);
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      login(data.access_token, data.user);
-      const redirectTarget =
-        sessionStorage.getItem("hoop_redirect_after_login") ||
-        (data.onboarded ? "/home" : "/onboarding");
+      login(data.access_token, withOnboardingStatus(data.user, data));
+      const requestedTarget = sessionStorage.getItem(
+        "hoop_redirect_after_login",
+      );
+      const target = resolvePostAuthTarget(data, requestedTarget);
       sessionStorage.removeItem("hoop_redirect_after_login");
-      navigate(redirectTarget);
+      sessionStorage.removeItem("hoop_post_auth_target");
+      navigate(target, { replace: true });
     } catch (err) {
       const msg =
         err.response?.data?.detail || "Login failed. Please try again.";
@@ -83,16 +89,11 @@ export function useGoogleAuth() {
     setError(null);
     try {
       const { data } = await api.post("/auth/google", { credential });
-      // Returning users go straight to the dashboard; only brand-new
-      // Google sign-ups are sent through onboarding. Falls back to the
-      // `onboarded` flag when talking to an older backend.
-      const isNewUser =
-        typeof data.is_new_user === "boolean"
-          ? data.is_new_user
-          : !data.onboarded;
-      const target = isNewUser ? "/onboarding" : "/home";
-      sessionStorage.setItem("hoop_post_auth_target", target);
-      login(data.access_token, { ...data.user, onboarded: data.onboarded });
+      // The saved API key is the single source of truth. A brand-new Google
+      // user and a returning user who abandoned onboarding are treated the
+      // same way: no key means mandatory onboarding.
+      login(data.access_token, withOnboardingStatus(data.user, data));
+      sessionStorage.removeItem("hoop_post_auth_target");
       // Navigate to the callback page which shows a brief loading view
       // before routing to the final destination.
       navigate("/auth/callback");
@@ -158,9 +159,9 @@ export function useVerifyOTP() {
         password,
         confirm_password: confirmPassword,
       });
-      login(data.access_token, data.user);
+      login(data.access_token, withOnboardingStatus(data.user, data));
       toast("Email verified & account created!", "success");
-      navigate("/onboarding");
+      navigate(resolvePostAuthTarget(data));
     } catch (err) {
       const msg =
         err.response?.data?.detail ||
@@ -293,9 +294,9 @@ export function useSignupFlow() {
         password: form.password,
         confirm_password: form.confirm,
       });
-      login(data.access_token, data.user);
+      login(data.access_token, withOnboardingStatus(data.user, data));
       toast("Account created successfully!", "success");
-      navigate(data.onboarded ? "/home" : "/onboarding");
+      navigate(resolvePostAuthTarget(data));
     } catch (err) {
       const msg =
         err.response?.data?.detail ||

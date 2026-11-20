@@ -42,7 +42,6 @@ async def login(body: LoginBody):
     pool = await get_pool()
     async with pool.acquire() as conn:
         user = await user_repo.get_user_by_email(conn, body.email)
-        cnt = await account_repo.count_accounts_for_user(conn, user["id"]) if user else 0
 
     if not user:
         raise AuthenticationError("User does not exist. Please check your email or sign up.", code="USER_NOT_FOUND")
@@ -50,12 +49,18 @@ async def login(body: LoginBody):
     if not verify_password(body.password, user["password_hash"]):
         raise AuthenticationError("Incorrect password. Please try again.", code="INVALID_PASSWORD")
 
+    async with pool.acquire() as conn:
+        has_api_key = await account_repo.has_api_key_for_user(conn, user["id"])
+
     token = create_jwt(user["id"], user["email"])
     user_role = user.get("role", "user")
     return {
         "access_token": token,
         "token_type": "bearer",
-        "onboarded": cnt > 0,
+        # Onboarding is complete when a Zernio API key has been saved.
+        # Connecting Instagram is optional and is prompted from the dashboard.
+        "onboarded": has_api_key,
+        "has_api_key": has_api_key,
         "user": {
             "id": user["id"],
             "email": user["email"],
@@ -81,17 +86,18 @@ async def google_login(body: GoogleLoginBody):
     pool = await get_pool()
     async with pool.acquire() as conn:
         user, is_new_user = await user_repo.get_or_create_google_user(conn, email, random_hash)
-        cnt = await account_repo.count_accounts_for_user(conn, user["id"])
+        has_api_key = await account_repo.has_api_key_for_user(conn, user["id"])
 
     token = create_jwt(user["id"], user["email"])
     user_role = user.get("role", "user")
     return {
         "access_token": token,
         "token_type": "bearer",
-        # `onboarded` reflects whether an Instagram account is connected,
-        # while `is_new_user` tells the client whether this was a brand-new
-        # sign-up (so returning users go straight to the dashboard).
-        "onboarded": cnt > 0,
+        # `onboarded`/`has_api_key` reflect whether a Zernio API key has been
+        # saved. `is_new_user` is kept for backwards compatibility, but it must
+        # not be used to decide the post-login destination.
+        "onboarded": has_api_key,
+        "has_api_key": has_api_key,
         "is_new_user": is_new_user,
         "user": {
             "id": user["id"],
@@ -155,6 +161,7 @@ async def signup_complete(body: SignupCompleteBody):
         "access_token": token,
         "token_type": "bearer",
         "onboarded": False,
+        "has_api_key": False,
         "user": {"id": user["id"], "email": user["email"]},
     }
 
@@ -181,6 +188,7 @@ async def verify_otp(body: VerifyOTPBody):
         "access_token": token,
         "token_type": "bearer",
         "onboarded": False,
+        "has_api_key": False,
         "user": {"id": user["id"], "email": user["email"]},
     }
 
@@ -267,12 +275,13 @@ async def signup(body: SignupBody):
 async def me(user=Depends(require_user)):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        cnt = await account_repo.count_accounts_for_user(conn, user["id"])
+        has_api_key = await account_repo.has_api_key_for_user(conn, user["id"])
     user_role = user.get("role", "user")
     return {
         "id": user["id"],
         "email": user["email"],
         "role": user_role,
-        "onboarded": cnt > 0,
+        "onboarded": has_api_key,
+        "has_api_key": has_api_key,
         "is_admin": user_role == "admin",
     }

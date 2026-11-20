@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import PwaInstallPrompt from "./components/common/PwaInstallPrompt";
+import Protected from "./components/auth/ProtectedRoute";
 import LandingPage from "./Pages/LandingPage";
 import NotFoundPage from "./Pages/NotFoundPage";
 import CallbackPage from "./components/auth/CallbackPage";
@@ -35,19 +36,6 @@ function RouteFallback() {
   );
 }
 
-function Protected({ children }) {
-  const { user, loading } = useAuth();
-  const hasToken =
-    typeof window !== "undefined" &&
-    Boolean(localStorage.getItem("hoop_token"));
-
-  if (loading) {
-    if (hasToken) return children;
-    return null;
-  }
-  return user ? children : <Navigate to="/login" replace />;
-}
-
 function AdminProtected({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -80,7 +68,7 @@ export default function App() {
           <Route
             path="/onboarding"
             element={
-              <Protected>
+              <Protected requireOnboarding={false}>
                 <OnboardingPage />
               </Protected>
             }

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+import { resolvePostAuthTarget } from "../../lib/authRouting";
 
 // Keep the loading view visible just long enough to avoid an abrupt flash,
 // while still feeling like an automatic redirect.
@@ -10,7 +10,7 @@ const MIN_DISPLAY_MS = 700;
 
 export default function CallbackPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
 
   useEffect(() => {
     // Wait until the auth state has resolved before routing.
@@ -24,30 +24,28 @@ export default function CallbackPage() {
         return;
       }
 
-      // Target decided earlier in the auth flow (Google new vs returning user).
-      const storedTarget = sessionStorage.getItem("hoop_post_auth_target");
-      const redirectAfterLogin = sessionStorage.getItem(
-        "hoop_redirect_after_login",
-      );
-
-      let onboarded = user.onboarded;
-      // Fall back to the backend if we don't yet know the onboarding state
-      // (e.g. a session restored from an older localStorage payload).
-      if (typeof onboarded !== "boolean") {
+      // Prefer the fresh /auth/me response when the stored profile predates
+      // the API-key onboarding fields (e.g. an older localStorage payload).
+      let status = user;
+      if (
+        typeof user.has_api_key !== "boolean" &&
+        typeof user.onboarded !== "boolean"
+      ) {
         try {
-          const { data } = await api.get("/auth/me");
-          onboarded = data?.onboarded === true;
+          status = await refreshUser();
         } catch {
-          onboarded = false;
+          status = { ...user, has_api_key: false, onboarded: false };
         }
       }
 
       if (cancelled) return;
 
-      const target =
-        redirectAfterLogin ||
-        storedTarget ||
-        (onboarded ? "/home" : "/onboarding");
+      // The API-key status always wins. A stale session-storage redirect
+      // (even one pointing at /home) cannot bypass mandatory onboarding.
+      const requestedTarget = sessionStorage.getItem(
+        "hoop_redirect_after_login",
+      );
+      const target = resolvePostAuthTarget(status, requestedTarget);
 
       sessionStorage.removeItem("hoop_post_auth_target");
       sessionStorage.removeItem("hoop_redirect_after_login");
@@ -59,7 +57,7 @@ export default function CallbackPage() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, refreshUser]);
 
   return (
     <div className="min-h-screen bg-[#f9f9f8] text-[#191918] flex items-center justify-center p-4">

@@ -9,6 +9,10 @@ from typing import List, Optional
 
 import asyncpg
 
+# Sentinel rows keep a saved API key without representing a real Instagram
+# account. They must never be treated as connected accounts by the UI/API.
+SENTINEL_USERNAMES = ("__pending__", "__key_only__")
+
 
 async def get_accounts_for_user(conn: asyncpg.Connection, user_id: int) -> List[asyncpg.Record]:
     return await conn.fetch(
@@ -40,15 +44,15 @@ async def get_active_account(
     clean_username = (requested_username or "").strip().lstrip("@").lower()
     if clean_username:
         account = await get_account(conn, user_id, clean_username)
-        if account and account["ig_username"] != "__pending__":
+        if account and account["ig_username"] not in SENTINEL_USERNAMES:
             return account
         return None
     return await conn.fetchrow(
         """
         SELECT * FROM connected_ig_accounts
-        WHERE user_id = $1 AND ig_username != '__pending__'
+        WHERE user_id = $1 AND ig_username != ALL($2::text[])
         ORDER BY added_at ASC LIMIT 1
-        """, user_id
+        """, user_id, list(SENTINEL_USERNAMES)
     )
 
 
@@ -77,12 +81,11 @@ async def upsert_account(
             zernio_api_key_enc = EXCLUDED.zernio_api_key_enc
     """, user_id, clean_username, zernio_account_id, zernio_api_key_enc)
 
-    SENTINELS = {"__pending__", "__key_only__"}
-    if clean_username not in SENTINELS:
+    if clean_username not in SENTINEL_USERNAMES:
         # A real account was saved - remove all sentinel rows for this user.
         await conn.execute(
             "DELETE FROM connected_ig_accounts WHERE user_id = $1 AND ig_username = ANY($2::text[])",
-            user_id, list(SENTINELS),
+            user_id, list(SENTINEL_USERNAMES),
         )
 
 
@@ -148,6 +151,30 @@ async def is_own_connected_account(conn: asyncpg.Connection, user_id: int, ig_us
 async def count_accounts_for_user(conn: asyncpg.Connection, user_id: int) -> int:
     return await conn.fetchval(
         "SELECT COUNT(*) FROM connected_ig_accounts WHERE user_id = $1", user_id
+    )
+
+
+async def has_api_key_for_user(conn: asyncpg.Connection, user_id: int) -> bool:
+    """Return True when the user has a saved (encrypted) Zernio API key.
+
+    This is the authoritative onboarding signal. It deliberately checks the
+    stored key rather than counting connected accounts, because a key can be
+    saved before (or without) connecting Instagram. Both real accounts and the
+    ``__pending__`` / ``__key_only__`` sentinels carry ``zernio_api_key_enc``.
+    The encrypted value is never returned - only its presence is queried.
+    """
+    return bool(
+        await conn.fetchval(
+            """
+            SELECT EXISTS (
+                SELECT 1 FROM connected_ig_accounts
+                WHERE user_id = $1
+                  AND zernio_api_key_enc IS NOT NULL
+                  AND zernio_api_key_enc <> ''
+            )
+            """,
+            user_id,
+        )
     )
 
 
