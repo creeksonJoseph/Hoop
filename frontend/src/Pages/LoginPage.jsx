@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useLogin, useGoogleAuth } from "../hooks/useAuthForms";
 import GoogleAuthButton from "../components/auth/GoogleAuthButton";
-import CallbackPage from "../components/auth/CallbackPage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -154,9 +153,6 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-
-        {/* Callback Page after Google sign-in */}
-        <CallbackPage />
       </div>
     </div>
   );
