@@ -18,7 +18,11 @@ export default function GoogleAuthButton({
   const buttonRef = useRef(null);
   const { ready, error, isConnecting } = useGoogleIdToken(onSuccess);
 
-  const busy = disabled || isConnecting;
+  // `disabled` only makes the button non-interactive (another auth operation
+  // is in flight). The Google-specific spinner/message must only appear while
+  // the actual Google flow is active (`isConnecting`), so email/password or
+  // OTP loading must not trigger "Connecting to Google…".
+  const googleBusy = isConnecting;
 
   useEffect(() => {
     if (!ready || !buttonRef.current || !window.google?.accounts?.id) return;
@@ -36,7 +40,7 @@ export default function GoogleAuthButton({
   return (
     <div
       className={`w-full flex flex-col items-center justify-center ${
-        busy ? "opacity-80 pointer-events-none" : ""
+        disabled || googleBusy ? "opacity-80 pointer-events-none" : ""
       }`}
     >
       {error && (
@@ -44,13 +48,13 @@ export default function GoogleAuthButton({
       )}
 
       {/* Keep the Google button mounted so it can reappear after an error;
-          only visually swap in the spinner. */}
+          only visually swap in the spinner during the actual Google flow. */}
       <div className="relative w-full min-h-[44px] flex items-center justify-center">
         <div
           ref={buttonRef}
-          className={`flex justify-center ${busy ? "invisible" : ""}`}
+          className={`flex justify-center ${googleBusy ? "invisible" : ""}`}
         />
-        {busy && (
+        {googleBusy && (
           <div className="absolute inset-0 flex items-center justify-center gap-2.5">
             <Loader2 size={16} className="animate-spin text-[#191918]" />
             <span className="text-sm text-[#191918] font-medium">
