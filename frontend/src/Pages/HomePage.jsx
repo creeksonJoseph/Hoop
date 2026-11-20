@@ -5,15 +5,17 @@ import {
   MessageCircle,
   CircleAlert as AlertCircle,
   ArrowRight,
+  Loader as Loader2,
 } from "lucide-react";
 import {
-  Link,
   useParams,
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
 import { useDMs } from "../hooks/useDMs";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import api from "../lib/api";
 import NavRail from "../components/NavRail";
 import DMList from "../components/home/DMList";
 import AddDMModal from "../components/home/AddDMModal";
@@ -24,10 +26,35 @@ export default function HomePage() {
   const { igUsername } = useParams();
   const [searchParams] = useSearchParams();
   const { setActiveAccount } = useAuth();
+  const { toast } = useToast();
   const { dms, hasRealAccount, loading, addDM, deleteDM } = useDMs();
   const [showModal, setShowModal] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [connectingOAuth, setConnectingOAuth] = useState(false);
   const navigate = useNavigate();
+
+  // Initiate Instagram OAuth directly from the dashboard notification. The user
+  // already has a saved Zernio API key, so fetching the settings endpoint gives
+  // us an OAuth URL generated from that key - no trip to Settings required.
+  const handleConnectClick = async () => {
+    setConnectingOAuth(true);
+    try {
+      const { data } = await api.get("/settings");
+      const oauthUrl = data?.oauth_url;
+      if (!oauthUrl) {
+        throw new Error("No OAuth URL available to connect Instagram.");
+      }
+      window.location.href = oauthUrl;
+    } catch (err) {
+      setConnectingOAuth(false);
+      toast(
+        err?.response?.data?.detail ||
+          err?.message ||
+          "Failed to start Instagram connection. Please try again.",
+        "error",
+      );
+    }
+  };
 
   // If redirected back from OAuth callback with account info, set as active account
   useEffect(() => {
@@ -97,12 +124,24 @@ export default function HomePage() {
                 />
                 <span className="truncate">Connect Instagram to track DMs</span>
               </div>
-              <Link
-                to="/settings"
-                className="bg-[#c78600] text-white font-medium text-[11px] px-2 py-1 rounded-[6px] hover:bg-[#a16c00] transition-colors shrink-0 flex items-center gap-1"
+              <button
+                onClick={handleConnectClick}
+                disabled={connectingOAuth}
+                className={`bg-[#c78600] text-white font-medium text-[11px] px-2 py-1 rounded-[6px] hover:bg-[#a16c00] transition-colors shrink-0 flex items-center gap-1 ${
+                  connectingOAuth ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+                }`}
               >
-                Connect <ArrowRight size={11} />
-              </Link>
+                {connectingOAuth ? (
+                  <>
+                    <Loader2 size={11} className="animate-spin" />
+                    Connecting…
+                  </>
+                ) : (
+                  <>
+                    Connect <ArrowRight size={11} />
+                  </>
+                )}
+              </button>
             </div>
           )}
 
