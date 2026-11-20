@@ -1,0 +1,43 @@
+name: Upstash Redis Keepalive
+
+on:
+  schedule:
+    # Every 3 days at 06:13 UTC
+    - cron: "13 6 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Redis heartbeat
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$UPSTASH_REDIS_REST_URL" || -z "$UPSTASH_REDIS_REST_TOKEN" ]]; then
+            echo "Missing Upstash credentials."
+            exit 1
+          fi
+
+          TIMESTAMP=$(date -u +%s)
+
+          RESPONSE=$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 3 \
+            --retry-delay 5 \
+            --max-time 20 \
+            "$UPSTASH_REDIS_REST_URL/set/_portfolio_keepalive/$TIMESTAMP/EX/604800" \
+            -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN")
+
+          echo "$RESPONSE" | jq -e '.result == "OK"' > /dev/null
+
+          echo "Redis heartbeat successful at $(date -u)"
